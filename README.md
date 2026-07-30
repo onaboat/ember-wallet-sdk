@@ -43,41 +43,99 @@ The package publishes ESM, CommonJS, and TypeScript declarations. It relies on
 standard `fetch`, `AbortController`, `TextEncoder`, and Web Crypto by default;
 React Native hosts can inject equivalent adapters.
 
-## Create a client
+## Sandbox/devnet quick start
+
+### What you need from Ember
+
+Before writing code, ask Ember for:
+
+- the sandbox API base URL;
+- your public `integrationId`;
+- registration of each browser-extension origin; and
+- registration of the iOS bundle ID and Android package ID used by the native
+  wallet.
+
+These are public binding values, not credentials. There is no Ember API key in
+a wallet integration.
+
+The test wallet also needs:
+
+- enough devnet SOL to pay transaction fees;
+- at least 1 devnet USDC for the current QA offer;
+- its existing message-signing and transaction-signing adapters; and
+- a separate ephemeral Ed25519 signer stored with the session in the
+  platform's secure storage.
+
+Circle's official Solana devnet USDC mint is
+`4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`. It uses the classic SPL Token
+Program `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA` and six decimals.
+Obtain test USDC from the
+[Circle Faucet](https://faucet.circle.com/) and devnet SOL from a public
+[Solana faucet](https://faucet.solana.com/).
+
+The SDK checks those devnet facts when it verifies the signed quote. The quote
+is still authoritative: never hardcode its amount, destination token account,
+treasury owner, payment reference, or expiry.
+
+### 1. Create a client
 
 ```ts
 import {
   EmberWalletClient,
   P11_WALLET_SCOPES,
+  type EmberCrypto,
+  type EmberFetch,
   type EmberMessageSigner,
   type WalletSessionStore,
 } from '@embercover/wallet-sdk';
 
 declare const sessionSigner: EmberMessageSigner; // ephemeral, not the wallet key
 declare const secureSessionStore: WalletSessionStore;
+declare const EMBER_SANDBOX_API_URL: string; // supplied by Ember
+declare const EMBER_INTEGRATION_ID: string; // supplied by Ember
 
 const ember = new EmberWalletClient({
-  baseUrl: 'https://sandbox-api.example.ember.cover',
+  baseUrl: EMBER_SANDBOX_API_URL,
   environment: 'sandbox',
-  integrationId: 'integration_partner-wallet',
+  integrationId: EMBER_INTEGRATION_ID,
   client: { kind: 'browser' },
   sessionSigner,
   sessionStore: secureSessionStore,
 });
 ```
 
-Native clients use an Ember-approved public application identifier:
+Use `client: { kind: 'browser' }` in an extension. Ember binds that session to
+the browser-provided `Origin`; do not synthesize or override it.
+
+React Native clients use the exact Ember-registered bundle/package identifier
+and inject platform-compatible `fetch` and crypto adapters when required:
 
 ```ts
-client: {
-  kind: 'native',
-  applicationId: 'com.partner.wallet',
-}
+declare const reactNativeFetch: EmberFetch;
+declare const reactNativeCrypto: EmberCrypto;
+
+const ember = new EmberWalletClient({
+  baseUrl: EMBER_SANDBOX_API_URL,
+  environment: 'sandbox',
+  integrationId: EMBER_INTEGRATION_ID,
+  client: {
+    kind: 'native',
+    applicationId: 'com.partner.wallet',
+  },
+  fetch: reactNativeFetch,
+  crypto: reactNativeCrypto,
+  sessionSigner,
+  sessionStore: secureSessionStore,
+});
 ```
 
 An application identifier is attribution and request binding, not a secret.
+See the complete storage adapters in
+[`examples/browser-extension`](https://github.com/onaboat/ember-wallet-sdk/tree/v1.3.2-beta.1/examples/browser-extension)
+and
+[`examples/react-native`](https://github.com/onaboat/ember-wallet-sdk/tree/v1.3.2-beta.1/examples/react-native).
 
-## Open a wallet session
+### 2. Open a wallet session
 
 ```ts
 declare const walletSigner: EmberMessageSigner;
@@ -97,12 +155,21 @@ another prefix or encoding transform.
 request claim authority. The SDK exposes only coverage-instance claims, never
 the legacy subscription claim API.
 
-## Offer, quote, and payment lifecycle
+### 3. Request and verify a quote
 
 ```ts
 const { offers } = await ember.listOffers();
-const offer = offers[0];
+const offer = offers.find(
+  (candidate) =>
+    candidate.environment === 'sandbox' &&
+    candidate.cluster === 'devnet' &&
+    candidate.availabilityMode === 'live' &&
+    candidate.lifecycle === 'active',
+);
+if (!offer) throw new Error('No devnet Ember offer is currently available.');
 
+// Render the terms identified by these exact versions and hashes. Call this
+// only after the user approves those terms.
 await ember.acceptTerms({
   offerId: offer.offerId,
   offerVersion: offer.offerVersion,
@@ -113,24 +180,107 @@ await ember.acceptTerms({
 // createQuote verifies the returned quote before resolving.
 const quote = await ember.createQuote({ offerId: offer.offerId });
 
-// A live quote has twelve activation-anchored periods. Each period shares
-// $10,000 across its claims; the annual maximum is $120,000.
-const schedule = quote.payload.benefitSchedule;
+if (
+  !quote.payload.paymentAllowed ||
+  !quote.payload.createsCoverage ||
+  quote.payload.offer.cluster !== 'devnet'
+) {
+  throw new Error('The returned quote is not a payable devnet quote.');
+}
+```
 
-// The protected wallet constructs, reviews, and signs the exact quoted USDC
-// payment. The SDK never signs or broadcasts it.
-const payment = await ember.createPayment({
+`createQuote` resolves only after checking the response schema, payload hash,
+Ed25519 signature, signing-key registry, expiry, environment, integration,
+wallet authority, cluster, and supported quote schema.
+
+### 4. Build and send the quoted USDC payment
+
+Keep Solana construction inside the wallet's existing transaction layer. The
+small adapter below is the only bridge the Ember flow needs:
+
+```ts
+import type {
+  OfferCluster,
+  QuotePaymentFactsResponse,
+} from '@embercover/wallet-sdk';
+
+interface QuotedUsdcPayment {
+  cluster: OfferCluster;
+  expiresAt: string;
+  payerWallet: string;
+  payment: QuotePaymentFactsResponse;
+  quoteId: string;
+}
+
+interface WalletPaymentAdapter {
+  simulateReviewSignAndSend(
+    input: QuotedUsdcPayment,
+  ): Promise<string>; // base58 transaction signature
+}
+
+declare const walletPayments: WalletPaymentAdapter;
+
+const paymentSignature = await walletPayments.simulateReviewSignAndSend({
+  cluster: quote.payload.offer.cluster,
+  expiresAt: quote.payload.validity.expiresAt,
+  payerWallet: quote.payload.payerWallet,
+  payment: quote.payload.payment,
   quoteId: quote.payload.quoteId,
-  paymentSignature: '<base58 payment transaction signature>',
 });
 
+const payment = await ember.createPayment({
+  quoteId: quote.payload.quoteId,
+  paymentSignature,
+});
+```
+
+The adapter must:
+
+1. reject an expired quote or a cluster other than the wallet's active
+   `devnet` cluster;
+2. derive the protected wallet's source token account for `payment.mint`;
+3. build an SPL Token `TransferChecked` using the exact `mint`,
+   `tokenProgram`, `treasuryTokenAccount`, `amount`, and `decimals` from the
+   verified quote, parsing `amount` as `BigInt` rather than a JavaScript
+   floating-point number;
+4. include `payment.reference` as an additional read-only, non-signer account
+   on that transfer instruction, following the Solana Pay reference convention;
+5. simulate the complete transaction;
+6. show the user the devnet cluster, payer, recipient, token, and amount before
+   requesting approval; and
+7. sign and broadcast through the wallet's normal Solana path.
+
+The SDK never receives a wallet private key, builds a transaction, chooses an
+RPC endpoint, or broadcasts.
+
+A complete typechecked version of this orchestration is available in
+[`examples/readme-quickstart.ts`](https://github.com/onaboat/ember-wallet-sdk/blob/v1.3.2-beta.1/examples/readme-quickstart.ts).
+
+### 5. Wait for activation
+
+`createPayment` is idempotent for the same quote and signature. Persist its
+`paymentId`, then refresh it from a background-safe scheduler:
+
+```ts
 const paymentState = await ember.getPayment(payment.paymentId);
-if (paymentState.coverageInstanceId) {
+
+if (paymentState.status === 'rejected') {
+  showPaymentRejected();
+} else if (
+  paymentState.status === 'activated' &&
+  paymentState.coverageInstanceId
+) {
   const coverage = await ember.getCoverageInstance(
     paymentState.coverageInstanceId,
   );
+  showActiveCoverage(coverage);
+} else {
+  schedulePaymentRefresh(payment.paymentId);
 }
 ```
+
+Do not treat a wallet broadcast callback as activation. Ember independently
+checks finalized settlement before returning a coverage instance.
 
 ## `signTransaction`
 

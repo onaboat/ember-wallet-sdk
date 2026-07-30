@@ -1,6 +1,6 @@
 {
   "name": "@embercover/wallet-sdk",
-  "version": "1.3.2-beta.0",
+  "version": "1.3.2-beta.1",
   "description": "Secretless browser-extension and React Native client for Ember Cover",
   "type": "module",
   "main": "./dist/index.cjs",
