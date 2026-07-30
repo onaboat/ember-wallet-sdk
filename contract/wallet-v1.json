@@ -1,0 +1,3937 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Ember Secretless Wallet API",
+    "description": "Secretless wallet-session, offer, quote, payment, coverage, decision, evidence, and claim APIs.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/v1/coverage-instances/{coverageInstanceId}": {
+      "get": {
+        "tags": [
+          "Wallet coverage"
+        ],
+        "summary": "Read one immutable quote-bound coverage instance.",
+        "operationId": "getCoverageInstance",
+        "parameters": [
+          {
+            "name": "coverageInstanceId",
+            "in": "path",
+            "description": "Canonical coverage instance identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authoritative coverage instance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoverageInstanceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Coverage identifier is malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wallet session is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wallet scope is not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Coverage is not visible to this wallet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
+    "/v1/decisions": {
+      "post": {
+        "tags": [
+          "Wallet decisions"
+        ],
+        "summary": "Create one authoritative coverage-instance-bound decision.",
+        "operationId": "createCoverageDecision",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCoverageDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Decision completed or exact retry replayed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoverageDecisionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Decision request is malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wallet session is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wallet scope, coverage, or evaluation allowance rejected the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Coverage is not visible to this wallet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Wallet, cluster, or duplicate lineage conflicts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Decision issuance is paused or not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
+    "/v1/decisions/{decisionId}": {
+      "get": {
+        "tags": [
+          "Wallet decisions"
+        ],
+        "summary": "Read the authoritative decision and current evidence state.",
+        "operationId": "getCoverageDecision",
+        "parameters": [
+          {
+            "name": "decisionId",
+            "in": "path",
+            "description": "Canonical decision identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authoritative decision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoverageDecisionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wallet session is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wallet scope is not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Decision is not visible to this wallet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
+    "/v1/decisions/{decisionId}/lineage": {
+      "get": {
+        "tags": [
+          "Wallet decisions"
+        ],
+        "summary": "Return the immutable quote-to-decision evidence lineage.",
+        "operationId": "getCoverageDecisionLineage",
+        "parameters": [
+          {
+            "name": "decisionId",
+            "in": "path",
+            "description": "Canonical decision identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quote-to-decision evidence lineage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionLineageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wallet session is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wallet scope is not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Decision is not visible to this wallet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
+    "/v1/decisions/{decisionId}/post-sign": {
+      "post": {
+        "tags": [
+          "Wallet decisions"
+        ],
+        "summary": "Attach exact wallet-signed evidence and transactionally enqueue finalized\ntransaction confirmation.",
+        "operationId": "submitCoverageDecisionEvidence",
+        "parameters": [
+          {
+            "name": "decisionId",
+            "in": "path",
+            "description": "Canonical decision identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitDecisionEvidenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Signed evidence accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmitDecisionEvidenceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Signed evidence is malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wallet session is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wallet scope is not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Decision is not visible to this wallet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Signed evidence conflicts with the reviewed payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
+    "/v1/payments": {
+      "post": {
+        "tags": [
+          "Wallet payments"
+        ],
+        "summary": "Submit a transaction signature for exact finalized payment verification.\nThe wallet supplies no price, mint, destination, cluster, payer, or term.",
+        "operationId": "createMainnetPayment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePaymentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Payment reached a terminal activated or rejected state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Payment awaits finality, provider recovery, or provider agreement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Payment request is malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wallet session is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wallet scope is not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Quote is not visible to this wallet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Quote is not payable or was already consumed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Mainnet activation is paused or not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
+    "/v1/payments/{paymentId}": {
+      "get": {
+        "tags": [
+          "Wallet payments"
+        ],
+        "summary": "Read the authoritative state of one payment submission.",
+        "operationId": "getMainnetPayment",
+        "parameters": [
+          {
+            "name": "paymentId",
+            "in": "path",
+            "description": "Canonical payment identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authoritative payment state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Payment identifier is malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wallet session is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wallet scope is not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Payment is not visible to this wallet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
+    "/v1/quote-signing-keys": {
+      "get": {
+        "tags": [
+          "Quote verification"
+        ],
+        "summary": "List public verification keys and their current lifecycle state.",
+        "operationId": "listQuoteSigningKeys",
+        "responses": {
+          "200": {
+            "description": "Public quote verification keys",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteSigningKeysResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Signing key registry could not be read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/quotes": {
+      "post": {
+        "tags": [
+          "Wallet quotes"
+        ],
+        "summary": "Issue a server-authored, immutable, expiring quote for the exact\nauthenticated wallet and offer. The request body contains no economic or\npayment overrides. A live quote atomically reserves its current-period\nbenefit capacity, preventing payable quotes from oversubscribing the\napproved production reserve.",
+        "operationId": "createSignedQuote",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateQuoteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Immutable signed test quote issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedQuoteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Offer identifier is malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wallet session is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wallet scope or offer availability is not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Terms, offer, key, or payment facts conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Quote issuance is disabled or not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
+    "/v1/wallet-openapi.json": {
+      "get": {
+        "tags": [
+          "API contract"
+        ],
+        "summary": "Serve the secretless wallet contract without exposing partner credentials,\noperator routes, legacy wallet compatibility routes, or operations.",
+        "operationId": "walletOpenApi",
+        "responses": {
+          "200": {
+            "description": "Secretless wallet OpenAPI 3.1 contract",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/wallet-sessions": {
+      "post": {
+        "tags": [
+          "Wallet sessions"
+        ],
+        "summary": "Consume a signed challenge and issue a proof-of-possession wallet session.",
+        "operationId": "createWalletSession",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Short-lived wallet session issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletSessionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Challenge is invalid, expired, or already used",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wallet or integration cannot create a session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Active session-family limit reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Session could not be issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/wallet-sessions/challenges": {
+      "post": {
+        "tags": [
+          "Wallet sessions"
+        ],
+        "summary": "Request a server-issued, one-use wallet proof challenge.",
+        "operationId": "createWalletSessionChallenge",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateChallengeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "One-use wallet challenge issued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletChallengeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Challenge input is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Integration, scope, or client binding is not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Challenge rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Challenge could not be persisted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/wallet-sessions/revoke": {
+      "post": {
+        "tags": [
+          "Wallet sessions"
+        ],
+        "summary": "Revoke the current session family.",
+        "operationId": "revokeWalletSession",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Current session family revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevocationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wallet session is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
+    "/v1/wallet-sessions/revoke-all": {
+      "post": {
+        "tags": [
+          "Wallet sessions"
+        ],
+        "summary": "Revoke every session for this wallet and integration.",
+        "operationId": "revokeAllWalletSessions",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "All wallet sessions for the integration revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevocationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wallet session is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
+    "/v1/wallet-sessions/rotate": {
+      "post": {
+        "tags": [
+          "Wallet sessions"
+        ],
+        "summary": "Rotate a live session using its one-use refresh credential and current\nproof-of-possession key. The old access session is revoked atomically.",
+        "operationId": "rotateWalletSession",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RotateSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Wallet session rotated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletSessionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session or refresh credential is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Tenant is not active",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Refresh credential was already consumed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
+    "/v1/wallet/claims": {
+      "get": {
+        "tags": [
+          "Wallet claims"
+        ],
+        "summary": "List claims owned by the authenticated wallet subject.",
+        "operationId": "walletClaimsList",
+        "responses": {
+          "200": {
+            "description": "Wallet-owned claims",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletClaimListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wallet session is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wallet scope is missing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Claims are not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Wallet claims"
+        ],
+        "summary": "Submit a durable claim bound to the exact paid coverage and sealed decision.",
+        "operationId": "walletClaimCreate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateClaimRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Claim submitted and verification enqueued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletClaimResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Claim request failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wallet session is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wallet scope or decision is ineligible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Claim, window, or idempotency conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Claim intake is disabled or unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
+    "/v1/wallet/claims/{claimId}": {
+      "get": {
+        "tags": [
+          "Wallet claims"
+        ],
+        "summary": "Read one wallet-owned claim and its immutable timeline.",
+        "operationId": "walletClaimGet",
+        "parameters": [
+          {
+            "name": "claimId",
+            "in": "path",
+            "description": "Claim identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wallet-owned claim",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletClaimResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wallet session is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wallet scope is missing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Claim was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
+    "/v1/wallet/claims/{claimId}/appeals": {
+      "post": {
+        "tags": [
+          "Wallet claims"
+        ],
+        "summary": "Submit an appeal against the immutable rejection decision.",
+        "operationId": "walletClaimAppeal",
+        "parameters": [
+          {
+            "name": "claimId",
+            "in": "path",
+            "description": "Claim identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppealClaimRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Appeal submitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletClaimResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Appeal failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wallet session is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Claim was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Appeal is late or not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
+    "/v1/wallet/claims/{claimId}/evidence-uploads": {
+      "post": {
+        "tags": [
+          "Wallet claims"
+        ],
+        "summary": "Create a short-lived upload grant for one policy-requested evidence item.",
+        "operationId": "walletClaimEvidenceUploadBegin",
+        "parameters": [
+          {
+            "name": "claimId",
+            "in": "path",
+            "description": "Claim identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BeginEvidenceUploadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Evidence upload reserved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceUploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Evidence metadata is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wallet session is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Claim or evidence request is unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Claim evidence request was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Evidence storage or scanner is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
+    "/v1/wallet/claims/{claimId}/evidence-uploads/{evidenceId}/complete": {
+      "post": {
+        "tags": [
+          "Wallet claims"
+        ],
+        "summary": "Complete an upload after independently checking stored size and digest.",
+        "operationId": "walletClaimEvidenceUploadComplete",
+        "parameters": [
+          {
+            "name": "claimId",
+            "in": "path",
+            "description": "Claim identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "evidenceId",
+            "in": "path",
+            "description": "Claim evidence identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Upload queued for scanning",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceUploadResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wallet session is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Evidence was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Evidence metadata conflicts or was rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Evidence storage is unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
+    "/v1/wallet/decisions/{decisionId}/claim-eligibility": {
+      "get": {
+        "tags": [
+          "Wallet claims"
+        ],
+        "summary": "Read claim eligibility for one wallet-owned P09 decision.",
+        "operationId": "walletClaimEligibility",
+        "parameters": [
+          {
+            "name": "decisionId",
+            "in": "path",
+            "description": "Covered decision identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Claim eligibility derived from sealed evidence",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimEligibilityResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wallet session is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wallet scope or decision is ineligible",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Decision was not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Claims policy is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
+    "/v1/wallet/offers": {
+      "get": {
+        "tags": [
+          "Wallet offers"
+        ],
+        "summary": "List offers available to the integration bound into the authenticated\nwallet session. This dedicated wallet path avoids combining partner Bearer\nauthentication with proof-of-possession authentication on one route.",
+        "operationId": "walletOffersList",
+        "responses": {
+          "200": {
+            "description": "Offers available to the wallet session integration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvailableOfferListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wallet session is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wallet scope, partner, or integration is not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Offer catalogue could not be resolved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
+    "/v1/wallet/offers/{offerId}": {
+      "get": {
+        "tags": [
+          "Wallet offers"
+        ],
+        "summary": "Read one offer through the exact tenant and environment bound into the\nauthenticated wallet session.",
+        "operationId": "walletOfferGet",
+        "parameters": [
+          {
+            "name": "offerId",
+            "in": "path",
+            "description": "Canonical offer identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Offer available to the wallet session integration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvailableOfferResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Offer identifier is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Wallet session is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Wallet scope, partner, or integration is not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Offer is unknown or unavailable to this integration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Offer catalogue could not be resolved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
+    "/v1/wallet/terms-acceptances": {
+      "post": {
+        "tags": [
+          "Wallet terms"
+        ],
+        "summary": "Persist explicit acceptance of the exact immutable terms document shown to\nthe verified wallet. Caller values are assertions checked against P04.",
+        "operationId": "acceptWalletTerms",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptTermsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Exact terms acceptance persisted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TermsAcceptanceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Offer or terms assertion is malformed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Offer is unavailable or scope is insufficient",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Offer/terms assertion is stale or mismatched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AcceptTermsRequest": {
+        "type": "object",
+        "required": [
+          "offerId",
+          "offerVersion",
+          "termsVersion",
+          "documentSha256"
+        ],
+        "properties": {
+          "documentSha256": {
+            "type": "string"
+          },
+          "offerId": {
+            "type": "string"
+          },
+          "offerVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "termsVersion": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApiErrorCode": {
+        "type": "string",
+        "enum": [
+          "invalid_request",
+          "session_invalid",
+          "client_binding_mismatch",
+          "permission_denied",
+          "not_found",
+          "conflict",
+          "coverage_limit_reached",
+          "rate_limited",
+          "service_unavailable"
+        ]
+      },
+      "ApiErrorResponse": {
+        "type": "object",
+        "description": "Stable JSON error envelope returned by every documented API operation.",
+        "required": [
+          "error",
+          "message",
+          "requestId",
+          "details"
+        ],
+        "properties": {
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldIssue"
+            }
+          },
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorCode"
+          },
+          "message": {
+            "type": "string"
+          },
+          "requestId": {
+            "type": "string"
+          }
+        }
+      },
+      "AppealClaimRequest": {
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AvailableOfferListResponse": {
+        "type": "object",
+        "required": [
+          "offers"
+        ],
+        "properties": {
+          "offers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AvailableOfferResponse"
+            }
+          }
+        }
+      },
+      "AvailableOfferResponse": {
+        "type": "object",
+        "required": [
+          "offerId",
+          "offerVersion",
+          "productCode",
+          "displayName",
+          "lifecycle",
+          "availabilityMode",
+          "environment",
+          "cluster",
+          "paymentAsset",
+          "paymentAssetDecimals",
+          "priceBaseUnits",
+          "coverageDurationDays",
+          "coverageDurationMonths",
+          "benefitPeriodCount",
+          "benefitPeriodLimitMicros",
+          "protectedWalletCount",
+          "payerMustEqualProtectedWallet",
+          "perLossLimitMicros",
+          "aggregateLimitMicros",
+          "coveredTransactionLimit",
+          "deductibleMicros",
+          "waitingPeriodDays",
+          "immediateLossClaimWindowDays",
+          "delegateLossTailDays",
+          "appealWindowDays",
+          "cancellationRuleCode",
+          "refundRuleCode",
+          "termsVersion",
+          "termsSha256",
+          "policyVersion",
+          "policySha256",
+          "catalogueSha256",
+          "snapshotSha256"
+        ],
+        "properties": {
+          "aggregateLimitMicros": {
+            "type": "string"
+          },
+          "appealWindowDays": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "availabilityMode": {
+            "$ref": "#/components/schemas/OfferAvailabilityModeValue"
+          },
+          "benefitPeriodCount": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "benefitPeriodLimitMicros": {
+            "type": "string"
+          },
+          "cancellationRuleCode": {
+            "type": "string"
+          },
+          "catalogueSha256": {
+            "type": "string"
+          },
+          "cluster": {
+            "$ref": "#/components/schemas/OfferCluster"
+          },
+          "coverageDurationDays": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "coverageDurationMonths": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "coveredTransactionLimit": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "deductibleMicros": {
+            "type": "string"
+          },
+          "delegateLossTailDays": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "environment": {
+            "$ref": "#/components/schemas/OfferEnvironment"
+          },
+          "immediateLossClaimWindowDays": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/OfferLifecycleValue"
+          },
+          "offerId": {
+            "type": "string"
+          },
+          "offerVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "payerMustEqualProtectedWallet": {
+            "type": "boolean"
+          },
+          "paymentAsset": {
+            "type": "string"
+          },
+          "paymentAssetDecimals": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "paymentMint": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "paymentTokenProgram": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "perLossLimitMicros": {
+            "type": "string"
+          },
+          "policySha256": {
+            "type": "string"
+          },
+          "policyVersion": {
+            "type": "string"
+          },
+          "priceBaseUnits": {
+            "type": "string"
+          },
+          "productCode": {
+            "type": "string"
+          },
+          "protectedWalletCount": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "refundRuleCode": {
+            "type": "string"
+          },
+          "snapshotSha256": {
+            "type": "string"
+          },
+          "termsSha256": {
+            "type": "string"
+          },
+          "termsVersion": {
+            "type": "string"
+          },
+          "waitingPeriodDays": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "BeginEvidenceUploadRequest": {
+        "type": "object",
+        "required": [
+          "requestId",
+          "evidenceCode",
+          "contentType",
+          "contentLength",
+          "sha256"
+        ],
+        "properties": {
+          "contentLength": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "evidenceCode": {
+            "type": "string"
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ClaimEligibilityReason": {
+        "type": "string",
+        "enum": [
+          "not_eligible",
+          "window_expired"
+        ]
+      },
+      "ClaimEligibilityResponse": {
+        "type": "object",
+        "required": [
+          "decisionId",
+          "eligible"
+        ],
+        "properties": {
+          "decisionId": {
+            "type": "string"
+          },
+          "delegateTailEndsAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "directLossDeadline": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "eligible": {
+            "type": "boolean"
+          },
+          "reason": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ClaimEligibilityReason"
+              }
+            ]
+          }
+        }
+      },
+      "ClaimLossEventKind": {
+        "type": "string",
+        "enum": [
+          "direct_malicious_signing_loss",
+          "delegate_drain"
+        ]
+      },
+      "CoverStatus": {
+        "type": "string",
+        "enum": [
+          "covered",
+          "not_covered",
+          "unsupported",
+          "unavailable"
+        ]
+      },
+      "CoverageDecisionResponse": {
+        "type": "object",
+        "required": [
+          "decisionId",
+          "coverageInstanceId",
+          "quoteId",
+          "offerId",
+          "offerVersion",
+          "termsVersion",
+          "policyVersion",
+          "protectedWallet",
+          "kind",
+          "coverStatus",
+          "riskBand",
+          "decisionReason",
+          "evidenceState",
+          "decisionExpiresAt",
+          "maximumPayoutMicros",
+          "remainingAggregateLimitMicros",
+          "remainingUnderwritingEvaluations",
+          "evaluationCountImpact"
+        ],
+        "properties": {
+          "coverStatus": {
+            "$ref": "#/components/schemas/CoverStatus"
+          },
+          "coverageInstanceId": {
+            "type": "string"
+          },
+          "decisionExpiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "decisionId": {
+            "type": "string"
+          },
+          "decisionReason": {
+            "$ref": "#/components/schemas/PublicDecisionReason"
+          },
+          "evaluationCountImpact": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "evidenceState": {
+            "$ref": "#/components/schemas/ProductionEvidenceState"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ProductionDecisionKind"
+          },
+          "maximumPayoutMicros": {
+            "type": "string"
+          },
+          "offerId": {
+            "type": "string"
+          },
+          "offerVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "policyVersion": {
+            "type": "string"
+          },
+          "protectedWallet": {
+            "type": "string",
+            "format": "solana-address-base58",
+            "description": "Canonical base58 Solana public key.",
+            "maxLength": 44,
+            "minLength": 32
+          },
+          "quoteId": {
+            "type": "string"
+          },
+          "remainingAggregateLimitMicros": {
+            "type": "string"
+          },
+          "remainingUnderwritingEvaluations": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "riskBand": {
+            "$ref": "#/components/schemas/RiskBand"
+          },
+          "termsVersion": {
+            "type": "string"
+          }
+        }
+      },
+      "CoverageInstanceResponse": {
+        "type": "object",
+        "required": [
+          "coverageInstanceId",
+          "quoteId",
+          "paymentId",
+          "paymentSignature",
+          "walletSubjectId",
+          "protectedWallet",
+          "offerId",
+          "offerVersion",
+          "termsVersion",
+          "policyVersion",
+          "status",
+          "perLossLimitMicros",
+          "aggregateLimitMicros",
+          "benefitPeriodCount",
+          "benefitPeriodLimitMicros",
+          "coveredTransactionLimit",
+          "deductibleMicros",
+          "waitingPeriodDays",
+          "immediateLossClaimWindowDays",
+          "delegateLossTailDays",
+          "appealWindowDays",
+          "activatedAt",
+          "coverageStartsAt",
+          "coverageEndsAt"
+        ],
+        "properties": {
+          "activatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "aggregateLimitMicros": {
+            "type": "string"
+          },
+          "appealWindowDays": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "benefitPeriodCount": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "benefitPeriodLimitMicros": {
+            "type": "string"
+          },
+          "coverageEndsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "coverageInstanceId": {
+            "type": "string"
+          },
+          "coverageStartsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "coveredTransactionLimit": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "currentBenefitPeriodEndsAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "currentBenefitPeriodOrdinal": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "minimum": 0
+          },
+          "currentBenefitPeriodStartsAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "deductibleMicros": {
+            "type": "string"
+          },
+          "delegateLossTailDays": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "immediateLossClaimWindowDays": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "offerId": {
+            "type": "string"
+          },
+          "offerVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "paymentId": {
+            "type": "string"
+          },
+          "paymentSignature": {
+            "type": "string",
+            "format": "solana-signature-base58",
+            "description": "Canonical base58 Solana Ed25519 signature.",
+            "maxLength": 88,
+            "minLength": 64
+          },
+          "perLossLimitMicros": {
+            "type": "string"
+          },
+          "policyVersion": {
+            "type": "string"
+          },
+          "protectedWallet": {
+            "type": "string",
+            "format": "solana-address-base58",
+            "description": "Canonical base58 Solana public key.",
+            "maxLength": 44,
+            "minLength": 32
+          },
+          "quoteId": {
+            "type": "string"
+          },
+          "remainingBenefitPeriodLimitMicros": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "termsVersion": {
+            "type": "string"
+          },
+          "waitingPeriodDays": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "walletSubjectId": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateChallengeRequest": {
+        "type": "object",
+        "required": [
+          "integrationId",
+          "walletAddress",
+          "sessionPublicKey",
+          "requestedScopes",
+          "client"
+        ],
+        "properties": {
+          "client": {
+            "$ref": "#/components/schemas/WalletClientBindingRequest"
+          },
+          "integrationId": {
+            "type": "string"
+          },
+          "requestedScopes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WalletScope"
+            }
+          },
+          "sessionPublicKey": {
+            "type": "string",
+            "format": "solana-address-base58",
+            "description": "Canonical base58 Solana public key.",
+            "maxLength": 44,
+            "minLength": 32
+          },
+          "walletAddress": {
+            "type": "string",
+            "format": "solana-address-base58",
+            "description": "Canonical base58 Solana public key.",
+            "maxLength": 44,
+            "minLength": 32
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateClaimRequest": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "decisionId",
+              "claimedAmountMicros",
+              "statement",
+              "lossEvent"
+            ],
+            "properties": {
+              "claimedAmountMicros": {
+                "type": "string"
+              },
+              "decisionId": {
+                "type": "string"
+              },
+              "lossEvent": {
+                "type": "string",
+                "enum": [
+                  "direct_malicious_signing_loss"
+                ]
+              },
+              "statement": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "decisionId",
+              "lossTransactionSignature",
+              "claimedAmountMicros",
+              "statement",
+              "lossEvent"
+            ],
+            "properties": {
+              "claimedAmountMicros": {
+                "type": "string"
+              },
+              "decisionId": {
+                "type": "string"
+              },
+              "lossEvent": {
+                "type": "string",
+                "enum": [
+                  "delegate_drain"
+                ]
+              },
+              "lossTransactionSignature": {
+                "type": "string"
+              },
+              "statement": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "CreateCoverageDecisionRequest": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "coverageInstanceId",
+              "transactionBytes",
+              "kind"
+            ],
+            "properties": {
+              "coverageInstanceId": {
+                "type": "string"
+              },
+              "dappProgramId": {
+                "type": "string",
+                "format": "solana-address-base58",
+                "description": "Canonical base58 Solana public key.",
+                "maxLength": 44,
+                "minLength": 32
+              },
+              "dappUrl": {
+                "type": "string",
+                "format": "uri",
+                "description": "HTTP or HTTPS dapp origin or page URL."
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "transaction"
+                ]
+              },
+              "transactionBytes": {
+                "type": "string",
+                "format": "base64",
+                "description": "Base64-encoded serialized Solana transaction before signing.",
+                "maxLength": 1644,
+                "x-maxDecodedBytes": 1232,
+                "contentEncoding": "base64",
+                "contentMediaType": "application/octet-stream"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "coverageInstanceId",
+              "messageBytes",
+              "walletMethod",
+              "kind"
+            ],
+            "properties": {
+              "coverageInstanceId": {
+                "type": "string"
+              },
+              "dappProgramId": {
+                "type": "string",
+                "format": "solana-address-base58",
+                "description": "Canonical base58 Solana public key.",
+                "maxLength": 44,
+                "minLength": 32
+              },
+              "dappUrl": {
+                "type": "string",
+                "format": "uri",
+                "description": "HTTP or HTTPS dapp origin or page URL."
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "message"
+                ]
+              },
+              "messageBytes": {
+                "type": "string",
+                "format": "base64",
+                "description": "Base64-encoded message bytes presented before wallet signing.",
+                "maxLength": 10924,
+                "x-maxDecodedBytes": 8192,
+                "contentEncoding": "base64",
+                "contentMediaType": "application/octet-stream"
+              },
+              "walletMethod": {
+                "type": "string",
+                "enum": [
+                  "signMessage",
+                  "signIn"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "CreatePaymentRequest": {
+        "type": "object",
+        "required": [
+          "quoteId",
+          "paymentSignature"
+        ],
+        "properties": {
+          "paymentSignature": {
+            "type": "string",
+            "format": "solana-signature-base58",
+            "description": "Canonical base58 Solana Ed25519 signature.",
+            "maxLength": 88,
+            "minLength": 64
+          },
+          "quoteId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateQuoteRequest": {
+        "type": "object",
+        "required": [
+          "offerId"
+        ],
+        "properties": {
+          "offerId": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateSessionRequest": {
+        "type": "object",
+        "required": [
+          "challengeId",
+          "signature"
+        ],
+        "properties": {
+          "challengeId": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "string",
+            "format": "solana-signature-base58",
+            "description": "Canonical base58 Solana Ed25519 signature.",
+            "maxLength": 88,
+            "minLength": 64
+          }
+        },
+        "additionalProperties": false
+      },
+      "DecisionLifecycleEvent": {
+        "type": "object",
+        "required": [
+          "status",
+          "occurredAt"
+        ],
+        "properties": {
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DecisionLifecycleStatus"
+          }
+        }
+      },
+      "DecisionLifecycleStatus": {
+        "type": "string",
+        "enum": [
+          "reviewed",
+          "evidence_received",
+          "confirmation_pending",
+          "finalized",
+          "expired",
+          "verification_failed"
+        ]
+      },
+      "DecisionLineageResponse": {
+        "type": "object",
+        "required": [
+          "decisionId",
+          "quoteId",
+          "paymentId",
+          "coverageInstanceId",
+          "evidenceState",
+          "lifecycle"
+        ],
+        "properties": {
+          "coverageInstanceId": {
+            "type": "string"
+          },
+          "decisionId": {
+            "type": "string"
+          },
+          "evidenceState": {
+            "$ref": "#/components/schemas/ProductionEvidenceState"
+          },
+          "lifecycle": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DecisionLifecycleEvent"
+            }
+          },
+          "paymentId": {
+            "type": "string"
+          },
+          "quoteId": {
+            "type": "string"
+          }
+        }
+      },
+      "EvidenceUploadGrant": {
+        "type": "object",
+        "required": [
+          "method",
+          "url",
+          "headers",
+          "expiresAt"
+        ],
+        "properties": {
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "method": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      },
+      "EvidenceUploadResponse": {
+        "type": "object",
+        "required": [
+          "evidenceId",
+          "claimId",
+          "requestId",
+          "evidenceCode",
+          "status",
+          "retentionUntil"
+        ],
+        "properties": {
+          "claimId": {
+            "type": "string"
+          },
+          "evidenceCode": {
+            "type": "string"
+          },
+          "evidenceId": {
+            "type": "string"
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "retentionUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string"
+          },
+          "upload": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EvidenceUploadGrant"
+              }
+            ]
+          }
+        }
+      },
+      "FieldIssue": {
+        "type": "object",
+        "required": [
+          "field",
+          "issue"
+        ],
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "issue": {
+            "type": "string"
+          }
+        }
+      },
+      "IntegrationEnvironment": {
+        "type": "string",
+        "enum": [
+          "sandbox",
+          "production"
+        ]
+      },
+      "OfferAvailabilityModeValue": {
+        "type": "string",
+        "enum": [
+          "test",
+          "live"
+        ]
+      },
+      "OfferCluster": {
+        "type": "string",
+        "enum": [
+          "devnet",
+          "mainnet-beta"
+        ]
+      },
+      "OfferEnvironment": {
+        "type": "string",
+        "enum": [
+          "sandbox",
+          "production"
+        ]
+      },
+      "OfferLifecycleValue": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "testing",
+          "active",
+          "deactivated"
+        ]
+      },
+      "PaymentResponse": {
+        "type": "object",
+        "required": [
+          "paymentId",
+          "quoteId",
+          "paymentSignature",
+          "status",
+          "submittedAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "coverageInstanceId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "paymentId": {
+            "type": "string"
+          },
+          "paymentSignature": {
+            "type": "string",
+            "format": "solana-signature-base58",
+            "description": "Canonical base58 Solana Ed25519 signature.",
+            "maxLength": 88,
+            "minLength": 64
+          },
+          "quoteId": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PaymentStatusResponse"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PaymentStatusResponse": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "inconsistent",
+          "rejected",
+          "activated"
+        ]
+      },
+      "ProductionClaimState": {
+        "type": "string",
+        "enum": [
+          "submitted",
+          "awaiting_evidence",
+          "under_review",
+          "held",
+          "approved",
+          "partially_approved",
+          "rejected",
+          "appealed"
+        ]
+      },
+      "ProductionDecisionKind": {
+        "type": "string",
+        "enum": [
+          "transaction",
+          "message"
+        ]
+      },
+      "ProductionEvidenceState": {
+        "type": "string",
+        "enum": [
+          "pre_sign",
+          "post_sign",
+          "confirmation",
+          "conflict",
+          "dropped",
+          "sealed"
+        ]
+      },
+      "PublicDecisionReason": {
+        "type": "string",
+        "enum": [
+          "eligible",
+          "not_eligible",
+          "unsupported",
+          "coverage_limit_reached",
+          "temporarily_unavailable"
+        ]
+      },
+      "PublicQuoteSigningKeyResponse": {
+        "type": "object",
+        "required": [
+          "keyId",
+          "publicKey",
+          "mode",
+          "algorithm",
+          "state",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "algorithm": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "keyId": {
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/QuoteKeyModeRequest"
+          },
+          "publicKey": {
+            "type": "string",
+            "format": "solana-address-base58",
+            "description": "Canonical base58 32-byte Solana address.",
+            "maxLength": 44,
+            "minLength": 32
+          },
+          "state": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "QuoteBenefitScheduleResponse": {
+        "type": "object",
+        "required": [
+          "coverageDurationMonths",
+          "benefitPeriodCount",
+          "benefitPeriodLimit"
+        ],
+        "properties": {
+          "benefitPeriodCount": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "benefitPeriodLimit": {
+            "type": "string"
+          },
+          "coverageDurationMonths": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "QuoteCommissionResponse": {
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "reference": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "QuoteKeyModeRequest": {
+        "type": "string",
+        "enum": [
+          "test",
+          "live"
+        ]
+      },
+      "QuoteOfferFactsResponse": {
+        "type": "object",
+        "required": [
+          "snapshotSchemaVersion",
+          "snapshotSha256",
+          "offerId",
+          "offerVersion",
+          "availabilityId",
+          "productCode",
+          "environment",
+          "cluster",
+          "paymentAsset",
+          "price",
+          "paymentAssetDecimals",
+          "coverageDurationDays",
+          "protectedWalletCount",
+          "payerMustEqualProtectedWallet",
+          "perLossLimit",
+          "aggregateLimit",
+          "coveredTransactionLimit",
+          "deductible",
+          "waitingPeriodDays",
+          "immediateLossClaimWindowDays",
+          "delegateLossTailDays",
+          "appealWindowDays",
+          "cancellationRuleCode",
+          "refundRuleCode",
+          "termsVersion",
+          "termsHash",
+          "policyVersion",
+          "policyHash",
+          "catalogueHash",
+          "commission",
+          "resolvedAt"
+        ],
+        "properties": {
+          "aggregateLimit": {
+            "type": "string"
+          },
+          "appealWindowDays": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "availabilityId": {
+            "type": "string"
+          },
+          "cancellationRuleCode": {
+            "type": "string"
+          },
+          "catalogueHash": {
+            "type": "string"
+          },
+          "cluster": {
+            "type": "string"
+          },
+          "commission": {
+            "$ref": "#/components/schemas/QuoteCommissionResponse"
+          },
+          "coverageDurationDays": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "coveredTransactionLimit": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "deductible": {
+            "type": "string"
+          },
+          "delegateLossTailDays": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "environment": {
+            "$ref": "#/components/schemas/IntegrationEnvironment"
+          },
+          "immediateLossClaimWindowDays": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "offerId": {
+            "type": "string"
+          },
+          "offerVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "payerMustEqualProtectedWallet": {
+            "type": "boolean"
+          },
+          "paymentAsset": {
+            "type": "string"
+          },
+          "paymentAssetDecimals": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "perLossLimit": {
+            "type": "string"
+          },
+          "policyHash": {
+            "type": "string"
+          },
+          "policyVersion": {
+            "type": "string"
+          },
+          "price": {
+            "type": "string"
+          },
+          "productCode": {
+            "type": "string"
+          },
+          "protectedWalletCount": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "refundRuleCode": {
+            "type": "string"
+          },
+          "resolvedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "snapshotSchemaVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "snapshotSha256": {
+            "type": "string"
+          },
+          "termsHash": {
+            "type": "string"
+          },
+          "termsVersion": {
+            "type": "string"
+          },
+          "waitingPeriodDays": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "QuotePayloadResponse": {
+        "type": "object",
+        "required": [
+          "schemaVersion",
+          "quoteId",
+          "signingKeyId",
+          "mode",
+          "partnerId",
+          "integrationId",
+          "integrationVersion",
+          "walletSubjectId",
+          "termsAcceptanceId",
+          "protectedWallet",
+          "payerWallet",
+          "offer",
+          "payment",
+          "validity",
+          "nonce",
+          "paymentAllowed",
+          "createsCoverage"
+        ],
+        "properties": {
+          "benefitSchedule": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/QuoteBenefitScheduleResponse"
+              }
+            ]
+          },
+          "createsCoverage": {
+            "type": "boolean"
+          },
+          "integrationId": {
+            "type": "string"
+          },
+          "integrationVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "mode": {
+            "$ref": "#/components/schemas/QuoteKeyModeRequest"
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "offer": {
+            "$ref": "#/components/schemas/QuoteOfferFactsResponse"
+          },
+          "partnerId": {
+            "type": "string"
+          },
+          "payerWallet": {
+            "type": "string",
+            "format": "solana-address-base58",
+            "description": "Canonical base58 Solana public key.",
+            "maxLength": 44,
+            "minLength": 32
+          },
+          "payment": {
+            "$ref": "#/components/schemas/QuotePaymentFactsResponse"
+          },
+          "paymentAllowed": {
+            "type": "boolean"
+          },
+          "protectedWallet": {
+            "type": "string",
+            "format": "solana-address-base58",
+            "description": "Canonical base58 Solana public key.",
+            "maxLength": 44,
+            "minLength": 32
+          },
+          "quoteId": {
+            "type": "string"
+          },
+          "schemaVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "signingKeyId": {
+            "type": "string"
+          },
+          "termsAcceptanceId": {
+            "type": "string"
+          },
+          "validity": {
+            "$ref": "#/components/schemas/QuoteValidityResponse"
+          },
+          "walletSubjectId": {
+            "type": "string"
+          }
+        }
+      },
+      "QuotePaymentFactsResponse": {
+        "type": "object",
+        "required": [
+          "genesisHash",
+          "mint",
+          "tokenProgram",
+          "treasuryTokenAccount",
+          "amount",
+          "decimals",
+          "reference"
+        ],
+        "properties": {
+          "amount": {
+            "type": "string"
+          },
+          "decimals": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "genesisHash": {
+            "type": "string",
+            "format": "solana-genesis-hash-base58",
+            "description": "Canonical base58 32-byte Solana cluster genesis hash.",
+            "maxLength": 44,
+            "minLength": 32
+          },
+          "mint": {
+            "type": "string",
+            "format": "solana-address-base58",
+            "description": "Canonical base58 32-byte Solana address.",
+            "maxLength": 44,
+            "minLength": 32
+          },
+          "reference": {
+            "type": "string",
+            "format": "solana-address-base58",
+            "description": "Canonical base58 32-byte Solana address.",
+            "maxLength": 44,
+            "minLength": 32
+          },
+          "tokenProgram": {
+            "type": "string",
+            "format": "solana-address-base58",
+            "description": "Canonical base58 32-byte Solana address.",
+            "maxLength": 44,
+            "minLength": 32
+          },
+          "treasuryOwner": {
+            "type": "string",
+            "format": "solana-address-base58",
+            "description": "Canonical base58 Solana public key.",
+            "maxLength": 44,
+            "minLength": 32
+          },
+          "treasuryTokenAccount": {
+            "type": "string",
+            "format": "solana-address-base58",
+            "description": "Canonical base58 32-byte Solana address.",
+            "maxLength": 44,
+            "minLength": 32
+          }
+        }
+      },
+      "QuoteSigningKeysResponse": {
+        "type": "object",
+        "required": [
+          "keys"
+        ],
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicQuoteSigningKeyResponse"
+            }
+          }
+        }
+      },
+      "QuoteValidityResponse": {
+        "type": "object",
+        "required": [
+          "issuedAt",
+          "expiresAt"
+        ],
+        "properties": {
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "issuedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RevocationResponse": {
+        "type": "object",
+        "required": [
+          "revokedSessions"
+        ],
+        "properties": {
+          "revokedSessions": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        }
+      },
+      "RevokeSessionRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "RiskBand": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high",
+          "severe"
+        ]
+      },
+      "RotateSessionRequest": {
+        "type": "object",
+        "required": [
+          "refreshToken",
+          "sessionPublicKey"
+        ],
+        "properties": {
+          "refreshToken": {
+            "type": "string"
+          },
+          "sessionPublicKey": {
+            "type": "string",
+            "format": "solana-address-base58",
+            "description": "Canonical base58 Solana public key.",
+            "maxLength": 44,
+            "minLength": 32
+          }
+        },
+        "additionalProperties": false
+      },
+      "SignedQuoteResponse": {
+        "type": "object",
+        "required": [
+          "payload",
+          "payloadSha256",
+          "signature",
+          "signingPublicKey"
+        ],
+        "properties": {
+          "payload": {
+            "$ref": "#/components/schemas/QuotePayloadResponse",
+            "description": "Canonical object signed with the P06 domain separator. Clients verify\nthese exact server-authored fields without adding local facts."
+          },
+          "payloadSha256": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "string",
+            "format": "solana-signature-base58",
+            "description": "Canonical base58 Solana Ed25519 signature.",
+            "maxLength": 88,
+            "minLength": 64
+          },
+          "signingPublicKey": {
+            "type": "string",
+            "format": "solana-address-base58",
+            "description": "Canonical base58 32-byte Solana address.",
+            "maxLength": 44,
+            "minLength": 32
+          }
+        }
+      },
+      "SubmitDecisionEvidenceRequest": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "signedBytes",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "transaction"
+                ]
+              },
+              "signedBytes": {
+                "type": "string",
+                "format": "base64",
+                "description": "Base64-encoded serialized Solana transaction after signing.",
+                "maxLength": 1644,
+                "x-maxDecodedBytes": 1232,
+                "contentEncoding": "base64",
+                "contentMediaType": "application/octet-stream"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "signedMessage",
+              "signature",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "message"
+                ]
+              },
+              "signature": {
+                "type": "string",
+                "format": "solana-signature-base58",
+                "description": "Canonical base58 Solana Ed25519 signature.",
+                "maxLength": 88,
+                "minLength": 64
+              },
+              "signedMessage": {
+                "type": "string",
+                "format": "base64",
+                "description": "Base64-encoded message bytes captured after wallet signing.",
+                "maxLength": 10924,
+                "x-maxDecodedBytes": 8192,
+                "contentEncoding": "base64",
+                "contentMediaType": "application/octet-stream"
+              }
+            }
+          }
+        ]
+      },
+      "SubmitDecisionEvidenceResponse": {
+        "type": "object",
+        "required": [
+          "decisionId",
+          "accepted",
+          "evidenceState"
+        ],
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          },
+          "decisionId": {
+            "type": "string"
+          },
+          "evidenceState": {
+            "$ref": "#/components/schemas/ProductionEvidenceState"
+          },
+          "transactionSignature": {
+            "type": "string",
+            "format": "solana-signature-base58",
+            "description": "Canonical base58 Solana Ed25519 signature.",
+            "maxLength": 88,
+            "minLength": 64
+          }
+        }
+      },
+      "TermsAcceptanceResponse": {
+        "type": "object",
+        "required": [
+          "acceptanceId",
+          "walletSubjectId",
+          "offerId",
+          "offerVersion",
+          "termsVersion",
+          "documentSha256",
+          "acceptedAt"
+        ],
+        "properties": {
+          "acceptanceId": {
+            "type": "string"
+          },
+          "acceptedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "documentSha256": {
+            "type": "string"
+          },
+          "offerId": {
+            "type": "string"
+          },
+          "offerVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "termsVersion": {
+            "type": "string"
+          },
+          "walletSubjectId": {
+            "type": "string"
+          }
+        }
+      },
+      "WalletChallengeResponse": {
+        "type": "object",
+        "required": [
+          "challengeId",
+          "message",
+          "nonce",
+          "issuedAt",
+          "expiresAt"
+        ],
+        "properties": {
+          "challengeId": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "issuedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "message": {
+            "type": "string"
+          },
+          "nonce": {
+            "type": "string"
+          }
+        }
+      },
+      "WalletClaimDecision": {
+        "type": "object",
+        "required": [
+          "outcome",
+          "verifiedLossMicros",
+          "approvedAmountMicros",
+          "reason",
+          "decidedAt"
+        ],
+        "properties": {
+          "approvedAmountMicros": {
+            "type": "string"
+          },
+          "decidedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "verifiedLossMicros": {
+            "type": "string"
+          }
+        }
+      },
+      "WalletClaimEvidenceRequest": {
+        "type": "object",
+        "required": [
+          "requestId",
+          "status",
+          "message",
+          "evidenceCodes",
+          "requestedAt",
+          "dueAt"
+        ],
+        "properties": {
+          "dueAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "evidenceCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "message": {
+            "type": "string"
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "WalletClaimListResponse": {
+        "type": "object",
+        "required": [
+          "claims"
+        ],
+        "properties": {
+          "claims": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WalletClaimResponse"
+            }
+          }
+        }
+      },
+      "WalletClaimResponse": {
+        "type": "object",
+        "required": [
+          "claimId",
+          "coverageInstanceId",
+          "decisionId",
+          "protectedWallet",
+          "lossEvent",
+          "state",
+          "version",
+          "claimedAmountMicros",
+          "submittedAt",
+          "reviewDueAt",
+          "evidenceRequests",
+          "timeline"
+        ],
+        "properties": {
+          "claimId": {
+            "type": "string"
+          },
+          "claimedAmountMicros": {
+            "type": "string"
+          },
+          "coverageInstanceId": {
+            "type": "string"
+          },
+          "decision": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/WalletClaimDecision"
+              }
+            ]
+          },
+          "decisionId": {
+            "type": "string"
+          },
+          "evidenceRequests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WalletClaimEvidenceRequest"
+            }
+          },
+          "lossEvent": {
+            "$ref": "#/components/schemas/ClaimLossEventKind"
+          },
+          "protectedWallet": {
+            "type": "string"
+          },
+          "reviewDueAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ProductionClaimState"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "timeline": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WalletClaimTimelineEvent"
+            }
+          },
+          "verifiedLossMicros": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "verifiedLossTime": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "WalletClaimTimelineEvent": {
+        "type": "object",
+        "required": [
+          "status",
+          "occurredAt"
+        ],
+        "properties": {
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "$ref": "#/components/schemas/WalletClaimTimelineStatus"
+          }
+        }
+      },
+      "WalletClaimTimelineStatus": {
+        "type": "string",
+        "enum": [
+          "submitted",
+          "verification_in_progress",
+          "awaiting_information",
+          "under_review",
+          "approved",
+          "partially_approved",
+          "rejected",
+          "appealed",
+          "updated"
+        ]
+      },
+      "WalletClientBindingRequest": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "browser"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "applicationId",
+              "kind"
+            ],
+            "properties": {
+              "applicationId": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "native"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "WalletScope": {
+        "type": "string",
+        "enum": [
+          "offers:read",
+          "terms:accept",
+          "quotes:create",
+          "payments:create",
+          "cover:evaluate",
+          "evidence:write",
+          "records:read",
+          "claims:create"
+        ]
+      },
+      "WalletSessionResponse": {
+        "type": "object",
+        "required": [
+          "sessionId",
+          "walletSubjectId",
+          "walletAddress",
+          "partnerId",
+          "integrationId",
+          "integrationVersion",
+          "environment",
+          "scopes",
+          "expiresAt",
+          "refreshToken",
+          "refreshExpiresAt"
+        ],
+        "properties": {
+          "environment": {
+            "$ref": "#/components/schemas/IntegrationEnvironment"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "integrationId": {
+            "type": "string"
+          },
+          "integrationVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "partnerId": {
+            "type": "string"
+          },
+          "refreshExpiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WalletScope"
+            }
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "walletAddress": {
+            "type": "string"
+          },
+          "walletSubjectId": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "walletProofOfPossession": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-ember-wallet-session",
+        "description": "Short-lived wallet session id. Each request also carries x-ember-wallet-timestamp, x-ember-wallet-jti, and x-ember-wallet-signature. HTTPS browser sessions must repeat their exact approved Origin; Chrome extension sessions are bound during bootstrap and may omit Origin only on signed GET requests where Chrome does not emit it. Native sessions repeat x-ember-application-id."
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Wallet sessions"
+    },
+    {
+      "name": "Wallet offers"
+    },
+    {
+      "name": "Wallet terms"
+    },
+    {
+      "name": "Wallet quotes"
+    },
+    {
+      "name": "Wallet payments"
+    },
+    {
+      "name": "Wallet coverage"
+    },
+    {
+      "name": "Wallet decisions"
+    },
+    {
+      "name": "Wallet claims"
+    },
+    {
+      "name": "Quote verification"
+    },
+    {
+      "name": "API contract"
+    }
+  ]
+}

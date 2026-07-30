@@ -1,0 +1,71 @@
+{
+  "vectorVersion": 1,
+  "signatureDomainHex": "656d6265722d7369676e65642d71756f74652d763100",
+  "payload": {
+    "schemaVersion": 1,
+    "quoteId": "quote_vector-1",
+    "signingKeyId": "quote-key_vector-1",
+    "mode": "test",
+    "partnerId": "partner_vector",
+    "integrationId": "integration_vector",
+    "integrationVersion": 1,
+    "walletSubjectId": "wallet_vector",
+    "termsAcceptanceId": "acceptance_vector",
+    "protectedWallet": "11111111111111111111111111111111",
+    "payerWallet": "11111111111111111111111111111111",
+    "offer": {
+      "snapshotSchemaVersion": 1,
+      "snapshotSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "offerId": "offer_core-annual",
+      "offerVersion": 1,
+      "availabilityId": "availability_vector",
+      "productCode": "core",
+      "environment": "production",
+      "cluster": "mainnet-beta",
+      "paymentAsset": "USDC",
+      "price": "249990000",
+      "paymentAssetDecimals": 6,
+      "coverageDurationDays": 365,
+      "protectedWalletCount": 1,
+      "payerMustEqualProtectedWallet": true,
+      "perLossLimit": "10000000000",
+      "aggregateLimit": "10000000000",
+      "coveredTransactionLimit": 100,
+      "deductible": "0",
+      "waitingPeriodDays": 0,
+      "immediateLossClaimWindowDays": 7,
+      "delegateLossTailDays": 30,
+      "appealWindowDays": 7,
+      "cancellationRuleCode": "no_post_activation_cancellation",
+      "refundRuleCode": "operational_or_mandatory_law_only",
+      "termsVersion": "terms-v0.1",
+      "termsHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "policyVersion": "policy-v0.1",
+      "policyHash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "catalogueHash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "commission": {
+        "kind": "test_no_accrual"
+      },
+      "resolvedAt": "2026-07-27T12:00:00Z"
+    },
+    "payment": {
+      "genesisHash": "11111111111111111111111111111111",
+      "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "tokenProgram": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+      "treasuryTokenAccount": "So11111111111111111111111111111111111111112",
+      "amount": "249990000",
+      "decimals": 6,
+      "reference": "Vote111111111111111111111111111111111111111"
+    },
+    "validity": {
+      "issuedAt": "2026-07-27T12:00:00Z",
+      "expiresAt": "2026-07-27T12:15:00Z"
+    },
+    "nonce": "P06QuoteVerificationVectorNonce1",
+    "paymentAllowed": false,
+    "createsCoverage": false
+  },
+  "payloadSha256": "a48e0ca58ceee6ac2f823661e98301909587aadfb89fb759dab585e54f7c33eb",
+  "signingPublicKey": "2iXtA8oeZqUU5pofxK971TCEvFGfems2AcDRaZHKD2pQ",
+  "signature": "4KoARpEnp9BqTe2Gyzz4NVcL2t2f1xQMRD1bZMactxGBGtUFgx7zWV5a2BE2P7q4PSAdo3uHgRUJyUUCtJaLAdzS"
+}
