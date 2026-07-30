@@ -9,6 +9,7 @@ const allowedTopLevel = new Set([
   '.gitignore',
   'CHANGELOG.md',
   'LICENSE',
+  'QA.md',
   'README.md',
   'RELEASE.md',
   'SECURITY.md',

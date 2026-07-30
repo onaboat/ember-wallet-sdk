@@ -263,3 +263,6 @@ credentials, or API responses.
   session persistence.
 
 Both examples are typechecked in CI.
+
+Before approving a prerelease, run the complete React Native and browser
+extension checkpoint in [`QA.md`](./QA.md) against the exact release tarball.
