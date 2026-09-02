@@ -1,6 +1,6 @@
 # Wallet integration QA
 
-Run this checkpoint against the exact prerelease tarball before anyone approves
+Run un this checkpoint against the exact prerelease tarball before anyone approves
 an npm release. Record the SDK version, tarball SHA-256, API environment, wallet
 build identifiers, tester, date, and pass/fail evidence.
 
