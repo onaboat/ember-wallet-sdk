@@ -29,4 +29,5 @@ jobs:
           package-manager-cache: false
       - run: npm ci
       - run: npm audit --audit-level=high
+      - run: npx playwright install --with-deps chromium
       - run: npm run verify

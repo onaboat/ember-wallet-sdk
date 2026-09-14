@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Ember SDK origin conformance",
+  "version": "1.0.0",
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "host_permissions": [
+    "https://127.0.0.1/*"
+  ],
+  "permissions": [
+    "storage"
+  ]
+}

@@ -23,6 +23,9 @@
 - Adds an SDK-owned packed-package conformance runner for the complete
   secretless lifecycle against a configured sandbox API, with explicit Devnet
   transaction approval and provenance-bearing evidence reports.
+- Adds packed-package execution in a real HTTPS Window and Chrome Manifest V3
+  worker, exact-origin CORS conformance, and host-owned browser session
+  partitioning and concurrency guidance.
 
 ## 1.3.2-beta.1
 

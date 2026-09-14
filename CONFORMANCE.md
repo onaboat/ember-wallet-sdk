@@ -8,6 +8,9 @@ The run is intentionally separate from `npm run verify`: it requires a live
 API, a registered integration, funded Devnet accounts, object storage, chain
 confirmation workers, and a human-approved wallet fixture.
 
+HTTPS web-wallet and Chrome-extension runtime/CORS conformance is documented
+separately in [`conformance/origin-host/README.md`](./conformance/origin-host/README.md).
+
 ## Safety boundary
 
 - The runner refuses every environment except `sandbox`.

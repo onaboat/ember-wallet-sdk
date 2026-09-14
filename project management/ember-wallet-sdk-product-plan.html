@@ -250,7 +250,7 @@
       <h1>Wallet SDK product and delivery plan</h1>
       <p class="lede">A detailed plan for making <code>@embercover/wallet-sdk</code> the dependable Ember integration shared by origin-bound HTTPS web wallets and browser extensions, application-bound native mobile wallets, and future wallet partners.</p>
       <div class="meta">
-        <span><strong>Audit date:</strong> 14 September 2026</span>
+        <span><strong>Audit date:</strong> 15 September 2026</span>
         <span><strong>Reviewed release:</strong> <code>1.3.2-beta.1</code></span>
         <span><strong>Recommendation:</strong> harden the shared core, then certify each supported host</span>
         <span><strong>Document type:</strong> product and engineering plan</span>
@@ -279,19 +279,19 @@
         <h2>SDK branch overview</h2>
         <div class="progress-summary">
           <article class="card">
-            <span class="status attention">4 complete · 1 awaiting live evidence</span>
-            <strong>Branch 04 harness implemented</strong>
-            <p>Branches 00 through 03 are complete and pushed. Branch 04 has an SDK-owned packed-package runner; a designated API and secure operator wallet fixture are still required for the real conformance record.</p>
+            <span class="status attention">5 SDK branches implemented · 2 live QA gates pending</span>
+            <strong>Origin-host implementation verified</strong>
+            <p>Branches 00 through 04 are complete and pushed. Branch 05 now executes the packed SDK in an HTTPS Window and Chrome MV3 worker. The full Devnet journey and positive deployed-API CORS record remain explicit Manual QA gates.</p>
           </article>
           <article class="card">
             <span class="status attention">Current branch</span>
-            <strong><code>codex/sdk-04-api-conformance</code></strong>
-            <p>The runner covers session through revocation, reconstructs the client after durable transitions, and emits provenance-bearing evidence without credential material. The local SDK gate passes 187 tests.</p>
+            <strong><code>codex/sdk-05-origin-host-conformance</code></strong>
+            <p>The branch is ready for review and commit. <code>npm run verify</code> passes 187 tests plus real HTTPS Window and MV3 service-worker execution from the installed tarball.</p>
           </article>
           <article class="card">
             <span class="status blocking">External checkpoint</span>
-            <strong>Designated sandbox inputs</strong>
-            <p>Supply the HTTPS QA API origin, registered integration/version and host identity, plus the external funded-wallet fixture. A human must approve the controlled Devnet transactions.</p>
+            <strong>Registered public origins and wallet fixture</strong>
+            <p>The Devnet API is confirmed live at <code>https://ember-devnet-qa.up.railway.app</code>. Positive CORS evidence needs its registered HTTPS and Chrome origins; full lifecycle evidence separately needs the human-approved Devnet wallet fixture.</p>
           </article>
         </div>
         <div class="table-wrap">
@@ -302,8 +302,8 @@
               <tr><td>01</td><td>Session and protected-signing security</td><td><code>codex/sdk-01-session-security</code></td><td><span class="status good">Done · Pushed</span></td></tr>
               <tr><td>02</td><td>Response integrity and privacy</td><td><code>codex/sdk-02-response-integrity</code></td><td><span class="status good">Done · Pushed</span></td></tr>
               <tr><td>03</td><td>Complete SDK lifecycle coverage</td><td><code>codex/sdk-03-lifecycle-coverage</code></td><td><span class="status good">Done · Pushed</span></td></tr>
-              <tr><td>04</td><td>Real API conformance</td><td><code>codex/sdk-04-api-conformance</code></td><td><span class="status attention">Harness ready · Live run required</span></td></tr>
-              <tr><td>05</td><td>Origin-bound web and Chrome conformance</td><td><code>codex/sdk-05-origin-host-conformance</code></td><td><span class="status planned">Not started</span></td></tr>
+              <tr><td>04</td><td>Real API conformance</td><td><code>codex/sdk-04-api-conformance</code></td><td><span class="status good">Done · Pushed</span> <span class="status attention">Live transaction QA pending</span></td></tr>
+              <tr><td>05</td><td>Origin-bound web and Chrome conformance</td><td><code>codex/sdk-05-origin-host-conformance</code></td><td><span class="status good">SDK done · Ready to commit</span> <span class="status attention">Live CORS QA pending</span></td></tr>
               <tr><td>06</td><td>Native-mobile conformance</td><td><code>codex/sdk-06-native-mobile-conformance</code></td><td><span class="status planned">Not started</span></td></tr>
               <tr><td>07</td><td>Shared release candidate</td><td><code>codex/sdk-07-release-candidate</code></td><td><span class="status planned">Not started</span></td></tr>
             </tbody>
@@ -491,12 +491,12 @@
         <p class="eyebrow">Audit evidence</p>
         <h2>Verified baseline for <code>1.3.2-beta.1</code></h2>
         <div class="grid three">
-          <article class="card"><span class="status good">Passed</span><h3>Repository verification</h3><p>The retained <code>project management/</code> artifact is part of the public-boundary scan. Full verification passed with 34 tests on 14 September 2026.</p></article>
+          <article class="card"><span class="status good">Passed</span><h3>Repository verification</h3><p>The retained <code>project management/</code> artifact is part of the public-boundary scan. Full verification passed with 187 tests plus packed-package HTTPS Window and Chrome MV3 worker execution on 15 September 2026.</p></article>
           <article class="card"><span class="status good">Recorded</span><h3>Imported API contract</h3><p><code>contract/provenance.json</code> records the reviewed upstream revision and exact SHA-256 of <code>contract/wallet-v1.json</code>; verification fails if its bytes or declared contract version drift.</p></article>
           <article class="card"><span class="status good">Passed</span><h3>Package boundary</h3><p>The exact eleven-file npm package contains runtime files, public contract documentation and the contract-provenance manifest; ESM and CommonJS consumer installs pass, only <code>zod</code> is required at runtime and release publishing retains npm provenance.</p></article>
           <article class="card"><span class="status good">Strong</span><h3>Quote verification</h3><p>Quotes are schema-checked, hash-checked, signature-verified and correlated to environment, cluster, integration, wallet, subject, product facts and expiry.</p></article>
-          <article class="card"><span class="status attention">Incomplete</span><h3>Behavioral coverage</h3><p>Tests are strong around request proof, quote verification and fail-open decision transport, but most lifecycle methods have no method-level behavior tests.</p></article>
-          <article class="card"><span class="status blocking">Fails release gate</span><h3>Development audit</h3><p>Runtime audit is clean, but the full dependency audit currently reports seven development findings, including five high-severity findings. CI and publish workflows gate on high severity.</p></article>
+          <article class="card"><span class="status good">Passed</span><h3>Behavioral coverage</h3><p>All 27 public client methods execute in the behavior suite. Retry, cancellation, response correlation, persistence, browser reload, multi-tab ownership and extension-worker restart are covered.</p></article>
+          <article class="card"><span class="status good">Clean</span><h3>Development audit</h3><p>The full npm dependency audit reports zero vulnerabilities. CI retains the high-severity gate and installs the exact Chromium runtime used by origin-host conformance.</p></article>
         </div>
       </section>
 
@@ -560,8 +560,8 @@
         </article>
 
         <article class="finding">
-          <div><span class="status attention">P1</span><div class="finding-id">SDK-012</div></div>
-          <div><h3>Restore a clean release audit</h3><p>Current runtime dependencies are clean, but development tooling produces high-severity audit failures while CI and publish workflows require a clean high-severity result.</p><p><strong>Failure impact:</strong> the next release can be blocked or the gate can be bypassed under schedule pressure.</p><p><strong>Exit:</strong> supported tool versions pass full audit and the complete release workflow without suppressing unrelated findings.</p></div>
+          <div><span class="status good">P1 · Resolved</span><div class="finding-id">SDK-012</div></div>
+          <div><h3>Restore a clean release audit</h3><p>Supported code-generation and test tooling now resolves with safe transitive versions. The full npm audit reports zero vulnerabilities without suppressing findings.</p><p><strong>Failure impact:</strong> the next release can be blocked or the gate can be bypassed under schedule pressure.</p><p><strong>Exit:</strong> supported tool versions pass full audit and the complete release workflow without suppressing unrelated findings.</p></div>
         </article>
 
         <article class="finding">
@@ -570,8 +570,8 @@
         </article>
 
         <article class="finding">
-          <div><span class="status blocking">P0</span><div class="finding-id">SDK-014</div></div>
-          <div><h3>Add a real HTTPS web-wallet conformance fixture</h3><p>The package currently typechecks an extension example and a React Native example. It has no ordinary HTTPS page/PWA consumer, no browser-runtime lifecycle test and no evidence that the configured API permits the required CORS preflights for JSON and signed-header requests.</p><p><strong>Failure impact:</strong> the package can bundle successfully while a web wallet fails before its first challenge request.</p><p><strong>Exit:</strong> a clean web fixture installs the packed SDK, opens an origin-bound session against the conformance API and exercises a signed request in the declared browser matrix. The SDK repository records CORS as an external API prerequisite and tests the observable contract without owning backend implementation.</p></div>
+          <div><span class="status attention">P0 · SDK resolved; live CORS evidence pending</span><div class="finding-id">SDK-014</div></div>
+          <div><h3>Add a real HTTPS web-wallet conformance fixture</h3><p>The clean fixture now installs the npm tarball, bundles the installed artifact, opens/restores an origin-bound session and performs a signed request in a real HTTPS Window. It observes challenge and signed-header preflights, rejects an unapproved origin and provides a separate exact-origin checker for the deployed API.</p><p><strong>Failure impact:</strong> the package can bundle successfully while a web wallet fails before its first challenge request.</p><p><strong>Exit:</strong> retain a passing <code>npm run conformance:cors</code> result using the HTTPS and Chrome origins actually registered at the Devnet QA API.</p></div>
         </article>
 
         <article class="finding">
@@ -580,13 +580,13 @@
         </article>
 
         <article class="finding">
-          <div><span class="status attention">P1</span><div class="finding-id">SDK-016</div></div>
-          <div><h3>Define browser session ownership and concurrency</h3><p>Web pages can reload, run in multiple tabs and switch accounts while the current store contract exposes one load/save/clear slot and the client mutates its active session signer during rotation. The browser example also uses one fixed storage key.</p><p><strong>Failure impact:</strong> two host instances can race rotation, restore the wrong wallet's session or clear authority owned by another active instance.</p><p><strong>Exit:</strong> specify the session partition key and rotation ownership rule; prove reload, multi-tab contention, account switching and stale-writer recovery in the web fixture. Keep browser coordination in the host unless a core invariant requires an SDK contract change.</p></div>
+          <div><span class="status good">P1 · Resolved</span><div class="finding-id">SDK-016</div></div>
+          <div><h3>Define browser session ownership and concurrency</h3><p>The host policy partitions by environment, integration ID/version and wallet address. Session transitions take a partitioned Web Lock and re-read storage after ownership is acquired; concurrent-tab conformance proves only one authority is opened.</p><p><strong>Failure impact:</strong> two host instances can race rotation, restore the wrong wallet's session or clear authority owned by another active instance.</p><p><strong>Exit:</strong> the policy and fixture keep browser coordination outside the SDK core while enforcing the shared session invariants.</p></div>
         </article>
 
         <article class="finding">
-          <div><span class="status attention">P1</span><div class="finding-id">SDK-017</div></div>
-          <div><h3>Make package positioning and build evidence host-neutral</h3><p>The package description, README, QA checklist and examples currently describe only browser extensions and React Native. The build uses the tool's default Node platform and the packaged-consumer check executes only Node ESM/CommonJS imports, even though the resulting ESM currently bundles for a browser.</p><p><strong>Failure impact:</strong> partners cannot distinguish an intended supported host from an incidental successful bundle, and a future dependency change can break browser consumers without CI noticing.</p><p><strong>Exit:</strong> publish a declared JavaScript/runtime compatibility policy, use an intentional library build target, add the HTTPS web-wallet fixture, and make README, QA and package metadata name every supported host without importing host frameworks into the SDK.</p></div>
+          <div><span class="status good">P1 · Resolved</span><div class="finding-id">SDK-017</div></div>
+          <div><h3>Make package positioning and build evidence host-neutral</h3><p>Package metadata and documentation now name HTTPS web, Chrome extension and native wallets. The library uses an explicit neutral ES2022 build, while the packed artifact is browser-bundled and executed without Node-only dependencies.</p><p><strong>Failure impact:</strong> partners cannot distinguish an intended supported host from an incidental successful bundle, and a future dependency change can break browser consumers without CI noticing.</p><p><strong>Exit:</strong> the declared compatibility policy, package metadata and CI browser gate now enforce the supported host claim.</p></div>
         </article>
       </section>
 
@@ -694,11 +694,11 @@
           </article>
 
           <article class="branch">
-            <div class="branch-head"><h3>05 · Origin-bound web and Chrome conformance</h3><div><span class="status planned">Not started</span> <code>codex/sdk-05-origin-host-conformance</code></div></div>
+            <div class="branch-head"><h3>05 · Origin-bound web and Chrome conformance</h3><div><span class="status good">SDK complete · Ready to commit</span> <code>codex/sdk-05-origin-host-conformance</code></div></div>
             <div class="branch-columns">
-              <div><h4>Build</h4><ul><li>Minimal HTTPS web-wallet/PWA fixture.</li><li>Chrome Manifest V3 extension fixture or pinned consumer.</li><li>Install the exact packed SDK tarball in both.</li><li>Use an intentional host-neutral library build configuration.</li><li>Exercise window and service-worker contexts.</li><li>Document the required external API CORS contract.</li><li>Define host-owned storage and tab coordination.</li><li>Update package description, README and QA host matrix.</li></ul></div>
-              <div><h4>Automated gate</h4><ul><li>Browser-target bundle has no Node-only runtime dependency.</li><li>Challenge preflight and signed-header preflight succeed against the conformance API.</li><li>Exact HTTPS and Chrome-extension origins bind correctly.</li><li>Unapproved and mismatched origins fail.</li><li>Default and injected crypto execute.</li><li>Reload and multi-tab cases preserve one authority.</li></ul></div>
-              <div><h4>Manual QA</h4><ul><li>Open, restore, rotate and revoke in web and extension hosts.</li><li>Exercise approval, payment recovery and evidence outbox flows.</li><li>Switch accounts and reopen multiple tabs.</li><li>Suspend and restart the extension worker.</li><li>Inspect CSP, storage and telemetry behavior.</li></ul></div>
+              <div><h4>Build · Complete</h4><ul><li>Minimal HTTPS web-wallet/PWA and Chrome MV3 worker fixtures.</li><li>Exact npm tarball installed in a clean consumer and browser-bundled.</li><li>Intentional neutral ES2022 library target.</li><li>External API CORS checker and explicit header contract.</li><li>Host-owned session partition, Web Lock, CSP and worker-recovery policy.</li><li>Host-neutral package description, README and QA matrix.</li></ul></div>
+              <div><h4>Automated gate · Passed 15 September 2026</h4><ul><li>No Node-only browser runtime dependency.</li><li>Real HTTPS challenge and signed-header preflights observed.</li><li>Exact HTTPS and Chrome-extension challenge bindings pass.</li><li>Unapproved and mismatched origins fail closed.</li><li>Default and injected Web Crypto execute.</li><li>Reload, two-tab contention and MV3 worker restart preserve one authority.</li><li><code>npm run verify</code>: 187 tests, 74-file boundary, eleven-file package and zero audit vulnerabilities.</li></ul></div>
+              <div><h4>Manual QA checkpoint</h4><ul><li>Run <code>npm run conformance:cors</code> with both registered origins; the live API is <code>https://ember-devnet-qa.up.railway.app</code>.</li><li>Open, restore, rotate and revoke in product web and extension hosts.</li><li>Exercise approval, payment recovery and evidence outbox flows.</li><li>Switch accounts, reopen tabs and suspend/restart the worker.</li><li>Inspect CSP, storage and telemetry behavior.</li></ul></div>
             </div>
           </article>
 
@@ -792,9 +792,9 @@
               <tr><td>Wallet address remains the account identity across hosts</td><td><span class="status good">Settled</span></td><td>The SDK resumes the same Ember wallet subject for the same proven address; it does not import, migrate or custody seed material.</td></tr>
               <tr><td>Decision expires during protected approval</td><td><span class="status good">Rule settled</span></td><td>Downgrade visibly; do not claim cover. Physical-phone timing still determines the safety margin.</td></tr>
               <tr><td>Native application identifier is not cryptographic attestation</td><td><span class="status attention">Security follow-up</span></td><td>Keep current binding explicit and record platform-attestation decisions outside the SDK; the SDK must not imply stronger authority than the protocol provides.</td></tr>
-              <tr><td>Actual deployed sandbox API origin and observable CORS behavior</td><td><span class="status blocking">External fact</span></td><td>Required by SDK conformance. The SDK repository tests and records the contract but does not own API implementation.</td></tr>
+              <tr><td>Actual deployed sandbox API origin and observable CORS behavior</td><td><span class="status attention">Origin known · positive bindings pending</span></td><td><code>https://ember-devnet-qa.up.railway.app</code> returns healthy and ready. Unapproved preflights receive no CORS grant. Run the SDK checker with the registered HTTPS and Chrome origins to record positive behavior.</td></tr>
               <tr><td>Final Android application identifier and registration owner</td><td><span class="status blocking">External fact</span></td><td>Required before the first native session conformance and Android release signing. The iOS identifier becomes required only when iOS enters the declared support plan.</td></tr>
-              <tr><td>Web storage, XSS and multi-tab policy</td><td><span class="status blocking">SDK host contract</span></td><td>Define safe session partitioning, host-owned signer/credential storage, CSP expectations and rotation ownership before HTTPS web-wallet support is advertised.</td></tr>
+              <tr><td>Web storage, XSS and multi-tab policy</td><td><span class="status good">Defined and tested</span></td><td>Partition by environment/integration/version/wallet, serialize transitions with Web Locks, re-read after lock acquisition, keep signing material host-owned and enforce a restrictive CSP.</td></tr>
               <tr><td>Embedded frames, other extension schemes, Electron and server-side wallets</td><td><span class="status attention">Not committed</span></td><td>Do not infer support from ESM/CJS packaging. Add a binding threat model and conformance fixture before adding any of these hosts.</td></tr>
               <tr><td>Production quote/product compatibility changes</td><td><span class="status planned">Policy needed</span></td><td>Document which backend changes are compatible and which require an SDK release.</td></tr>
               <tr><td>Multiple SDK copies</td><td><span class="status attention">Drift risk</span></td><td>This repository is the sole implementation authority. External copies must consume a pinned release or be retired by their owners; this SDK does not synchronize source bidirectionally.</td></tr>
@@ -815,6 +815,9 @@
           <li><a href="../CONFORMANCE.md">Real API conformance operator contract</a></li>
           <li><a href="../conformance/runner.mjs">Packed-SDK real API lifecycle runner</a></li>
           <li><a href="../scripts/run-api-conformance.mjs">Package installation and evidence orchestration</a></li>
+          <li><a href="../conformance/origin-host/README.md">HTTPS web and Chrome extension host contract</a></li>
+          <li><a href="../scripts/check-origin-hosts.mjs">Packed-SDK Window and MV3 conformance gate</a></li>
+          <li><a href="../scripts/check-live-origin-cors.mjs">Deployed exact-origin CORS checker</a></li>
           <li><a href="../contract/wallet-v1.json">Standalone wallet OpenAPI input</a></li>
           <li><a href="../contract/provenance.json">Imported wallet contract provenance</a></li>
           <li><a href="../contract/README.md">Contract update and regeneration process</a></li>

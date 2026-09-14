@@ -1,7 +1,7 @@
 # `@embercover/wallet-sdk`
 
-Secretless Ember Cover integration for browser-extension and React Native
-wallets.
+Secretless Ember Cover integration for HTTPS web wallets/PWAs, Chrome
+extensions, and native mobile wallets.
 
 The package never accepts a partner API key. A wallet proves ownership with a
 one-use Solana off-chain challenge, then uses a host-custodied ephemeral
@@ -54,9 +54,10 @@ npm install @embercover/wallet-sdk@beta
 The `beta` tag is the prerelease channel for integration testing. Pin an exact
 version before a production wallet release.
 
-The package publishes ESM, CommonJS, and TypeScript declarations. It relies on
-standard `fetch`, `AbortController`, `TextEncoder`, and Web Crypto by default;
-React Native hosts can inject equivalent adapters.
+The package publishes ESM, CommonJS, and TypeScript declarations from an
+intentional host-neutral ES2022 build. The runtime has no Node-only dependency.
+It relies on standard `fetch`, `AbortController`, `TextEncoder`, `URL`, timers,
+and Web Crypto by default; native hosts can inject equivalent adapters.
 
 ## Sandbox/devnet quick start
 
@@ -67,7 +68,7 @@ Before writing code, ask Ember for:
 - the sandbox API base URL;
 - your public `integrationId`;
 - the exact registered `integrationVersion`;
-- registration of each browser-extension origin; and
+- registration of each HTTPS web-wallet and browser-extension origin; and
 - registration of the iOS bundle ID and Android package ID used by the native
   wallet.
 
@@ -464,12 +465,20 @@ credentials, or API responses.
 
 ## Platform examples
 
+- `conformance/origin-host` installs the packed SDK into an HTTPS page and a
+  Manifest V3 worker and proves origin, CORS, reload and restart behavior.
 - `examples/browser-extension` demonstrates a Manifest V3 signing boundary and
   durable post-sign queue ordering.
 - `examples/react-native` demonstrates injected crypto, fetch, and secure
   session persistence.
 
-Both examples are typechecked in CI.
+The examples and browser conformance sources are typechecked in CI. The browser
+fixture itself runs in Chromium as part of `npm run verify`; deployed API CORS
+is checked separately with `npm run conformance:cors` and registered origins.
+
+Session persistence and multi-tab/worker coordination remain host-owned. See
+[`conformance/origin-host/README.md`](./conformance/origin-host/README.md) for
+the required partition key, Web Lock and browser security policy.
 
 Before approving a prerelease, run the complete React Native and browser
 extension checkpoint in [`QA.md`](./QA.md) against the exact release tarball.

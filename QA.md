@@ -12,7 +12,8 @@ build identifiers, tester, date, and pass/fail evidence.
 - Confirm the published provenance digest matches the reviewed
   `contract/wallet-v1.json` and its recorded upstream revision.
 - Install the tarball into clean React Native and browser-extension test
-  projects. Both projects must build without Node-only runtime polyfills.
+  projects, and execute it in the SDK-owned HTTPS web and Manifest V3 fixtures.
+  All targets must build without Node-only runtime polyfills.
 - Import the package through both ESM and CommonJS entry points and confirm the
   expected exports load.
 - Confirm logs, thrown errors, and network responses expose only documented
@@ -35,6 +36,25 @@ build identifiers, tester, date, and pass/fail evidence.
   closed and prompt a clean session renewal.
 - Force secure-storage save and clear failures and confirm they surface as
   `EmberSessionPersistenceError` without silently switching session signers.
+
+## HTTPS web and Chrome extension hosts
+
+- Run `npm run conformance:origins`. Confirm the installed tarball executes in
+  a real HTTPS Window and Manifest V3 service worker with default and injected
+  Web Crypto.
+- Confirm HTTPS reload and extension-worker restart restore the same
+  partitioned authority without opening another session.
+- Open two web-wallet tabs concurrently. Confirm Web Locks permit only one
+  session-opening transition and the second tab re-reads the stored authority.
+- Use a different wallet partition. Confirm it cannot load or clear the first
+  wallet's session.
+- Configure the deployed Devnet API values from
+  `conformance/origin-host/env.example`, run `npm run conformance:cors`, and
+  retain the result with the release evidence.
+- Confirm approved HTTPS and Chrome origins receive exact CORS reflection for
+  challenge and signed headers; an unapproved origin must not receive access.
+- Inspect the host CSP and dependency graph. No unreviewed third-party script
+  may share access to refresh credentials or session signing capability.
 
 ## Quote and coverage journeys
 
@@ -91,6 +111,7 @@ build identifiers, tester, date, and pass/fail evidence.
 
 ## Release decision
 
-The prerelease passes only when every row has evidence from both the React
-Native wallet and the browser extension, the package and repository boundary
-checks pass, and no unresolved severity-one or severity-two defect remains.
+The prerelease passes only when every row has evidence from the HTTPS web
+fixture, browser extension, and declared native-mobile wallet; the package and
+repository boundary checks pass; and no unresolved severity-one or
+severity-two defect remains.
