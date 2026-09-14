@@ -56,6 +56,9 @@ version before a production wallet release.
 
 The package publishes ESM, CommonJS, and TypeScript declarations from an
 intentional host-neutral ES2022 build. The runtime has no Node-only dependency.
+Its runtime validator is bundled into the JavaScript artifact so React Native
+consumers do not need a package-specific Babel transform; `zod` remains
+declared for the public schema declaration types.
 It relies on standard `fetch`, `AbortController`, `TextEncoder`, `URL`, timers,
 and Web Crypto by default; native hosts can inject equivalent adapters.
 
@@ -467,18 +470,29 @@ credentials, or API responses.
 
 - `conformance/origin-host` installs the packed SDK into an HTTPS page and a
   Manifest V3 worker and proves origin, CORS, reload and restart behavior.
+- `conformance/native-mobile` installs the packed SDK into a clean React Native
+  consumer, creates an Android Metro bundle, compiles it with the pinned React
+  Native Hermes compiler, and proves request signing and serialized session
+  restoration through injected native adapters.
 - `examples/browser-extension` demonstrates a Manifest V3 signing boundary and
   durable post-sign queue ordering.
 - `examples/react-native` demonstrates injected crypto, fetch, and secure
   session persistence.
 
-The examples and browser conformance sources are typechecked in CI. The browser
-fixture itself runs in Chromium as part of `npm run verify`; deployed API CORS
-is checked separately with `npm run conformance:cors` and registered origins.
+The examples are typechecked in CI. The browser fixture runs in Chromium and
+the native fixture passes Metro/Hermes compilation and adapter behavior as part
+of `npm run verify`; deployed API CORS is checked separately with
+`npm run conformance:cors` and registered origins.
 
 Session persistence and multi-tab/worker coordination remain host-owned. See
 [`conformance/origin-host/README.md`](./conformance/origin-host/README.md) for
 the required partition key, Web Lock and browser security policy.
+
+Android device boot, platform secure storage, application binding and
+background/process-death behavior remain a Manual QA gate. See
+[`conformance/native-mobile/README.md`](./conformance/native-mobile/README.md)
+for the exact emulator and representative Solana-phone checkpoint. iOS is not
+declared supported without equivalent evidence.
 
 Before approving a prerelease, run the complete React Native and browser
 extension checkpoint in [`QA.md`](./QA.md) against the exact release tarball.

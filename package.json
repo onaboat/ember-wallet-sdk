@@ -35,12 +35,13 @@
     "url": "https://github.com/onaboat/ember-wallet-sdk.git"
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --platform neutral --target es2022 --dts --sourcemap --clean",
+    "build": "tsup --config tsup.config.ts",
     "boundary:check": "node scripts/check-public-boundary.mjs",
     "contract:check": "node scripts/check-contract-provenance.mjs && npm run generate:check",
     "consumer:check": "npm run build && node scripts/check-consumers.mjs",
     "conformance:api": "node scripts/run-api-conformance.mjs",
     "conformance:cors": "node scripts/check-live-origin-cors.mjs",
+    "conformance:native": "npm run build && node scripts/check-native-mobile.mjs",
     "conformance:origins": "npm run build && tsc --noEmit --project conformance/origin-host/tsconfig.json && node scripts/check-origin-hosts.mjs",
     "generate": "openapi-ts",
     "generate:check": "node scripts/check-generated.mjs",
@@ -51,7 +52,7 @@
     "sbom": "node scripts/write-sbom.mjs",
     "pack:check": "npm run build && node scripts/check-package-contents.mjs",
     "release:check": "node scripts/check-release-ref.mjs",
-    "verify": "npm run contract:check && npm run typecheck && npm test && npm run examples:check && npm run consumer:check && npm run conformance:origins && npm run scan:public && npm run pack:check",
+    "verify": "npm run contract:check && npm run typecheck && npm test && npm run examples:check && npm run consumer:check && npm run conformance:origins && npm run conformance:native && npm run scan:public && npm run pack:check",
     "prepack": "npm run build && npm run boundary:check && node scripts/check-bundle-secrets.mjs",
     "prepublishOnly": "npm run verify"
   },
@@ -63,9 +64,16 @@
   "devDependencies": {
     "@hey-api/openapi-ts": "0.99.0",
     "@playwright/test": "1.63.0",
+    "@react-native/metro-config": "0.86.0",
     "@types/node": "25.9.3",
+    "@types/react": "19.3.0",
     "esbuild": "0.28.1",
+    "hermes-compiler": "250829098.0.14",
+    "metro": "0.84.6",
+    "metro-config": "0.84.6",
     "msw": "^2.14.6",
+    "react": "19.2.3",
+    "react-native": "0.86.0",
     "tsup": "8.5.0",
     "typescript": "^6.0.3",
     "vitest": "4.1.11"

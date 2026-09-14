@@ -43,11 +43,13 @@ For each beta:
    evidence report;
 4. run `npm run conformance:cors` with the registered HTTPS and Chrome origins
    and retain the exact-origin result;
-5. create the exact signed tag `v<package-version>`;
-6. manually run `publish.yml` from that tag;
-7. download and inspect the staged tarball and its provenance manifest on npm;
-8. approve it with maintainer 2FA; and
-9. install by exact version and rerun the smoke test.
+5. retain the `npm run conformance:native` result, then complete the Android
+   emulator and representative Solana-phone Manual QA checkpoint from `QA.md`;
+6. create the exact signed tag `v<package-version>`;
+7. manually run `publish.yml` from that tag;
+8. download and inspect the staged tarball and its provenance manifest on npm;
+9. approve it with maintainer 2FA; and
+10. install by exact version and rerun the smoke test.
 
 The workflow cannot publish directly. It can only place a package in npm's
 private staging area for later human approval.

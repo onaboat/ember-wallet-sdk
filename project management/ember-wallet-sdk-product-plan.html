@@ -279,32 +279,32 @@
         <h2>SDK branch overview</h2>
         <div class="progress-summary">
           <article class="card">
-            <span class="status attention">5 SDK branches implemented · 2 live QA gates pending</span>
-            <strong>Origin-host implementation verified</strong>
-            <p>Branches 00 through 04 are complete and pushed. Branch 05 now executes the packed SDK in an HTTPS Window and Chrome MV3 worker. The full Devnet journey and positive deployed-API CORS record remain explicit Manual QA gates.</p>
+            <span class="status attention">6 branches pushed · Branch 06 SDK ready · 3 live QA gates pending</span>
+            <strong>Web, extension and native SDK gates implemented</strong>
+            <p>Branches 00 through 05 are complete and pushed. Branch 06 now installs the packed SDK into a clean React Native consumer, builds with Metro, compiles with the matching Hermes compiler and proves adapter behavior. Full Devnet, positive CORS and physical Android/Solana-phone evidence remain explicit Manual QA gates.</p>
           </article>
           <article class="card">
             <span class="status attention">Current branch</span>
-            <strong><code>codex/sdk-05-origin-host-conformance</code></strong>
-            <p>The branch is ready for review and commit. <code>npm run verify</code> passes 187 tests plus real HTTPS Window and MV3 service-worker execution from the installed tarball.</p>
+            <strong><code>codex/sdk-06-native-mobile-conformance</code></strong>
+            <p>The SDK work is ready for review and commit. The packed Android target passes Metro and Hermes compiler acceptance, the shared proof vector and two-process session restoration without importing React Native into the SDK core.</p>
           </article>
           <article class="card">
             <span class="status blocking">External checkpoint</span>
-            <strong>Registered public origins and wallet fixture</strong>
-            <p>The Devnet API is confirmed live at <code>https://ember-devnet-qa.up.railway.app</code>. Positive CORS evidence needs its registered HTTPS and Chrome origins; full lifecycle evidence separately needs the human-approved Devnet wallet fixture.</p>
+            <strong>Registered hosts and live wallet fixtures</strong>
+            <p>The Devnet API is confirmed live at <code>https://ember-devnet-qa.up.railway.app</code>. Positive CORS needs registered HTTPS and Chrome origins; full lifecycle evidence needs the human-approved Devnet wallet fixture; native approval needs the final registered application ID plus emulator and representative Solana-phone runs.</p>
           </article>
         </div>
         <div class="table-wrap">
           <table>
             <thead><tr><th>Order</th><th>Delivery branch</th><th>Branch name</th><th>Status</th></tr></thead>
             <tbody>
-              <tr><td>00</td><td>Contract authority and provenance</td><td><code>codex/sdk-00-contract-authority</code></td><td><span class="status good">Done</span></td></tr>
+              <tr><td>00</td><td>Contract authority and provenance</td><td><code>codex/sdk-00-contract-authority</code></td><td><span class="status good">Done · Pushed</span></td></tr>
               <tr><td>01</td><td>Session and protected-signing security</td><td><code>codex/sdk-01-session-security</code></td><td><span class="status good">Done · Pushed</span></td></tr>
               <tr><td>02</td><td>Response integrity and privacy</td><td><code>codex/sdk-02-response-integrity</code></td><td><span class="status good">Done · Pushed</span></td></tr>
               <tr><td>03</td><td>Complete SDK lifecycle coverage</td><td><code>codex/sdk-03-lifecycle-coverage</code></td><td><span class="status good">Done · Pushed</span></td></tr>
               <tr><td>04</td><td>Real API conformance</td><td><code>codex/sdk-04-api-conformance</code></td><td><span class="status good">Done · Pushed</span> <span class="status attention">Live transaction QA pending</span></td></tr>
-              <tr><td>05</td><td>Origin-bound web and Chrome conformance</td><td><code>codex/sdk-05-origin-host-conformance</code></td><td><span class="status good">SDK done · Ready to commit</span> <span class="status attention">Live CORS QA pending</span></td></tr>
-              <tr><td>06</td><td>Native-mobile conformance</td><td><code>codex/sdk-06-native-mobile-conformance</code></td><td><span class="status planned">Not started</span></td></tr>
+              <tr><td>05</td><td>Origin-bound web and Chrome conformance</td><td><code>codex/sdk-05-origin-host-conformance</code></td><td><span class="status good">Done · Pushed</span> <span class="status attention">Live CORS QA pending</span></td></tr>
+              <tr><td>06</td><td>Native-mobile conformance</td><td><code>codex/sdk-06-native-mobile-conformance</code></td><td><span class="status good">SDK done · Ready to commit</span> <span class="status attention">Android/Solana-phone QA pending</span></td></tr>
               <tr><td>07</td><td>Shared release candidate</td><td><code>codex/sdk-07-release-candidate</code></td><td><span class="status planned">Not started</span></td></tr>
             </tbody>
           </table>
@@ -371,7 +371,7 @@
             <tbody>
               <tr><td>HTTPS web wallet or PWA</td><td>Exact browser-provided HTTPS <code>Origin</code>.</td><td>Browser-target bundle, real window/worker execution, API preflight and CORS, default and injected crypto, reload, multi-tab, account switching and safe storage guidance.</td><td><span class="status planned">First-class target</span></td></tr>
               <tr><td>Chrome Manifest V3 extension</td><td>Exact <code>chrome-extension://&lt;extension-id&gt;</code> origin, including the backend's narrow signed-GET missing-Origin rule.</td><td>Background service-worker execution, host permission, extension storage, restart recovery, exact extension identity and current browser-wallet journeys.</td><td><span class="status planned">First-class target</span></td></tr>
-              <tr><td>Native mobile wallet</td><td>Exact registered application identifier repeated in the Ember header.</td><td>React Native package installation, Android/Hermes on a representative Solana phone, injected fetch/crypto, secure storage, backgrounding, process death and protected signer timing. iOS becomes supported only after its own equivalent conformance evidence.</td><td><span class="status planned">Android first</span></td></tr>
+              <tr><td>Native mobile wallet</td><td>Exact registered application identifier repeated in the Ember header.</td><td>React Native package installation, Android/Hermes on a representative Solana phone, injected fetch/crypto, secure storage, backgrounding, process death and protected signer timing. iOS becomes supported only after its own equivalent conformance evidence.</td><td><span class="status attention">Automated gate passed · device QA pending</span></td></tr>
               <tr><td>Other extension schemes, embedded cross-origin frames, Electron/desktop and server-side wallets</td><td>Not implied by the two current binding modes.</td><td>Separate threat model, backend binding rule and consumer conformance before support is advertised.</td><td><span class="status attention">Explicitly undecided</span></td></tr>
             </tbody>
           </table>
@@ -480,7 +480,7 @@
               <tr><td>External SDK source copies</td><td>Non-authoritative compatibility mirrors</td><td>They may compare against or consume a published SDK version, but they never supply implementation changes back into this repository as an alternate source of truth.</td></tr>
               <tr><td>HTTPS web-wallet fixture</td><td>Standalone SDK repository</td><td>A clean, framework-light consumer must install the packed package and prove the origin-bound flow in a real browser.</td></tr>
               <tr><td>Chrome-extension consumer</td><td>External browser wallet</td><td>Consumes a pinned published version; currently recorded as <code>1.3.2-beta.0</code>.</td></tr>
-              <tr><td>Native-mobile fixture</td><td>Standalone SDK repository</td><td>A clean React Native Android consumer on Hermes must install and execute the packed package before Android support is advertised. iOS requires a later equivalent fixture before it is listed as supported.</td></tr>
+              <tr><td>Native-mobile fixture</td><td>Standalone SDK repository</td><td>A clean React Native Android consumer installs the packed package and must pass Metro, Hermes compiler and adapter gates in CI. Actual execution on an emulator and representative Solana phone remains required before Android support is advertised. iOS requires equivalent evidence.</td></tr>
             </tbody>
           </table>
         </div>
@@ -491,11 +491,11 @@
         <p class="eyebrow">Audit evidence</p>
         <h2>Verified baseline for <code>1.3.2-beta.1</code></h2>
         <div class="grid three">
-          <article class="card"><span class="status good">Passed</span><h3>Repository verification</h3><p>The retained <code>project management/</code> artifact is part of the public-boundary scan. Full verification passed with 187 tests plus packed-package HTTPS Window and Chrome MV3 worker execution on 15 September 2026.</p></article>
+          <article class="card"><span class="status good">Passed</span><h3>Repository verification</h3><p>The retained <code>project management/</code> artifact is part of the public-boundary scan. Full verification passes 187 tests plus packed-package HTTPS Window, Chrome MV3 worker and React Native Android/Metro/Hermes compiler gates on 15 September 2026.</p></article>
           <article class="card"><span class="status good">Recorded</span><h3>Imported API contract</h3><p><code>contract/provenance.json</code> records the reviewed upstream revision and exact SHA-256 of <code>contract/wallet-v1.json</code>; verification fails if its bytes or declared contract version drift.</p></article>
-          <article class="card"><span class="status good">Passed</span><h3>Package boundary</h3><p>The exact eleven-file npm package contains runtime files, public contract documentation and the contract-provenance manifest; ESM and CommonJS consumer installs pass, only <code>zod</code> is required at runtime and release publishing retains npm provenance.</p></article>
+          <article class="card"><span class="status good">Passed</span><h3>Package boundary</h3><p>The exact eleven-file npm package contains runtime files, public contract documentation and the contract-provenance manifest. ESM, CommonJS, browser and Metro consumers pass; the validator runtime is embedded for host-neutral bundling while <code>zod</code> remains declared for public schema types.</p></article>
           <article class="card"><span class="status good">Strong</span><h3>Quote verification</h3><p>Quotes are schema-checked, hash-checked, signature-verified and correlated to environment, cluster, integration, wallet, subject, product facts and expiry.</p></article>
-          <article class="card"><span class="status good">Passed</span><h3>Behavioral coverage</h3><p>All 27 public client methods execute in the behavior suite. Retry, cancellation, response correlation, persistence, browser reload, multi-tab ownership and extension-worker restart are covered.</p></article>
+          <article class="card"><span class="status good">Passed</span><h3>Behavioral coverage</h3><p>All 27 public client methods execute in the behavior suite. Retry, cancellation, response correlation, persistence, browser reload, multi-tab ownership, extension-worker restart and native two-process restoration are covered.</p></article>
           <article class="card"><span class="status good">Clean</span><h3>Development audit</h3><p>The full npm dependency audit reports zero vulnerabilities. CI retains the high-severity gate and installs the exact Chromium runtime used by origin-host conformance.</p></article>
         </div>
       </section>
@@ -515,8 +515,8 @@
         </article>
 
         <article class="finding">
-          <div><span class="status blocking">P0</span><div class="finding-id">SDK-003</div></div>
-          <div><h3>Prove native-mobile runtime compatibility</h3><p>The <a href="../examples/react-native/index.ts">React Native example</a> declares adapters and typechecks, but does not execute under Metro, Hermes or Android. The runtime depends on fetch, abort, text encoding, URL handling, timers and crypto behavior.</p><p><strong>Failure impact:</strong> the shared package can be correct in Node and browsers but fail at mobile bundling or runtime.</p><p><strong>Exit:</strong> a clean React Native fixture installs the release tarball and executes representative session and request-proof flows on Android/Hermes and a representative Solana phone. iOS remains unsupported until equivalent evidence is added.</p></div>
+          <div><span class="status attention">P0 · Automated gate resolved</span><div class="finding-id">SDK-003</div></div>
+          <div><h3>Prove native-mobile runtime compatibility</h3><p>The clean fixture now installs the packed artifact, creates a React Native Android bundle with Metro, compiles it with Hermes <code>250829098.0.14</code>, rejects Node-only imports, matches the request-proof vector and restores serialized authority in a second process without a duplicate challenge. This exposed and resolved the SDK's externally bundled validator incompatibility.</p><p><strong>Remaining risk:</strong> compiler acceptance and deterministic adapters do not prove an Android device boot, platform secure storage, final application binding, background behavior or protected-signer timing.</p><p><strong>Exit:</strong> execute the same tarball and representative session flow on a supported emulator and Solana phone using the production-equivalent host adapters. iOS remains unsupported until equivalent evidence is added.</p></div>
         </article>
 
         <article class="finding">
@@ -694,7 +694,7 @@
           </article>
 
           <article class="branch">
-            <div class="branch-head"><h3>05 · Origin-bound web and Chrome conformance</h3><div><span class="status good">SDK complete · Ready to commit</span> <code>codex/sdk-05-origin-host-conformance</code></div></div>
+            <div class="branch-head"><h3>05 · Origin-bound web and Chrome conformance</h3><div><span class="status good">Done · Pushed</span> <code>codex/sdk-05-origin-host-conformance</code></div></div>
             <div class="branch-columns">
               <div><h4>Build · Complete</h4><ul><li>Minimal HTTPS web-wallet/PWA and Chrome MV3 worker fixtures.</li><li>Exact npm tarball installed in a clean consumer and browser-bundled.</li><li>Intentional neutral ES2022 library target.</li><li>External API CORS checker and explicit header contract.</li><li>Host-owned session partition, Web Lock, CSP and worker-recovery policy.</li><li>Host-neutral package description, README and QA matrix.</li></ul></div>
               <div><h4>Automated gate · Passed 15 September 2026</h4><ul><li>No Node-only browser runtime dependency.</li><li>Real HTTPS challenge and signed-header preflights observed.</li><li>Exact HTTPS and Chrome-extension challenge bindings pass.</li><li>Unapproved and mismatched origins fail closed.</li><li>Default and injected Web Crypto execute.</li><li>Reload, two-tab contention and MV3 worker restart preserve one authority.</li><li><code>npm run verify</code>: 187 tests, 74-file boundary, eleven-file package and zero audit vulnerabilities.</li></ul></div>
@@ -703,11 +703,11 @@
           </article>
 
           <article class="branch">
-            <div class="branch-head"><h3>06 · Native-mobile conformance</h3><div><span class="status planned">Not started</span> <code>codex/sdk-06-native-mobile-conformance</code></div></div>
+            <div class="branch-head"><h3>06 · Native-mobile conformance</h3><div><span class="status good">SDK complete · Ready to commit</span> <span class="status attention">Device QA pending</span> <code>codex/sdk-06-native-mobile-conformance</code></div></div>
             <div class="branch-columns">
-              <div><h4>Build</h4><ul><li>Minimal clean React Native fixtures.</li><li>Install the exact packed SDK tarball.</li><li>Real runtime-compatible fetch and crypto adapters.</li><li>Secure-storage and ephemeral-signer test adapters.</li><li>No Expo or mobile framework dependency in the SDK.</li></ul></div>
-              <div><h4>Automated gate</h4><ul><li>Metro bundles the Android target.</li><li>Android/Hermes starts.</li><li>Request proof matches shared vectors.</li><li>Storage survives process death.</li><li>No Node-only module enters the Android runtime bundle.</li></ul></div>
-              <div><h4>Manual QA</h4><ul><li>Install on emulators and representative physical devices.</li><li>Open, restore, rotate and revoke a session.</li><li>Background beyond 15 minutes and recover honestly.</li><li>Record biometric/PIN timing for the decision margin.</li></ul></div>
+              <div><h4>Build · Complete</h4><ul><li>Minimal clean React Native 0.86 Android fixture.</li><li>Exact npm tarball installed in an isolated consumer.</li><li>Injected fetch, crypto, serialized store and ephemeral-signer test adapters.</li><li>Validator runtime bundled inside the neutral SDK artifact for Metro compatibility.</li><li>No Expo, React Native, MWA, Seed Vault or mobile framework dependency in the SDK runtime.</li></ul></div>
+              <div><h4>Automated gate · Passed 15 September 2026</h4><ul><li>Metro bundles the installed package for Android.</li><li>Hermes <code>250829098.0.14</code> compiles both Android bundles to bytecode.</li><li>Request proof matches the fixed shared vector.</li><li>A second process restores serialized authority without another challenge.</li><li>No Node-only module enters either runtime bundle.</li><li><code>npm run verify</code>: 187 tests, browser and native packed consumers, 79-file boundary, eleven-file package and zero audit vulnerabilities.</li></ul></div>
+              <div><h4>Manual QA checkpoint</h4><ul><li>Start the exact tarball on a supported Android emulator and representative Solana phone under Hermes.</li><li>Use the final registered application ID and production-equivalent fetch, crypto, secure-store and non-exportable signer adapters.</li><li>Open, restore, rotate and revoke against Devnet QA.</li><li>Kill and restore the process, then background beyond 15 minutes and recover honestly.</li><li>Record biometric/PIN timing for the decision margin.</li></ul></div>
             </div>
           </article>
 
@@ -818,6 +818,8 @@
           <li><a href="../conformance/origin-host/README.md">HTTPS web and Chrome extension host contract</a></li>
           <li><a href="../scripts/check-origin-hosts.mjs">Packed-SDK Window and MV3 conformance gate</a></li>
           <li><a href="../scripts/check-live-origin-cors.mjs">Deployed exact-origin CORS checker</a></li>
+          <li><a href="../conformance/native-mobile/README.md">React Native Android host contract and device checkpoint</a></li>
+          <li><a href="../scripts/check-native-mobile.mjs">Packed-SDK Metro and Hermes compiler conformance gate</a></li>
           <li><a href="../contract/wallet-v1.json">Standalone wallet OpenAPI input</a></li>
           <li><a href="../contract/provenance.json">Imported wallet contract provenance</a></li>
           <li><a href="../contract/README.md">Contract update and regeneration process</a></li>

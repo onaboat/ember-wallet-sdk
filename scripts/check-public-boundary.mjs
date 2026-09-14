@@ -26,6 +26,7 @@ const allowedTopLevel = new Set([
   'scripts',
   'src',
   'tsconfig.json',
+  'tsup.config.ts',
 ]);
 const scannedExtensions = new Set([
   '.cjs',

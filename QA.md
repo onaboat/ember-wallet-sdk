@@ -56,6 +56,28 @@ build identifiers, tester, date, and pass/fail evidence.
 - Inspect the host CSP and dependency graph. No unreviewed third-party script
   may share access to refresh credentials or session signing capability.
 
+## Native Android and Solana-phone hosts
+
+- Run `npm run conformance:native`. Confirm a clean consumer installs the
+  current tarball, Metro builds its Android target, the React Native-matched
+  Hermes compiler accepts both bundles, and no Node-only runtime import enters
+  either bundle.
+- Confirm the deterministic adapter result matches the shared request-proof
+  vector and restores the serialized session in a second process without
+  opening another wallet challenge.
+- Install the same tarball in a supported Android emulator and a representative
+  Solana phone. Confirm the application actually starts under Hermes; compiler
+  acceptance alone is not device-runtime evidence.
+- Using the final Ember-registered Android application ID, open, restore,
+  rotate and revoke against Devnet QA with the wallet's production-equivalent
+  fetch, crypto, non-exportable signer and secure-storage adapters.
+- Kill the process after persistence and confirm the refresh credential and
+  matching ephemeral signer restore as one authority without another protected
+  wallet signature.
+- Background beyond the access window and exercise biometric/PIN approval near
+  the decision-expiry boundary. Record expected reauthentication and freshness
+  behavior. Do not advertise iOS support without an equivalent gate.
+
 ## Quote and coverage journeys
 
 - Exercise eligible, not-eligible, unsupported, temporarily unavailable, and
