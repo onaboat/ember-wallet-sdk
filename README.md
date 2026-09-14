@@ -30,6 +30,21 @@ Underwriting implementation, operational controls, provider configuration,
 partner APIs, and administrative APIs are intentionally not part of the
 package or its source history.
 
+## Contract authority and provenance
+
+This repository is the sole source of behavior for the published
+`@embercover/wallet-sdk`. The checked-in wallet OpenAPI document is an imported
+release artifact, not a second implementation of the API.
+
+[`contract/provenance.json`](./contract/provenance.json) records the exact
+upstream contract revision, artifact path, contract version, and SHA-256. It is
+validated before generated-code currency and is included in the npm tarball so
+an installed SDK can be traced to its wire contract. See
+[`contract/README.md`](./contract/README.md) for the contract-change sequence.
+
+External SDK copies and wallet applications are consumers or temporary
+compatibility mirrors. They do not define this package's behavior.
+
 ## Install
 
 ```bash

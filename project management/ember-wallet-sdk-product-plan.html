@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Detailed product and delivery plan for a portable Ember Wallet SDK shared by HTTPS web wallets, browser extensions and native mobile wallets.">
+  <title>Ember Wallet SDK · Product and Delivery Plan</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #ffffff;
+      --surface: #f5f5f7;
+      --surface-strong: #eeeeef;
+      --line: #d2d2d7;
+      --text: #1d1d1f;
+      --muted: #6e6e73;
+      --blue: #0066cc;
+      --green: #248a3d;
+      --orange: #b25000;
+      --red: #c41e3a;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.55;
+    }
+    a { color: var(--blue); }
+    a:hover { text-decoration-thickness: 2px; }
+    code {
+      padding: 0.1em 0.32em;
+      border-radius: 5px;
+      background: #ececef;
+      color: #27272a;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.88em;
+      overflow-wrap: anywhere;
+    }
+    h1, h2, h3, h4, p { margin-top: 0; }
+    h1 {
+      max-width: 900px;
+      margin-bottom: 14px;
+      font-size: clamp(2.25rem, 6vw, 4.25rem);
+      line-height: 1.02;
+      letter-spacing: -0.045em;
+    }
+    h2 {
+      margin-bottom: 16px;
+      font-size: clamp(1.55rem, 3vw, 2rem);
+      letter-spacing: -0.025em;
+    }
+    h3 { margin-bottom: 9px; font-size: 1.08rem; }
+    h4 { margin-bottom: 7px; font-size: 0.96rem; }
+    p:last-child { margin-bottom: 0; }
+    .shell {
+      width: min(1220px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 48px 0 72px;
+    }
+    header {
+      padding-bottom: 30px;
+      border-bottom: 1px solid var(--line);
+    }
+    .eyebrow {
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .lede {
+      max-width: 900px;
+      margin-bottom: 18px;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 18px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-top: 20px;
+    }
+    nav a {
+      padding: 7px 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--text);
+      font-size: 0.82rem;
+      text-decoration: none;
+    }
+    nav a:hover { background: var(--surface); }
+    main { display: grid; gap: 18px; padding-top: 20px; }
+    section {
+      padding: 26px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--page);
+    }
+    .surface { background: var(--surface); }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--page);
+    }
+    .card p { color: var(--muted); font-size: 0.93rem; }
+    .status {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 4px 8px;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      font-size: 0.71rem;
+      font-weight: 700;
+      letter-spacing: 0.045em;
+      text-transform: uppercase;
+    }
+    .good { color: var(--green); }
+    .attention { color: var(--orange); }
+    .blocking { color: var(--red); }
+    .planned { color: var(--blue); }
+    .callout {
+      padding: 17px 19px;
+      border-left: 4px solid var(--blue);
+      background: var(--surface);
+    }
+    .callout.warning { border-left-color: var(--orange); }
+    .callout.blocker { border-left-color: var(--red); }
+    .small { color: var(--muted); font-size: 0.86rem; }
+    .progress-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .progress-summary .card strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 1.08rem;
+    }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+    th {
+      color: var(--muted);
+      font-size: 0.73rem;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+    td { font-size: 0.9rem; }
+    tbody tr:last-child td { border-bottom: 0; }
+    ol, ul { margin: 0; padding-left: 1.25rem; }
+    li + li { margin-top: 7px; }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(135px, 1fr));
+      gap: 8px;
+    }
+    .flow div {
+      min-height: 102px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--surface);
+    }
+    .flow strong { display: block; margin-bottom: 5px; }
+    .flow span { color: var(--muted); font-size: 0.82rem; }
+    .finding {
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr);
+      gap: 16px;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .finding:first-of-type { padding-top: 4px; }
+    .finding:last-child { padding-bottom: 0; border-bottom: 0; }
+    .finding-id { color: var(--muted); font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.84rem; }
+    .finding p, .finding li { font-size: 0.92rem; }
+    .branch-plan {
+      display: grid;
+      gap: 12px;
+    }
+    .branch {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--page);
+    }
+    .branch-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .branch-head h3 { margin-bottom: 0; }
+    .branch-columns {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    footer {
+      padding-top: 24px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      text-align: center;
+    }
+    @media (max-width: 900px) {
+      .grid, .grid.three, .branch-columns, .progress-summary { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 20px, 1220px); padding-top: 26px; }
+      section { padding: 19px; }
+      .flow { grid-template-columns: 1fr; }
+      .finding { grid-template-columns: 1fr; gap: 8px; }
+    }
+    @media print {
+      nav { display: none; }
+      .shell { width: 100%; padding: 0; }
+      section, .branch, .card { break-inside: avoid; }
+      a { color: var(--text); }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <p class="eyebrow">Ember product management · shared client boundary</p>
+      <h1>Wallet SDK product and delivery plan</h1>
+      <p class="lede">A detailed plan for making <code>@embercover/wallet-sdk</code> the dependable Ember integration shared by origin-bound HTTPS web wallets and browser extensions, application-bound native mobile wallets, and future wallet partners.</p>
+      <div class="meta">
+        <span><strong>Audit date:</strong> 14 September 2026</span>
+        <span><strong>Reviewed release:</strong> <code>1.3.2-beta.1</code></span>
+        <span><strong>Recommendation:</strong> harden the shared core, then certify each supported host</span>
+        <span><strong>Document type:</strong> product and engineering plan</span>
+      </div>
+      <nav aria-label="Document sections">
+        <a href="#progress">Delivery progress</a>
+        <a href="#decision">Decision</a>
+        <a href="#product-role">Product role</a>
+        <a href="#host-support">Host support</a>
+        <a href="#journeys">User journeys</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#baseline">Verified baseline</a>
+        <a href="#findings">Findings</a>
+        <a href="#expiry">Decision expiry</a>
+        <a href="#functions">Functions</a>
+        <a href="#branches">Branches</a>
+        <a href="#testing">Testing</a>
+        <a href="#release">Release criteria</a>
+        <a href="#risks">Risks</a>
+      </nav>
+    </header>
+
+    <main>
+      <section id="progress" class="surface">
+        <p class="eyebrow">Delivery progress</p>
+        <h2>SDK branch overview</h2>
+        <div class="progress-summary">
+          <article class="card">
+            <span class="status good">1 of 8 complete</span>
+            <strong>Branch 00 passed</strong>
+            <p>Contract authority, automated verification and Manual QA are complete.</p>
+          </article>
+          <article class="card">
+            <span class="status good">Current branch</span>
+            <strong><code>codex/sdk-00-contract-authority</code></strong>
+            <p>Completed locally. Nothing has been pushed.</p>
+          </article>
+          <article class="card">
+            <span class="status attention">Next</span>
+            <strong><code>codex/sdk-01-session-security</code></strong>
+            <p>Requirements and security contracts must be reviewed before implementation.</p>
+          </article>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Order</th><th>Delivery branch</th><th>Branch name</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>00</td><td>Contract authority and provenance</td><td><code>codex/sdk-00-contract-authority</code></td><td><span class="status good">Done</span></td></tr>
+              <tr><td>01</td><td>Session and protected-signing security</td><td><code>codex/sdk-01-session-security</code></td><td><span class="status attention">Next · Not started</span></td></tr>
+              <tr><td>02</td><td>Response integrity and privacy</td><td><code>codex/sdk-02-response-integrity</code></td><td><span class="status planned">Not started</span></td></tr>
+              <tr><td>03</td><td>Complete SDK lifecycle coverage</td><td><code>codex/sdk-03-lifecycle-coverage</code></td><td><span class="status planned">Not started</span></td></tr>
+              <tr><td>04</td><td>Real API conformance</td><td><code>codex/sdk-04-api-conformance</code></td><td><span class="status planned">Not started</span></td></tr>
+              <tr><td>05</td><td>Origin-bound web and Chrome conformance</td><td><code>codex/sdk-05-origin-host-conformance</code></td><td><span class="status planned">Not started</span></td></tr>
+              <tr><td>06</td><td>Native-mobile conformance</td><td><code>codex/sdk-06-native-mobile-conformance</code></td><td><span class="status planned">Not started</span></td></tr>
+              <tr><td>07</td><td>Shared release candidate</td><td><code>codex/sdk-07-release-candidate</code></td><td><span class="status planned">Not started</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="decision" class="surface">
+        <p class="eyebrow">Executive decision</p>
+        <h2>Use one SDK core, but certify every supported wallet host explicitly</h2>
+        <div class="grid three">
+          <article class="card">
+            <span class="status good">Keep</span>
+            <h3>Existing architecture</h3>
+            <p>The SDK already has meaningful ports for wallet signing, session signing, secure persistence, crypto, clock, fetch and telemetry. The package is secretless and keeps private wallet material outside its boundary.</p>
+          </article>
+          <article class="card">
+            <span class="status blocking">Resolve first</span>
+            <h3>Trust and conformance gaps</h3>
+            <p>Challenge semantics, response correlation, stored-session validation and real-API conformance need evidence in every host. Ordinary web wallets also require a working CORS contract; mobile runtimes require executed adapter conformance.</p>
+          </article>
+          <article class="card">
+            <span class="status planned">Then proceed</span>
+            <h3>Host conformance</h3>
+            <p>After the shared gates pass, certify an HTTPS web wallet/PWA, the Chrome extension and native mobile applications against the exact package. Browser, MWA, Seed Vault, RPC and secure-storage adapters stay outside the SDK core.</p>
+          </article>
+        </div>
+        <div class="callout" style="margin-top:16px">
+          <strong>This is not an adoption gate.</strong>
+          <p>Whether users switch from Phantom or Solflare is a product experiment. This plan defines technical evidence required to avoid shipping broken account, payment, signing or recovery behavior while that experiment runs.</p>
+        </div>
+      </section>
+
+      <section id="product-role">
+        <p class="eyebrow">Product role</p>
+        <h2>What the shared SDK is responsible for</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Capability</th><th>SDK owns</th><th>Host application owns</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Wallet identity</td><td>Challenge request, challenge validation, session creation, session correlation, rotation and revocation.</td><td>Selecting the wallet account, protected signing through the host wallet signer, and explaining the approval to the user.</td></tr>
+              <tr><td>Account signup</td><td>Creates or resumes Ember wallet-subject history after a valid ownership signature. No email, password or partner key.</td><td>Account selection, recovery explanation, consent screen and secure storage implementation.</td></tr>
+              <tr><td>Offers and terms</td><td>Typed offer reads, environment checks, terms receipt request and response correlation.</td><td>Rendering the exact terms and collecting explicit user agreement.</td></tr>
+              <tr><td>Cover purchase</td><td>Quote creation and cryptographic verification, payment submission, payment recovery and coverage reads.</td><td>USDC transaction construction, simulation, user review, signing, broadcast and durable local recovery state.</td></tr>
+              <tr><td>Signing review</td><td>Exact decision request, typed result, fail-open transport behavior, decision identity and freshness helpers.</td><td>Dapp identity, transaction decoding, simulation, approval UI, protected-signer lifecycle, evidence outbox and signature release.</td></tr>
+              <tr><td>Claims</td><td>Eligibility, creation, reads, appeal and typed evidence-upload lifecycle.</td><td>Evidence selection, upload byte transfer, user explanation and local recovery UX.</td></tr>
+              <tr><td>Infrastructure</td><td>Portable interfaces at real external boundaries only.</td><td>HTTPS page/PWA, extension worker, Android first, later-declared iOS, storage, RPC, MWA, Seed Vault and telemetry implementations.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout warning" style="margin-top:16px">
+          <strong>The SDK is not a wallet UI framework.</strong>
+          <p>It must not import React, PWA, extension, React Native, Expo, Android, iOS, Seed Vault, MWA, Solana RPC or UI types. It supplies trustworthy Ember use-case results that any certified host can present and act on.</p>
+        </div>
+      </section>
+
+      <section id="host-support" class="surface">
+        <p class="eyebrow">Supported-host contract</p>
+        <h2>Portability means declared hosts with evidence, not an unbounded runtime promise</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Host</th><th>Protocol binding</th><th>Required conformance</th><th>Status in this plan</th></tr></thead>
+            <tbody>
+              <tr><td>HTTPS web wallet or PWA</td><td>Exact browser-provided HTTPS <code>Origin</code>.</td><td>Browser-target bundle, real window/worker execution, API preflight and CORS, default and injected crypto, reload, multi-tab, account switching and safe storage guidance.</td><td><span class="status planned">First-class target</span></td></tr>
+              <tr><td>Chrome Manifest V3 extension</td><td>Exact <code>chrome-extension://&lt;extension-id&gt;</code> origin, including the backend's narrow signed-GET missing-Origin rule.</td><td>Background service-worker execution, host permission, extension storage, restart recovery, exact extension identity and current browser-wallet journeys.</td><td><span class="status planned">First-class target</span></td></tr>
+              <tr><td>Native mobile wallet</td><td>Exact registered application identifier repeated in the Ember header.</td><td>React Native package installation, Android/Hermes on a representative Solana phone, injected fetch/crypto, secure storage, backgrounding, process death and protected signer timing. iOS becomes supported only after its own equivalent conformance evidence.</td><td><span class="status planned">Android first</span></td></tr>
+              <tr><td>Other extension schemes, embedded cross-origin frames, Electron/desktop and server-side wallets</td><td>Not implied by the two current binding modes.</td><td>Separate threat model, backend binding rule and consumer conformance before support is advertised.</td><td><span class="status attention">Explicitly undecided</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout warning" style="margin-top:16px">
+          <strong>Runtime compatibility and product support are different claims.</strong>
+          <p>An ESM or CommonJS import, or a successful bundle, proves packaging only. A host is supported only after its binding, network, crypto, persistence, lifecycle and recovery behavior pass the declared conformance gate.</p>
+        </div>
+      </section>
+
+      <section id="journeys" class="surface">
+        <p class="eyebrow">User-test-driven scope</p>
+        <h2>The complete journeys the SDK must support</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>1. Wallet account and Ember signup</h3>
+            <ol>
+              <li>The user selects the protected wallet address in an HTTPS web wallet, browser extension or native mobile wallet.</li>
+              <li>The host creates a separate ephemeral Ed25519 session signer.</li>
+              <li>The SDK requests a one-use Ember challenge for the selected wallet, integration, scopes and client binding.</li>
+              <li>The SDK validates every challenge field before protected-wallet signing is requested.</li>
+              <li>The host explains that the signature proves wallet ownership and cannot move funds.</li>
+              <li>The host's protected-wallet signer signs the exact verified bytes.</li>
+              <li>The SDK redeems the challenge and correlates the returned session to the requested authority.</li>
+              <li>The host stores the refresh credential and ephemeral signer in approved secure storage.</li>
+              <li>The user now has an Ember wallet subject and session, but has not paid and is not yet covered.</li>
+              <li>Relaunch, rotation, expiry, revocation and account mismatch produce explicit recoverable states.</li>
+            </ol>
+          </article>
+          <article class="card">
+            <h3>2. Pay once to activate cover</h3>
+            <ol>
+              <li>The SDK returns offers for the active environment and cluster only.</li>
+              <li>The host displays the exact price, benefit limits, duration, exclusions, terms and policy identifiers.</li>
+              <li>The user explicitly accepts the displayed terms.</li>
+              <li>The SDK records and verifies the terms receipt.</li>
+              <li>The SDK creates a signed quote and verifies its authority, hash, signature, key state, product facts and expiry.</li>
+              <li>The host constructs one exact USDC transfer using the verified mint, token program, amount, decimals, treasury account and reference.</li>
+              <li>The host simulates and displays the transaction before protected-wallet approval.</li>
+              <li>The signed payment state is persisted before broadcast so a crash cannot cause a second payment.</li>
+              <li>The SDK submits the quote ID and transaction signature idempotently.</li>
+              <li>The host polls the same payment ID until rejected or activated.</li>
+              <li>Only a server-confirmed coverage instance means the selected address is covered.</li>
+            </ol>
+          </article>
+          <article class="card">
+            <h3>3. Review and sign a dapp request</h3>
+            <ol>
+              <li>The host verifies the requesting native app or web origin.</li>
+              <li>The host decodes and simulates the exact unsigned transaction bytes.</li>
+              <li>The SDK obtains a decision bound to the wallet, coverage instance, kind and exact bytes.</li>
+              <li>The host displays covered, not covered, unsupported or unavailable honestly.</li>
+              <li>A covered decision must have enough validity remaining before protected signing begins.</li>
+              <li>The bytes are checked again immediately before signing.</li>
+              <li>The host requests the protected signature from its wallet-signing adapter.</li>
+              <li>The decision is checked again after protected signing returns.</li>
+              <li>Fresh covered evidence is queued durably before signed bytes are released.</li>
+              <li>If cover expired, the signed result is not represented as covered; the user chooses cancel or continue without cover.</li>
+              <li>Confirmation and evidence lineage remain visible after the dapp receives the result.</li>
+            </ol>
+          </article>
+          <article class="card">
+            <h3>4. Claim and evidence recovery</h3>
+            <ol>
+              <li>The SDK checks eligibility for the exact covered decision.</li>
+              <li>The user submits the appropriate direct-loss or delegate-drain claim.</li>
+              <li>A stable idempotency key is reused after process or network interruption.</li>
+              <li>The SDK correlates the returned claim to the decision, coverage instance and protected wallet.</li>
+              <li>The host presents requested evidence and retention information.</li>
+              <li>The SDK validates the short-lived upload grant before the host uploads bytes.</li>
+              <li>The host uploads only the declared bytes and SHA-256.</li>
+              <li>The SDK completes the same claim, evidence and request identifiers.</li>
+              <li>Claim state is recovered from Ember rather than inferred from local UI state.</li>
+              <li>An appeal creates a new review path without rewriting the original decision.</li>
+            </ol>
+          </article>
+        </div>
+      </section>
+
+      <section id="architecture">
+        <p class="eyebrow">Clean Architecture</p>
+        <h2>Dependency direction and responsibility boundaries</h2>
+        <div class="flow" aria-label="Architecture dependency direction">
+          <div><strong>Ember business contract</strong><span>Wallet identity, offer, quote, payment, coverage, decision, evidence and claim invariants.</span></div>
+          <div><strong>Generated contract boundary</strong><span>OpenAPI-derived wire types and runtime response schemas.</span></div>
+          <div><strong>SDK application client</strong><span>Use-case methods, validation, correlation, retry and fail-open rules.</span></div>
+          <div><strong>Portable ports</strong><span>Signer, crypto, fetch, clock, session store and privacy-safe telemetry.</span></div>
+          <div><strong>Host adapters</strong><span>Web wallet, extension worker, Android first, later-declared iOS, protected signer, secure storage, Solana RPC and UI.</span></div>
+        </div>
+        <div class="grid three" style="margin-top:14px">
+          <article class="card"><h3>Core rules</h3><ul><li>Pure validation where practical.</li><li>No framework types in business decisions.</li><li>Side effects at transport and host edges.</li><li>Explicit discriminated states.</li></ul></article>
+          <article class="card"><h3>Meaningful interfaces</h3><ul><li><code>EmberMessageSigner</code></li><li><code>WalletSessionStore</code></li><li><code>EmberCrypto</code></li><li><code>EmberFetch</code></li></ul></article>
+          <article class="card"><h3>Do not add</h3><ul><li>Generic repositories.</li><li>Factories for every object.</li><li>Mobile-specific DTO copies.</li><li>A second SDK abstraction layer.</li><li>UI or CSS APIs.</li></ul></article>
+        </div>
+      </section>
+
+      <section id="ownership" class="surface">
+        <p class="eyebrow">Contract ownership</p>
+        <h2>One imported API contract, one authoritative published SDK</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Asset</th><th>Authority</th><th>Rule</th></tr></thead>
+            <tbody>
+              <tr><td>Wallet API wire behavior</td><td><a href="../contract/provenance.json">Recorded upstream OpenAPI release</a></td><td>Contract changes originate in the authoritative Ember wallet API contract and enter this repository only as a reviewed artifact with exact revision and SHA-256.</td></tr>
+              <tr><td>Published client implementation</td><td><a href="../src/emberClient.ts">This SDK repository</a></td><td>This repository alone owns package behavior, versions, provenance, release notes and consumer compatibility.</td></tr>
+              <tr><td>External SDK source copies</td><td>Non-authoritative compatibility mirrors</td><td>They may compare against or consume a published SDK version, but they never supply implementation changes back into this repository as an alternate source of truth.</td></tr>
+              <tr><td>HTTPS web-wallet fixture</td><td>Standalone SDK repository</td><td>A clean, framework-light consumer must install the packed package and prove the origin-bound flow in a real browser.</td></tr>
+              <tr><td>Chrome-extension consumer</td><td>External browser wallet</td><td>Consumes a pinned published version; currently recorded as <code>1.3.2-beta.0</code>.</td></tr>
+              <tr><td>Native-mobile fixture</td><td>Standalone SDK repository</td><td>A clean React Native Android consumer on Hermes must install and execute the packed package before Android support is advertised. iOS requires a later equivalent fixture before it is listed as supported.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small" style="margin-top:14px">Each SDK source state and npm tarball carry <code>contract/provenance.json</code> with the upstream contract revision, artifact path, version and SHA-256. The reviewed contract SHA-256 is <code>60f54059f578d1a9264819cd64ab842e51e6d521292378bfe59e8bcfb2264f95</code>.</p>
+      </section>
+
+      <section id="baseline">
+        <p class="eyebrow">Audit evidence</p>
+        <h2>Verified baseline for <code>1.3.2-beta.1</code></h2>
+        <div class="grid three">
+          <article class="card"><span class="status good">Passed</span><h3>Repository verification</h3><p>The retained <code>project management/</code> artifact is part of the public-boundary scan. Full verification passed with 34 tests on 14 September 2026.</p></article>
+          <article class="card"><span class="status good">Recorded</span><h3>Imported API contract</h3><p><code>contract/provenance.json</code> records the reviewed upstream revision and exact SHA-256 of <code>contract/wallet-v1.json</code>; verification fails if its bytes or declared contract version drift.</p></article>
+          <article class="card"><span class="status good">Passed</span><h3>Package boundary</h3><p>The exact eleven-file npm package contains runtime files, public contract documentation and the contract-provenance manifest; ESM and CommonJS consumer installs pass, only <code>zod</code> is required at runtime and release publishing retains npm provenance.</p></article>
+          <article class="card"><span class="status good">Strong</span><h3>Quote verification</h3><p>Quotes are schema-checked, hash-checked, signature-verified and correlated to environment, cluster, integration, wallet, subject, product facts and expiry.</p></article>
+          <article class="card"><span class="status attention">Incomplete</span><h3>Behavioral coverage</h3><p>Tests are strong around request proof, quote verification and fail-open decision transport, but most lifecycle methods have no method-level behavior tests.</p></article>
+          <article class="card"><span class="status blocking">Fails release gate</span><h3>Development audit</h3><p>Runtime audit is clean, but the full dependency audit currently reports seven development findings, including five high-severity findings. CI and publish workflows gate on high severity.</p></article>
+        </div>
+      </section>
+
+      <section id="findings" class="surface">
+        <p class="eyebrow">Detailed gap register</p>
+        <h2>Issues to resolve before certifying supported wallet hosts</h2>
+
+        <article class="finding">
+          <div><span class="status blocking">P0</span><div class="finding-id">SDK-001</div></div>
+          <div><h3>Validate the complete wallet challenge before protected signing</h3><p><a href="../src/emberClient.ts#L346"><code>openSession()</code></a> validates JSON shape, then sends <code>challenge.message</code> to the wallet signer without verifying its meaning. The API message correctly binds wallet, integration/version, environment, chain, ephemeral key, client binding, scopes, nonce, request ID and expiry. The SDK must parse and compare those facts before any host wallet signer sees a signature request.</p><p><strong>Failure impact:</strong> an unexpected API response could become an arbitrary protected-wallet message-signing request.</p><p><strong>Exit:</strong> field-by-field tampering tests prove the signer is never called for an invalid challenge in web, extension or native configurations.</p></div>
+        </article>
+
+        <article class="finding">
+          <div><span class="status blocking">P0</span><div class="finding-id">SDK-002</div></div>
+          <div><h3>Add real SDK-to-API conformance</h3><p>SDK tests mock HTTP and there is no SDK-owned automated proof that the packed public client completes the current secretless wallet protocol against the designated real test API.</p><p><strong>Failure impact:</strong> schema generation and mocked SDK tests can pass while the deployed product journey fails.</p><p><strong>Exit:</strong> an SDK-repository conformance runner installs the packed artifact and completes session, offer, terms, quote, payment, coverage, decision, evidence and claim journeys against a configured API, without importing backend source or a legacy client.</p></div>
+        </article>
+
+        <article class="finding">
+          <div><span class="status blocking">P0</span><div class="finding-id">SDK-003</div></div>
+          <div><h3>Prove native-mobile runtime compatibility</h3><p>The <a href="../examples/react-native/index.ts">React Native example</a> declares adapters and typechecks, but does not execute under Metro, Hermes or Android. The runtime depends on fetch, abort, text encoding, URL handling, timers and crypto behavior.</p><p><strong>Failure impact:</strong> the shared package can be correct in Node and browsers but fail at mobile bundling or runtime.</p><p><strong>Exit:</strong> a clean React Native fixture installs the release tarball and executes representative session and request-proof flows on Android/Hermes and a representative Solana phone. iOS remains unsupported until equivalent evidence is added.</p></div>
+        </article>
+
+        <article class="finding">
+          <div><span class="status blocking">P0</span><div class="finding-id">SDK-004</div></div>
+          <div><h3>Correlate every successful response with its request and active authority</h3><p>Most methods trust any response that matches the generated schema. Explicit checks are needed for offer ID, terms facts, quote ID, payment signature, payment ID, coverage ID, wallet subject, protected wallet, decision kind, decision ID, claim ID and evidence identifiers.</p><p><strong>Failure impact:</strong> a validly shaped but misrouted or stale response can be accepted as the result of another operation.</p><p><strong>Exit:</strong> cross-resource fixtures fail locally with typed response-mismatch errors.</p></div>
+        </article>
+
+        <article class="finding">
+          <div><span class="status attention">P1</span><div class="finding-id">SDK-005</div></div>
+          <div><h3>Treat persisted sessions as untrusted input</h3><p><a href="../src/emberClient.ts#L898"><code>requireSession()</code></a> checks signer, integration, environment and access expiry, but the session store result bypasses the generated runtime schema. Malformed timestamps, scopes and identifiers can enter through restored storage.</p><p><strong>Failure impact:</strong> corrupted or old app data produces inconsistent recovery behavior across hosts.</p><p><strong>Exit:</strong> one shared parser rejects and clears malformed persisted sessions, while valid sessions survive process restart.</p></div>
+        </article>
+
+        <article class="finding">
+          <div><span class="status attention">P1</span><div class="finding-id">SDK-006</div></div>
+          <div><h3>Stop telemetry from receiving resource identifiers</h3><p><a href="../src/transport.ts#L437">The telemetry emitter</a> passes the concrete request path even though the README promises a path template. Dynamic paths can reveal payment, coverage, decision, claim and evidence identifiers.</p><p><strong>Failure impact:</strong> integrations can accidentally export customer-linked identifiers to analytics systems.</p><p><strong>Exit:</strong> telemetry emits an operation and static route template only; a privacy test rejects dynamic identifiers.</p></div>
+        </article>
+
+        <article class="finding">
+          <div><span class="status attention">P1</span><div class="finding-id">SDK-007</div></div>
+          <div><h3>Close important public state types</h3><p>Coverage status, upload status and method, quote-key state, commission kind, quote cluster and parts of claim decisions remain unrestricted strings even where the backend has a closed state model.</p><p><strong>Failure impact:</strong> hosts add string comparisons, default incorrectly or silently diverge.</p><p><strong>Exit:</strong> backend OpenAPI exposes deliberate enums or an explicit forward-compatible unknown-state contract, and generated SDK schemas enforce it.</p></div>
+        </article>
+
+        <article class="finding">
+          <div><span class="status attention">P1</span><div class="finding-id">SDK-008</div></div>
+          <div><h3>Complete lifecycle method tests</h3><p>The current 30 tests focus on transport proof, quote verification and failure conversion. Rotation, revocation, offer detail, terms success, payment reads, coverage, lineage, evidence, claim eligibility, claim reads, appeal and upload lifecycle need direct behavior tests.</p><p><strong>Failure impact:</strong> public methods can regress without failing package CI.</p><p><strong>Exit:</strong> every public method has at least one success contract and its relevant failure, correlation and retry contract.</p></div>
+        </article>
+
+        <article class="finding">
+          <div><span class="status good">P1 · Resolved</span><div class="finding-id">SDK-009</div></div>
+          <div><h3>Resolve source-of-truth drift risk</h3><p>The audit found two non-authoritative SDK source mirrors plus multiple working checkouts. Package source authority and imported-contract provenance were not machine-enforced.</p><p><strong>Failure impact:</strong> wallet consumers can certify or copy different implementations.</p><p><strong>Exit:</strong> this repository declares sole package authority, checks the imported contract revision and digest, publishes that provenance, and documents all external copies as consumers or temporary mirrors rather than synchronization peers.</p></div>
+        </article>
+
+        <article class="finding">
+          <div><span class="status attention">P1</span><div class="finding-id">SDK-010</div></div>
+          <div><h3>Validate evidence-upload grants before host use</h3><p>Upload method, URL and status are broad strings. A production host should not blindly send claim material to an unexpected scheme, method or destination.</p><p><strong>Failure impact:</strong> sensitive evidence could be sent using an unsafe or unsupported grant.</p><p><strong>Exit:</strong> production grants require HTTPS, the contract-defined method, valid expiry and a documented header policy before returning to the host.</p></div>
+        </article>
+
+        <article class="finding">
+          <div><span class="status attention">P1</span><div class="finding-id">SDK-011</div></div>
+          <div><h3>Make session renewal behavior explicit</h3><p>The backend defines a 15-minute access session and a 24-hour refresh window, but rotation requires proof from the still-active current session. A suspended app, sleeping extension worker or inactive browser tab that resumes after 15 minutes must ask for wallet ownership again; the 24-hour token is useful only for proactive rotation.</p><p><strong>Failure impact:</strong> hosts can appear to promise silent 24-hour recovery that the protocol intentionally does not allow.</p><p><strong>Exit:</strong> SDK documentation and conformance tests distinguish active, rotate-soon, expired/re-authentication-required and refresh-window-expired states across all supported hosts.</p></div>
+        </article>
+
+        <article class="finding">
+          <div><span class="status attention">P1</span><div class="finding-id">SDK-012</div></div>
+          <div><h3>Restore a clean release audit</h3><p>Current runtime dependencies are clean, but development tooling produces high-severity audit failures while CI and publish workflows require a clean high-severity result.</p><p><strong>Failure impact:</strong> the next release can be blocked or the gate can be bypassed under schedule pressure.</p><p><strong>Exit:</strong> supported tool versions pass full audit and the complete release workflow without suppressing unrelated findings.</p></div>
+        </article>
+
+        <article class="finding">
+          <div><span class="status planned">P2</span><div class="finding-id">SDK-013</div></div>
+          <div><h3>Document quote-key trust and compatibility policy</h3><p>Quote verification fetches public keys from the same configured API and allows active or retired keys. The package also hardcodes acceptance of the current Core Annual production facts and the specific devnet QA offer.</p><p><strong>Failure impact:</strong> operators may describe verification as fully offline, or product changes may unexpectedly require an SDK release.</p><p><strong>Exit:</strong> document key freshness/cache behavior, revocation expectations and which product-contract changes require a new SDK version.</p></div>
+        </article>
+
+        <article class="finding">
+          <div><span class="status blocking">P0</span><div class="finding-id">SDK-014</div></div>
+          <div><h3>Add a real HTTPS web-wallet conformance fixture</h3><p>The package currently typechecks an extension example and a React Native example. It has no ordinary HTTPS page/PWA consumer, no browser-runtime lifecycle test and no evidence that the configured API permits the required CORS preflights for JSON and signed-header requests.</p><p><strong>Failure impact:</strong> the package can bundle successfully while a web wallet fails before its first challenge request.</p><p><strong>Exit:</strong> a clean web fixture installs the packed SDK, opens an origin-bound session against the conformance API and exercises a signed request in the declared browser matrix. The SDK repository records CORS as an external API prerequisite and tests the observable contract without owning backend implementation.</p></div>
+        </article>
+
+        <article class="finding">
+          <div><span class="status blocking">P0</span><div class="finding-id">SDK-015</div></div>
+          <div><h3>Separate host binding configuration from the generated wire DTO</h3><p><code>EmberTransportConfig.client</code> currently exposes <code>WalletClientBindingRequest</code> directly. The browser wire value contains only <code>{ kind: 'browser' }</code>, so the SDK has no explicit expected HTTPS or extension origin with which to validate the returned challenge before protected signing.</p><p><strong>Failure impact:</strong> challenge validation either depends implicitly on a runtime global or cannot prove that the message names the host the user is actually using.</p><p><strong>Exit:</strong> a deliberate SDK binding type captures the expected origin or native application identifier, validates it locally and maps only the contract-defined wire fields into requests.</p></div>
+        </article>
+
+        <article class="finding">
+          <div><span class="status attention">P1</span><div class="finding-id">SDK-016</div></div>
+          <div><h3>Define browser session ownership and concurrency</h3><p>Web pages can reload, run in multiple tabs and switch accounts while the current store contract exposes one load/save/clear slot and the client mutates its active session signer during rotation. The browser example also uses one fixed storage key.</p><p><strong>Failure impact:</strong> two host instances can race rotation, restore the wrong wallet's session or clear authority owned by another active instance.</p><p><strong>Exit:</strong> specify the session partition key and rotation ownership rule; prove reload, multi-tab contention, account switching and stale-writer recovery in the web fixture. Keep browser coordination in the host unless a core invariant requires an SDK contract change.</p></div>
+        </article>
+
+        <article class="finding">
+          <div><span class="status attention">P1</span><div class="finding-id">SDK-017</div></div>
+          <div><h3>Make package positioning and build evidence host-neutral</h3><p>The package description, README, QA checklist and examples currently describe only browser extensions and React Native. The build uses the tool's default Node platform and the packaged-consumer check executes only Node ESM/CommonJS imports, even though the resulting ESM currently bundles for a browser.</p><p><strong>Failure impact:</strong> partners cannot distinguish an intended supported host from an incidental successful bundle, and a future dependency change can break browser consumers without CI noticing.</p><p><strong>Exit:</strong> publish a declared JavaScript/runtime compatibility policy, use an intentional library build target, add the HTTPS web-wallet fixture, and make README, QA and package metadata name every supported host without importing host frameworks into the SDK.</p></div>
+        </article>
+      </section>
+
+      <section id="expiry">
+        <p class="eyebrow">Critical cross-host rule</p>
+        <h2>Decision expiry during protected-wallet approval</h2>
+        <div class="callout blocker">
+          <strong>The backend rule already exists.</strong>
+          <p>A cover decision lasts 60 seconds. Post-sign evidence received at or after expiry is rejected with <code>decision_expired</code>. This is one shared rule for web, extension and native hosts.</p>
+        </div>
+        <div class="table-wrap" style="margin-top:16px">
+          <table>
+            <thead><tr><th>Moment</th><th>Required behavior</th><th>Owner</th></tr></thead>
+            <tbody>
+              <tr><td>Decision received</td><td>Validate response identity, exact request binding and expiry.</td><td>SDK</td></tr>
+              <tr><td>Before protected UI</td><td>Require a configurable minimum remaining validity window. Do not enter any host signing surface with a nearly expired covered result.</td><td>Host use case using SDK helper</td></tr>
+              <tr><td>Before signing bytes</td><td>Confirm the bytes still match the reviewed bytes and the decision remains fresh.</td><td>Host signing orchestration</td></tr>
+              <tr><td>After the signer returns</td><td>Check freshness again before evidence, release or broadcast.</td><td>Host signing orchestration</td></tr>
+              <tr><td>Expired during approval</td><td>Never describe the signature as covered. Hold or discard it, explain the downgrade, and offer cancel or an explicit continue-without-cover path.</td><td>Product use case and UI</td></tr>
+              <tr><td>Still fresh</td><td>Persist the evidence obligation before returning signed bytes, then submit exact evidence idempotently.</td><td>Host outbox plus SDK</td></tr>
+              <tr><td>Blockhash expired</td><td>Discard the signed transaction and require the dapp or wallet flow to rebuild and re-review it.</td><td>Host Solana transaction layer</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small" style="margin-top:14px"><strong>Measurement still required:</strong> the minimum remaining window before protected signing must be based on extension-popup, browser-wallet and physical-phone approval timings, slow-user testing and network latency. Do not guess one global value in the SDK; hosts provide a measured policy input.</p>
+      </section>
+
+      <section id="functions" class="surface">
+        <p class="eyebrow">Type-driven design</p>
+        <h2>Proposed function-level changes</h2>
+        <p class="small">Names are proposed for planning clarity. The implementation should keep them small and colocated unless reuse justifies a separate module.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Function or type</th><th>Layer</th><th>Responsibility</th><th>Key tests</th></tr></thead>
+            <tbody>
+              <tr><td><code>validateWalletChallenge(challenge, expected, now)</code></td><td>Core validation</td><td>Parse the exact SIWS-style message and compare wallet, session key, integration/version, environment/chain, client binding, scopes, nonce, ID and time window.</td><td>One tampering test per field; expired/not-yet-valid; reordered or duplicate resources; signer never called on failure.</td></tr>
+              <tr><td><code>EmberHostBinding</code></td><td>Public SDK type</td><td>Distinguish an origin-bound host with an explicit expected HTTPS or Chrome-extension origin from an application-bound host with an exact application ID. Map this host contract to the narrower generated wire DTO at the transport edge.</td><td>HTTPS web, extension and native construction; canonical values; no secret fields or wire-only leakage.</td></tr>
+              <tr><td><code>ExpectedChallengeAuthority</code></td><td>Core type</td><td>Closed expected facts derived from session-opening input and <code>EmberHostBinding</code>, including exact origin/application identity, integration, environment, wallet, session key and scopes.</td><td>Web, extension and native construction; no runtime-global dependency.</td></tr>
+              <tr><td><code>parsePersistedWalletSession(value)</code></td><td>Core validation</td><td>Runtime-validate storage values, canonical keys, scopes, environment and timestamp ordering.</td><td>Corrupt JSON shapes; invalid dates; unknown scope; wrong key; valid restore.</td></tr>
+              <tr><td><code>currentSession()</code></td><td>Application client</td><td>Return only a validated session or <code>null</code>; never expose malformed stored authority as trusted state.</td><td>Malformed storage clears safely; valid expired session has an explicit state policy.</td></tr>
+              <tr><td><code>sessionState(session, now)</code></td><td>Core policy helper</td><td>Return a discriminated state such as active, rotate-soon, reauthentication-required or refresh-window-expired.</td><td>Boundary timestamps at access and refresh expiry; identical results in every host.</td></tr>
+              <tr><td><code>decisionFreshness(decision, now, minimumRemainingMs)</code></td><td>Core policy helper</td><td>Return fresh, near-expiry or expired without importing a protected-signer or UI concern.</td><td>Exact equality, safety margin and malformed time.</td></tr>
+              <tr><td><code>assertOfferMatchesRequest</code></td><td>Application client</td><td>Match returned offer ID and environment/cluster.</td><td>Wrong ID and wrong cluster.</td></tr>
+              <tr><td><code>assertTermsAcceptanceMatchesRequest</code></td><td>Application client</td><td>Match offer/version, terms version, document hash and active wallet subject.</td><td>Each stale fact rejected independently.</td></tr>
+              <tr><td><code>assertPaymentMatchesRequest</code></td><td>Application client</td><td>Match quote ID and payment signature for creation; match payment ID for reads.</td><td>Cross-payment and stale-signature fixtures.</td></tr>
+              <tr><td><code>assertCoverageMatchesAuthority</code></td><td>Application client</td><td>Match requested coverage ID, active subject and protected wallet.</td><td>Wrong coverage, subject and wallet.</td></tr>
+              <tr><td><code>assertDecisionMatchesRequest</code></td><td>Application client</td><td>Match coverage instance, protected wallet, decision kind and authoritative response identity.</td><td>Wrong kind/coverage/wallet; expired decision.</td></tr>
+              <tr><td><code>assertClaimMatchesAuthority</code></td><td>Application client</td><td>Match claim/path ID, decision, coverage instance and protected wallet.</td><td>Cross-claim and cross-wallet responses.</td></tr>
+              <tr><td><code>assertEvidenceUploadGrant</code></td><td>Core validation</td><td>Require an unexpired, contract-approved method, production HTTPS URL and safe header structure.</td><td>HTTP URL, wrong method, expiry and unexpected status.</td></tr>
+              <tr><td><code>EmberResponseMismatchError</code></td><td>Public error type</td><td>Distinguish a semantically wrong successful response from transport, API and malformed-schema failures.</td><td>Error classification through <code>reviewForSigning</code> remains fail-open.</td></tr>
+              <tr><td><code>RequestDefinition.pathTemplate</code></td><td>Transport</td><td>Keep actual path for signing and fetching, but expose only a static template to telemetry.</td><td>Dynamic IDs never appear in telemetry events.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="branches">
+        <p class="eyebrow">Incremental delivery</p>
+        <h2>Branch sequence with automated and manual gates</h2>
+        <p>No branch starts until the previous branch is merged and its manual QA record is attached. Each branch is intentionally bounded so a failure can be isolated without rewriting the SDK.</p>
+        <div class="branch-plan" style="margin-top:16px">
+          <article class="branch">
+            <div class="branch-head"><h3>00 · Contract authority and provenance</h3><div><span class="status good">Complete</span> <code>codex/sdk-00-contract-authority</code></div></div>
+            <div class="branch-columns">
+              <div><h4>Build</h4><ul><li>Record the upstream contract revision, artifact path, version and SHA-256.</li><li>Declare this repository as sole package authority.</li><li>Publish the provenance manifest with the npm package.</li><li>Document the contract-change and regeneration sequence.</li><li>Scan this retained planning artifact as public repository content.</li></ul></div>
+              <div><h4>Automated gate</h4><ul><li>Generated files current.</li><li>Contract bytes and version match strict provenance metadata.</li><li>Provenance rejects malformed paths and revisions.</li><li>Public boundary includes HTML planning documents.</li><li>Package contains the exact public provenance file and no private implementation.</li></ul></div>
+              <div><h4>Manual QA · Passed 14 September 2026</h4><ul><li><code>npm run contract:check</code> confirmed the recorded digest, contract version and all three generated files.</li><li>The tampering suite rejects changed contract bytes, unsafe paths and shortened upstream revisions.</li><li><code>npm run pack:check</code> confirmed the exact eleven-file public package.</li><li>The package allowlist contains no backend or wallet-application implementation.</li></ul></div>
+            </div>
+          </article>
+
+          <article class="branch">
+            <div class="branch-head"><h3>01 · Session and protected-signing security</h3><div><span class="status attention">Next · Not started</span> <code>codex/sdk-01-session-security</code></div></div>
+            <div class="branch-columns">
+              <div><h4>Build</h4><ul><li>Complete challenge parser and authority validator.</li><li>Add the explicit SDK host-binding type.</li><li>Verify HTTPS origin, Chrome-extension origin and native application binding.</li><li>Persisted-session parser and session-state helper.</li><li>Fail before protected signing.</li></ul></div>
+              <div><h4>Automated gate</h4><ul><li>Tamper every challenge field.</li><li>Web, extension and native binding cases.</li><li>Challenge timing boundaries.</li><li>Malformed storage matrix.</li><li>15-minute/24-hour session-state boundaries.</li><li>No wallet signer calls on rejected challenge.</li></ul></div>
+              <div><h4>Manual QA</h4><ul><li>Open real sandbox sessions from each declared host fixture.</li><li>Inspect the human-readable messages.</li><li>Test wrong origin/application ID, replay and expiry.</li><li>Restart with valid and deliberately corrupted storage.</li></ul></div>
+            </div>
+          </article>
+
+          <article class="branch">
+            <div class="branch-head"><h3>02 · Response integrity and privacy</h3><div><span class="status planned">Not started</span> <code>codex/sdk-02-response-integrity</code></div></div>
+            <div class="branch-columns">
+              <div><h4>Build</h4><ul><li>Explicit response correlation per use case.</li><li>Typed semantic mismatch error.</li><li>Static telemetry route templates.</li><li>Evidence grant validation.</li><li>Backend enum improvements and regeneration.</li></ul></div>
+              <div><h4>Automated gate</h4><ul><li>Cross-resource response fixtures.</li><li>Cross-wallet and cross-subject fixtures.</li><li>Telemetry privacy assertions.</li><li>Upload URL/method/expiry tests.</li><li>Generated schema enum tests.</li></ul></div>
+              <div><h4>Manual QA</h4><ul><li>Proxy one valid response to the wrong request.</li><li>Confirm the SDK rejects it locally.</li><li>Capture telemetry events and inspect identifiers.</li><li>Exercise an evidence grant without uploading customer material.</li></ul></div>
+            </div>
+          </article>
+
+          <article class="branch">
+            <div class="branch-head"><h3>03 · Complete SDK lifecycle coverage</h3><div><span class="status planned">Not started</span> <code>codex/sdk-03-lifecycle-coverage</code></div></div>
+            <div class="branch-columns">
+              <div><h4>Build</h4><ul><li>Behavior tests for every public method.</li><li>Retry and non-retry matrix.</li><li>Idempotency and cancellation matrix.</li><li>Decision freshness helper.</li><li>Document product compatibility behavior.</li></ul></div>
+              <div><h4>Automated gate</h4><ul><li>All public methods exercised.</li><li>Every retry receives a fresh JTI.</li><li>Mutation replay rules remain exact.</li><li>Fail-open signing never claims cover.</li><li>Package and consumer checks still pass.</li></ul></div>
+              <div><h4>Manual QA</h4><ul><li>Force timeout, abort, malformed response and 5xx.</li><li>Confirm no duplicate payment or claim.</li><li>Test near-expiry and expired decisions.</li><li>Verify error messages are support-safe.</li></ul></div>
+            </div>
+          </article>
+
+          <article class="branch">
+            <div class="branch-head"><h3>04 · Real API conformance</h3><div><span class="status planned">Not started</span> <code>codex/sdk-04-api-conformance</code></div></div>
+            <div class="branch-columns">
+              <div><h4>Build</h4><ul><li>Keep the conformance runner in this SDK repository.</li><li>Install the packed standalone SDK rather than importing source.</li><li>Use real ephemeral and wallet signer fixtures.</li><li>Run the secretless lifecycle against a configured real test API.</li><li>Record the API contract revision used as evidence.</li></ul></div>
+              <div><h4>Automated gate</h4><ul><li>Challenge/session/rotation/revocation.</li><li>Offer/terms/quote.</li><li>Payment/coverage.</li><li>Decision/evidence/lineage.</li><li>Eligibility/claim/upload/appeal.</li></ul></div>
+              <div><h4>Manual QA</h4><ul><li>Complete the journey against the designated test API.</li><li>Record returned public lifecycle identifiers and expected states.</li><li>Kill the client between each durable transition.</li><li>Resume without repeating a side effect.</li></ul></div>
+            </div>
+          </article>
+
+          <article class="branch">
+            <div class="branch-head"><h3>05 · Origin-bound web and Chrome conformance</h3><div><span class="status planned">Not started</span> <code>codex/sdk-05-origin-host-conformance</code></div></div>
+            <div class="branch-columns">
+              <div><h4>Build</h4><ul><li>Minimal HTTPS web-wallet/PWA fixture.</li><li>Chrome Manifest V3 extension fixture or pinned consumer.</li><li>Install the exact packed SDK tarball in both.</li><li>Use an intentional host-neutral library build configuration.</li><li>Exercise window and service-worker contexts.</li><li>Document the required external API CORS contract.</li><li>Define host-owned storage and tab coordination.</li><li>Update package description, README and QA host matrix.</li></ul></div>
+              <div><h4>Automated gate</h4><ul><li>Browser-target bundle has no Node-only runtime dependency.</li><li>Challenge preflight and signed-header preflight succeed against the conformance API.</li><li>Exact HTTPS and Chrome-extension origins bind correctly.</li><li>Unapproved and mismatched origins fail.</li><li>Default and injected crypto execute.</li><li>Reload and multi-tab cases preserve one authority.</li></ul></div>
+              <div><h4>Manual QA</h4><ul><li>Open, restore, rotate and revoke in web and extension hosts.</li><li>Exercise approval, payment recovery and evidence outbox flows.</li><li>Switch accounts and reopen multiple tabs.</li><li>Suspend and restart the extension worker.</li><li>Inspect CSP, storage and telemetry behavior.</li></ul></div>
+            </div>
+          </article>
+
+          <article class="branch">
+            <div class="branch-head"><h3>06 · Native-mobile conformance</h3><div><span class="status planned">Not started</span> <code>codex/sdk-06-native-mobile-conformance</code></div></div>
+            <div class="branch-columns">
+              <div><h4>Build</h4><ul><li>Minimal clean React Native fixtures.</li><li>Install the exact packed SDK tarball.</li><li>Real runtime-compatible fetch and crypto adapters.</li><li>Secure-storage and ephemeral-signer test adapters.</li><li>No Expo or mobile framework dependency in the SDK.</li></ul></div>
+              <div><h4>Automated gate</h4><ul><li>Metro bundles the Android target.</li><li>Android/Hermes starts.</li><li>Request proof matches shared vectors.</li><li>Storage survives process death.</li><li>No Node-only module enters the Android runtime bundle.</li></ul></div>
+              <div><h4>Manual QA</h4><ul><li>Install on emulators and representative physical devices.</li><li>Open, restore, rotate and revoke a session.</li><li>Background beyond 15 minutes and recover honestly.</li><li>Record biometric/PIN timing for the decision margin.</li></ul></div>
+            </div>
+          </article>
+
+          <article class="branch">
+            <div class="branch-head"><h3>07 · Shared release candidate</h3><div><span class="status planned">Not started</span> <code>codex/sdk-07-release-candidate</code></div></div>
+            <div class="branch-columns">
+              <div><h4>Build</h4><ul><li>Resolve development dependency audit failures.</li><li>Define beta, release-candidate and latest tags.</li><li>Publish with provenance and signed source tag.</li><li>Document the exact supported-host matrix.</li><li>Write compatibility and rollback notes.</li></ul></div>
+              <div><h4>Automated gate</h4><ul><li>Full audit clean at configured threshold.</li><li>All SDK verification passes.</li><li>Real API conformance passes.</li><li>HTTPS web-wallet and Chrome-extension consumers pass.</li><li>Declared native-mobile consumers pass.</li></ul></div>
+              <div><h4>Manual QA</h4><ul><li>Install from the published tarball only.</li><li>Repeat account, payment and signing journeys in every supported host.</li><li>Verify package provenance and tag.</li><li>Practice pin rollback to the previous compatible release.</li></ul></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="testing" class="surface">
+        <p class="eyebrow">Verification strategy</p>
+        <h2>Tests around business rules, not implementation details</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Level</th><th>Purpose</th><th>Required evidence</th><th>Must not depend on</th></tr></thead>
+            <tbody>
+              <tr><td>Pure rule tests</td><td>Challenge authority, session state, response correlation, decision freshness, upload-grant safety.</td><td>Deterministic clocks, table-driven boundary cases and no network.</td><td>React, Android, database, RPC or real external services.</td></tr>
+              <tr><td>SDK transport tests</td><td>Exact request body, path proof, JTI, retries, timeouts, cancellation and error mapping.</td><td>Mock server records exact bytes and headers.</td><td>Private implementation fields or test-only production branches.</td></tr>
+              <tr><td>Contract tests</td><td>Generated request/response states match backend OpenAPI.</td><td>Contract hash, generation check and representative decoding vectors.</td><td>Handwritten duplicate DTOs.</td></tr>
+              <tr><td>Real API conformance</td><td>Prove the public SDK interoperates with the configured Ember test API.</td><td>Actual API, signer fixtures, public lifecycle responses and recorded contract revision.</td><td>Legacy partner client or backend source imports.</td></tr>
+              <tr><td>Consumer compatibility</td><td>Prove the package works in Node ESM/CJS packaging checks, an HTTPS web wallet/PWA, the Chrome extension and declared native-mobile runtimes.</td><td>Install the packed/published artifact, bundle, start and execute representative flows in each target.</td><td>Importing SDK source directly or treating a Node import as browser/mobile evidence.</td></tr>
+              <tr><td>Manual product QA</td><td>Prove account, payment, decision-expiry and recovery behavior is understandable and honest.</td><td>Named build, test record, screenshots/logs without secrets and expected backend IDs.</td><td>Assuming a green unit test proves user comprehension.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="grid" style="margin-top:16px">
+          <article class="card"><h3>Failure matrix</h3><ul><li>Offline before request.</li><li>Connection loss after server commit.</li><li>Timeout with late response.</li><li>Caller cancellation.</li><li>Process death after signing.</li><li>Malformed success payload.</li><li>Wrong resource response.</li><li>Expired authority.</li></ul></article>
+          <article class="card"><h3>Security matrix</h3><ul><li>Challenge tampering and replay.</li><li>Session signer mismatch.</li><li>Wrong client binding.</li><li>Wrong environment or cluster.</li><li>JTI replay.</li><li>Body/path mutation.</li><li>Quote hash/signature/key failure.</li><li>Telemetry identifier leakage.</li></ul></article>
+        </div>
+      </section>
+
+      <section id="manual-qa">
+        <p class="eyebrow">Manual checkpoints</p>
+        <h2>Minimum end-to-end scripts before a host is declared supported</h2>
+        <div class="grid three">
+          <article class="card"><h3>Account script</h3><ol><li>Select wallet.</li><li>Inspect challenge.</li><li>Approve ownership.</li><li>Verify backend subject.</li><li>Restart and restore.</li><li>Rotate near expiry.</li><li>Revoke and confirm failure.</li></ol></article>
+          <article class="card"><h3>Payment script</h3><ol><li>Read offer.</li><li>Accept exact terms.</li><li>Verify quote.</li><li>Simulate USDC payment.</li><li>Sign once.</li><li>Interrupt after broadcast.</li><li>Resume same payment.</li><li>Verify one coverage instance.</li></ol></article>
+          <article class="card"><h3>Signing script</h3><ol><li>Request covered review.</li><li>Inspect exact bytes.</li><li>Approve protected signing.</li><li>Queue evidence.</li><li>Confirm lineage.</li><li>Repeat near expiry.</li><li>Expire during approval.</li><li>Confirm no silent cover claim.</li></ol></article>
+          <article class="card"><h3>Claim script</h3><ol><li>Check eligibility.</li><li>Create with stable key.</li><li>Interrupt response.</li><li>Retry without duplicate.</li><li>Request upload.</li><li>Validate grant.</li><li>Complete evidence.</li><li>Read authoritative state.</li></ol></article>
+          <article class="card"><h3>Privacy script</h3><ol><li>Enable telemetry collector.</li><li>Exercise all dynamic routes.</li><li>Inspect events.</li><li>Confirm no IDs, wallets, signatures, bodies or tokens appear.</li></ol></article>
+          <article class="card"><h3>Package and host script</h3><ol><li>Download the exact release.</li><li>Verify integrity and provenance.</li><li>Install without workspace links.</li><li>Run ESM/CJS packaging, HTTPS web, Chrome extension and declared mobile checks.</li><li>Confirm the bundle secret scan.</li></ol></article>
+        </div>
+      </section>
+
+      <section id="release" class="surface">
+        <p class="eyebrow">Technical release criteria</p>
+        <h2>What must be true before supported wallet hosts depend on the SDK</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Criterion</th><th>Evidence</th><th>Required</th></tr></thead>
+            <tbody>
+              <tr><td>Contract authority is unambiguous</td><td>Upstream revision, artifact path, contract version and SHA-256 are machine-checked and published; external copies are non-authoritative.</td><td>Yes</td></tr>
+              <tr><td>Protected signing cannot receive an unverified challenge</td><td>Complete challenge tampering suite.</td><td>Yes</td></tr>
+              <tr><td>Successful responses cannot cross resource or wallet boundaries</td><td>Semantic correlation suite.</td><td>Yes</td></tr>
+              <tr><td>Persisted authority fails closed</td><td>Corrupt-storage and restart suite.</td><td>Yes</td></tr>
+              <tr><td>SDK works with the real API</td><td>SDK-owned full secretless conformance journey against the designated test API.</td><td>Yes</td></tr>
+              <tr><td>HTTPS web wallets can reach the API</td><td>Real-browser challenge and signed requests pass preflight with an exact approved origin; mismatched origins fail.</td><td>Yes</td></tr>
+              <tr><td>SDK works in origin-bound browser hosts</td><td>The packed artifact executes in the HTTPS web-wallet/PWA fixture and Chrome Manifest V3 extension.</td><td>Yes</td></tr>
+              <tr><td>SDK works in declared native-mobile hosts</td><td>The packed artifact bundles and executes on Android/Hermes and a representative Solana phone. iOS is not listed as supported until equivalent evidence exists.</td><td>Yes</td></tr>
+              <tr><td>Telemetry boundary matches privacy promise</td><td>No dynamic identifiers in captured events.</td><td>Yes</td></tr>
+              <tr><td>Release automation is healthy</td><td>Verification, audit, provenance and package checks pass.</td><td>Yes</td></tr>
+              <tr><td>Users prefer Ember to another wallet</td><td>Measured after usable product testing.</td><td>No—this is the adoption experiment, not an SDK release gate.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="risks">
+        <p class="eyebrow">Risk and decision log</p>
+        <h2>Known risks, settled rules and external facts still needed</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Item</th><th>Status</th><th>Handling</th></tr></thead>
+            <tbody>
+              <tr><td>Wallet address is Ember account identity; no email/password signup</td><td><span class="status good">Settled</span></td><td>Preserve the backend wallet-subject model. Signup is free and separate from payment.</td></tr>
+              <tr><td>Payment activates cover only after backend confirmation</td><td><span class="status good">Settled</span></td><td>Never infer cover from a signed or broadcast transaction alone.</td></tr>
+              <tr><td>Wallet address remains the account identity across hosts</td><td><span class="status good">Settled</span></td><td>The SDK resumes the same Ember wallet subject for the same proven address; it does not import, migrate or custody seed material.</td></tr>
+              <tr><td>Decision expires during protected approval</td><td><span class="status good">Rule settled</span></td><td>Downgrade visibly; do not claim cover. Physical-phone timing still determines the safety margin.</td></tr>
+              <tr><td>Native application identifier is not cryptographic attestation</td><td><span class="status attention">Security follow-up</span></td><td>Keep current binding explicit and record platform-attestation decisions outside the SDK; the SDK must not imply stronger authority than the protocol provides.</td></tr>
+              <tr><td>Actual deployed sandbox API origin and observable CORS behavior</td><td><span class="status blocking">External fact</span></td><td>Required by SDK conformance. The SDK repository tests and records the contract but does not own API implementation.</td></tr>
+              <tr><td>Final Android application identifier and registration owner</td><td><span class="status blocking">External fact</span></td><td>Required before the first native session conformance and Android release signing. The iOS identifier becomes required only when iOS enters the declared support plan.</td></tr>
+              <tr><td>Web storage, XSS and multi-tab policy</td><td><span class="status blocking">SDK host contract</span></td><td>Define safe session partitioning, host-owned signer/credential storage, CSP expectations and rotation ownership before HTTPS web-wallet support is advertised.</td></tr>
+              <tr><td>Embedded frames, other extension schemes, Electron and server-side wallets</td><td><span class="status attention">Not committed</span></td><td>Do not infer support from ESM/CJS packaging. Add a binding threat model and conformance fixture before adding any of these hosts.</td></tr>
+              <tr><td>Production quote/product compatibility changes</td><td><span class="status planned">Policy needed</span></td><td>Document which backend changes are compatible and which require an SDK release.</td></tr>
+              <tr><td>Multiple SDK copies</td><td><span class="status attention">Drift risk</span></td><td>This repository is the sole implementation authority. External copies must consume a pinned release or be retired by their owners; this SDK does not synchronize source bidirectionally.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="references" class="surface">
+        <p class="eyebrow">Source references</p>
+        <h2>Reviewed implementation and product contracts</h2>
+        <ul>
+          <li><a href="../README.md">SDK README and public integration contract</a></li>
+          <li><a href="../src/emberClient.ts">SDK application client</a></li>
+          <li><a href="../src/session.ts">Signing and session ports</a></li>
+          <li><a href="../src/transport.ts">HTTP proof, retry and telemetry boundary</a></li>
+          <li><a href="../src/emberClient.test.ts">Current SDK behavioral tests</a></li>
+          <li><a href="../contract/wallet-v1.json">Standalone wallet OpenAPI input</a></li>
+          <li><a href="../contract/provenance.json">Imported wallet contract provenance</a></li>
+          <li><a href="../contract/README.md">Contract update and regeneration process</a></li>
+          <li>External API and wallet-consumer implementation records are referenced by revision in conformance evidence, not linked as package source.</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer>
+      <p>Ember Wallet SDK product-management artifact · shared web, extension and native host contract · documentation only · no credentials, wallet secrets or production identifiers</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -20,6 +20,7 @@ const allowedTopLevel = new Set([
   'openapi-ts.config.mjs',
   'package-lock.json',
   'package.json',
+  'project management',
   'scripts',
   'src',
   'tsconfig.json',
@@ -27,6 +28,7 @@ const allowedTopLevel = new Set([
 const scannedExtensions = new Set([
   '.cjs',
   '.cts',
+  '.html',
   '.js',
   '.json',
   '.map',

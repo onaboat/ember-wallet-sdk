@@ -15,6 +15,8 @@
     }
   },
   "files": [
+    "contract/README.md",
+    "contract/provenance.json",
     "dist",
     "README.md",
     "LICENSE"
@@ -35,6 +37,7 @@
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --sourcemap --clean",
     "boundary:check": "node scripts/check-public-boundary.mjs",
+    "contract:check": "node scripts/check-contract-provenance.mjs && npm run generate:check",
     "consumer:check": "npm run build && node scripts/check-consumers.mjs",
     "generate": "openapi-ts",
     "generate:check": "node scripts/check-generated.mjs",
@@ -45,7 +48,7 @@
     "sbom": "node scripts/write-sbom.mjs",
     "pack:check": "npm run build && node scripts/check-package-contents.mjs",
     "release:check": "node scripts/check-release-ref.mjs",
-    "verify": "npm run generate:check && npm run typecheck && npm test && npm run examples:check && npm run consumer:check && npm run scan:public && npm run pack:check",
+    "verify": "npm run contract:check && npm run typecheck && npm test && npm run examples:check && npm run consumer:check && npm run scan:public && npm run pack:check",
     "prepack": "npm run build && npm run boundary:check && node scripts/check-bundle-secrets.mjs",
     "prepublishOnly": "npm run verify"
   },

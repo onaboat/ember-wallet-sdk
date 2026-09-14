@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Declares this repository as the sole authority for the published SDK.
+- Adds a published contract-provenance manifest with strict revision, path,
+  version, and SHA-256 verification.
+- Includes the retained product plan in public-boundary scanning.
+
 ## 1.3.2-beta.1
 
 - Adds a copyable sandbox/devnet wallet-integration path to the README.

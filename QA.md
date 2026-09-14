@@ -7,7 +7,10 @@ build identifiers, tester, date, and pass/fail evidence.
 ## Package boundary
 
 - Extract the tarball and confirm it contains only `dist`, `README.md`,
-  `LICENSE`, and package metadata.
+  `LICENSE`, `contract/README.md`, `contract/provenance.json`, and package
+  metadata.
+- Confirm the published provenance digest matches the reviewed
+  `contract/wallet-v1.json` and its recorded upstream revision.
 - Install the tarball into clean React Native and browser-extension test
   projects. Both projects must build without Node-only runtime polyfills.
 - Import the package through both ESM and CommonJS entry points and confirm the

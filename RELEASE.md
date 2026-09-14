@@ -10,10 +10,12 @@ to exist first. The initial beta is therefore a one-time manual bootstrap:
 
 1. Enable two-factor authentication on the maintainer npm account.
 2. From the exact public tag, run `npm ci` and `npm run verify`.
-3. Run `npm pack` and inspect the nine-file tarball.
-4. Publish that exact tarball with
+3. Confirm `contract/provenance.json` identifies the reviewed upstream contract
+   revision and exact SHA-256.
+4. Run `npm pack` and inspect the eleven-file tarball.
+5. Publish that exact tarball with
    `npm publish <tarball> --tag beta --access public`.
-5. Confirm `npm install @embercover/wallet-sdk@beta` resolves the expected
+6. Confirm `npm install @embercover/wallet-sdk@beta` resolves the expected
    version and run the consumer smoke test.
 
 ## Subsequent versions
@@ -33,10 +35,11 @@ reviewer and tag protection.
 For each beta:
 
 1. update `package.json`, `package-lock.json`, and `CHANGELOG.md`;
-2. run `npm ci` and `npm run verify`;
+2. verify the recorded contract revision and digest, then run `npm ci` and
+   `npm run verify`;
 3. create the exact signed tag `v<package-version>`;
 4. manually run `publish.yml` from that tag;
-5. download and inspect the staged tarball on npm;
+5. download and inspect the staged tarball and its provenance manifest on npm;
 6. approve it with maintainer 2FA; and
 7. install by exact version and rerun the smoke test.
 

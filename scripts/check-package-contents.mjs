@@ -19,7 +19,14 @@ const files = packed?.files?.map((file) => file.path).sort();
 if (!Array.isArray(files) || files.length === 0) {
   throw new Error('npm pack dry-run returned no package files');
 }
-const allowedRoots = ['LICENSE', 'README.md', 'dist/', 'package.json'];
+const allowedRoots = [
+  'LICENSE',
+  'README.md',
+  'contract/README.md',
+  'contract/provenance.json',
+  'dist/',
+  'package.json',
+];
 const unexpected = files.filter(
   (file) =>
     !allowedRoots.some((allowed) =>
@@ -38,6 +45,8 @@ for (const required of [
   'dist/index.js.map',
   'LICENSE',
   'README.md',
+  'contract/README.md',
+  'contract/provenance.json',
   'package.json',
 ]) {
   if (!files.includes(required)) {
