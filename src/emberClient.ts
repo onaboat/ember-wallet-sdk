@@ -8,12 +8,15 @@ import {
   EmberEnvironmentMismatchError,
   EmberNetworkError,
   EmberQuoteVerificationError,
+  EmberResponseMismatchError,
+  type EmberResponseMismatchReason,
   EmberResponseValidationError,
   EmberSessionPersistenceError,
   EmberSessionRequiredError,
   EmberSigningError,
   EmberTimeoutError,
 } from './errors';
+import { assertEvidenceUploadGrant } from './responseIntegrity';
 import type {
   AcceptTermsRequest,
   AppealClaimRequest,
@@ -130,6 +133,7 @@ export type SigningReview =
         | 'environment'
         | 'invalid_response'
         | 'network'
+        | 'response_mismatch'
         | 'session'
         | 'signing'
         | 'timeout'
@@ -326,6 +330,8 @@ function unavailableReview(error: unknown): SigningReview {
         ? 'aborted'
         : error instanceof EmberNetworkError
           ? 'network'
+          : error instanceof EmberResponseMismatchError
+            ? 'response_mismatch'
           : error instanceof EmberResponseValidationError
             ? 'invalid_response'
             : error instanceof EmberSigningError
@@ -393,6 +399,7 @@ export class EmberWalletClient {
       method: 'POST',
       operation: 'wallet_session.challenge',
       path: '/v1/wallet-sessions/challenges',
+      pathTemplate: '/v1/wallet-sessions/challenges',
       schema: zWalletChallengeResponse,
       timeoutMs: this.transport.timeouts.bootstrapMs,
     });
@@ -431,6 +438,7 @@ export class EmberWalletClient {
       method: 'POST',
       operation: 'wallet_session.create',
       path: '/v1/wallet-sessions',
+      pathTemplate: '/v1/wallet-sessions',
       schema: zWalletSessionResponse,
       timeoutMs: this.transport.timeouts.bootstrapMs,
     });
@@ -475,6 +483,7 @@ export class EmberWalletClient {
         operation: 'wallet_session.rotate',
         options,
         path: '/v1/wallet-sessions/rotate',
+        pathTemplate: '/v1/wallet-sessions/rotate',
         schema: zWalletSessionResponse,
         timeoutMs: this.transport.timeouts.mutationMs,
       },
@@ -544,6 +553,7 @@ export class EmberWalletClient {
         operation: 'offers.list',
         options,
         path: '/v1/wallet/offers',
+        pathTemplate: '/v1/wallet/offers',
         schema: zAvailableOfferListResponse,
         timeoutMs: this.transport.timeouts.readMs,
       },
@@ -562,27 +572,68 @@ export class EmberWalletClient {
       operation: 'offers.get',
       options,
       path: `/v1/wallet/offers/${encodeURIComponent(offerId)}`,
+      pathTemplate: '/v1/wallet/offers/{offerId}',
       schema: zAvailableOfferResponse,
       timeoutMs: this.transport.timeouts.readMs,
     });
+    this.assertMatch(
+      'offers.get',
+      'offerId',
+      response.offerId,
+      offerId,
+      'resource_mismatch',
+    );
     this.assertOfferEnvironment(response);
     return response;
   }
 
-  acceptTerms(
+  async acceptTerms(
     request: AcceptTermsRequest,
     options?: EmberRequestOptions,
   ): Promise<TermsAcceptanceResponse> {
-    return this.authenticated({
+    const { response, session } = await this.authenticatedWithSession({
       body: request,
       idempotent: false,
       method: 'POST',
       operation: 'terms.accept',
       options,
       path: '/v1/wallet/terms-acceptances',
+      pathTemplate: '/v1/wallet/terms-acceptances',
       schema: zTermsAcceptanceResponse,
       timeoutMs: this.transport.timeouts.mutationMs,
     });
+    this.assertMatch(
+      'terms.accept',
+      'offerId',
+      response.offerId,
+      request.offerId,
+    );
+    this.assertMatch(
+      'terms.accept',
+      'offerVersion',
+      response.offerVersion,
+      request.offerVersion,
+    );
+    this.assertMatch(
+      'terms.accept',
+      'termsVersion',
+      response.termsVersion,
+      request.termsVersion,
+    );
+    this.assertMatch(
+      'terms.accept',
+      'documentSha256',
+      response.documentSha256,
+      request.documentSha256,
+    );
+    this.assertMatch(
+      'terms.accept',
+      'walletSubjectId',
+      response.walletSubjectId,
+      session.walletSubjectId,
+      'authority_mismatch',
+    );
+    return response;
   }
 
   async createQuote(
@@ -596,9 +647,16 @@ export class EmberWalletClient {
       operation: 'quotes.create',
       options,
       path: '/v1/quotes',
+      pathTemplate: '/v1/quotes',
       schema: zSignedQuoteResponse,
       timeoutMs: this.transport.timeouts.mutationMs,
     });
+    this.assertMatch(
+      'quotes.create',
+      'offerId',
+      quote.payload.offer.offerId,
+      request.offerId,
+    );
     await this.verifyQuote(quote, options);
     return quote;
   }
@@ -610,6 +668,7 @@ export class EmberWalletClient {
       operation: 'quotes.keys',
       options,
       path: '/v1/quote-signing-keys',
+      pathTemplate: '/v1/quote-signing-keys',
       schema: zQuoteSigningKeysResponse,
       timeoutMs: this.transport.timeouts.readMs,
     });
@@ -705,66 +764,125 @@ export class EmberWalletClient {
     if (!verified) throw new EmberQuoteVerificationError('invalid_signature');
   }
 
-  createPayment(
+  async createPayment(
     request: CreatePaymentRequest,
     options?: EmberRequestOptions,
   ): Promise<PaymentResponse> {
-    return this.authenticated({
+    const response = await this.authenticated({
       body: request,
       idempotent: true,
       method: 'POST',
       operation: 'payments.create',
       options,
       path: '/v1/payments',
+      pathTemplate: '/v1/payments',
       schema: zPaymentResponse,
       timeoutMs: this.transport.timeouts.mutationMs,
     });
+    this.assertMatch(
+      'payments.create',
+      'quoteId',
+      response.quoteId,
+      request.quoteId,
+    );
+    this.assertMatch(
+      'payments.create',
+      'paymentSignature',
+      response.paymentSignature,
+      request.paymentSignature,
+    );
+    return response;
   }
 
-  getPayment(
+  async getPayment(
     paymentId: string,
     options?: EmberRequestOptions,
   ): Promise<PaymentResponse> {
-    return this.authenticated({
+    const response = await this.authenticated({
       idempotent: true,
       method: 'GET',
       operation: 'payments.get',
       options,
       path: `/v1/payments/${encodeURIComponent(paymentId)}`,
+      pathTemplate: '/v1/payments/{paymentId}',
       schema: zPaymentResponse,
       timeoutMs: this.transport.timeouts.readMs,
     });
+    this.assertMatch(
+      'payments.get',
+      'paymentId',
+      response.paymentId,
+      paymentId,
+      'resource_mismatch',
+    );
+    return response;
   }
 
-  getCoverageInstance(
+  async getCoverageInstance(
     coverageInstanceId: string,
     options?: EmberRequestOptions,
   ): Promise<CoverageInstanceResponse> {
-    return this.authenticated({
+    const { response, session } = await this.authenticatedWithSession({
       idempotent: true,
       method: 'GET',
       operation: 'coverage.get',
       options,
       path: `/v1/coverage-instances/${encodeURIComponent(coverageInstanceId)}`,
+      pathTemplate: '/v1/coverage-instances/{coverageInstanceId}',
       schema: zCoverageInstanceResponse,
       timeoutMs: this.transport.timeouts.readMs,
     });
+    this.assertMatch(
+      'coverage.get',
+      'coverageInstanceId',
+      response.coverageInstanceId,
+      coverageInstanceId,
+      'resource_mismatch',
+    );
+    this.assertCoverageAuthority(response, session, 'coverage.get');
+    return response;
   }
 
-  createDecision(
+  async createDecision(
     request: CreateCoverageDecisionRequest,
     options?: EmberRequestOptions,
   ): Promise<CoverageDecisionResponse> {
-    return this.authenticated({
+    const { response, session } = await this.authenticatedWithSession({
       body: request,
       idempotent: true,
       method: 'POST',
       operation: 'decisions.create',
       options,
       path: '/v1/decisions',
+      pathTemplate: '/v1/decisions',
       schema: zCoverageDecisionResponse,
       timeoutMs: this.transport.timeouts.decisionMs,
     });
+    this.assertMatch(
+      'decisions.create',
+      'coverageInstanceId',
+      response.coverageInstanceId,
+      request.coverageInstanceId,
+    );
+    this.assertMatch('decisions.create', 'kind', response.kind, request.kind);
+    this.assertMatch(
+      'decisions.create',
+      'protectedWallet',
+      response.protectedWallet,
+      session.walletAddress,
+      'authority_mismatch',
+    );
+    if (
+      Date.parse(response.decisionExpiresAt) <=
+      this.transport.currentDate().getTime()
+    ) {
+      throw new EmberResponseMismatchError(
+        'decisions.create',
+        'decisionExpiresAt',
+        'expired',
+      );
+    }
+    return response;
   }
 
   async reviewForSigning(
@@ -778,69 +896,112 @@ export class EmberWalletClient {
     }
   }
 
-  getDecision(
+  async getDecision(
     decisionId: string,
     options?: EmberRequestOptions,
   ): Promise<CoverageDecisionResponse> {
-    return this.authenticated({
+    const { response, session } = await this.authenticatedWithSession({
       idempotent: true,
       method: 'GET',
       operation: 'decisions.get',
       options,
       path: `/v1/decisions/${encodeURIComponent(decisionId)}`,
+      pathTemplate: '/v1/decisions/{decisionId}',
       schema: zCoverageDecisionResponse,
       timeoutMs: this.transport.timeouts.readMs,
     });
+    this.assertMatch(
+      'decisions.get',
+      'decisionId',
+      response.decisionId,
+      decisionId,
+      'resource_mismatch',
+    );
+    this.assertMatch(
+      'decisions.get',
+      'protectedWallet',
+      response.protectedWallet,
+      session.walletAddress,
+      'authority_mismatch',
+    );
+    return response;
   }
 
-  getDecisionLineage(
+  async getDecisionLineage(
     decisionId: string,
     options?: EmberRequestOptions,
   ): Promise<DecisionLineageResponse> {
-    return this.authenticated({
+    const response = await this.authenticated({
       idempotent: true,
       method: 'GET',
       operation: 'decisions.lineage',
       options,
       path: `/v1/decisions/${encodeURIComponent(decisionId)}/lineage`,
+      pathTemplate: '/v1/decisions/{decisionId}/lineage',
       schema: zDecisionLineageResponse,
       timeoutMs: this.transport.timeouts.readMs,
     });
+    this.assertMatch(
+      'decisions.lineage',
+      'decisionId',
+      response.decisionId,
+      decisionId,
+      'resource_mismatch',
+    );
+    return response;
   }
 
-  submitDecisionEvidence(
+  async submitDecisionEvidence(
     decisionId: string,
     request: SubmitDecisionEvidenceRequest,
     options?: EmberRequestOptions,
   ): Promise<SubmitDecisionEvidenceResponse> {
-    return this.authenticated({
+    const response = await this.authenticated({
       body: request,
       idempotent: true,
       method: 'POST',
       operation: 'decisions.evidence',
       options,
       path: `/v1/decisions/${encodeURIComponent(decisionId)}/post-sign`,
+      pathTemplate: '/v1/decisions/{decisionId}/post-sign',
       schema: zSubmitDecisionEvidenceResponse,
       timeoutMs: this.transport.timeouts.mutationMs,
     });
+    this.assertMatch(
+      'decisions.evidence',
+      'decisionId',
+      response.decisionId,
+      decisionId,
+      'resource_mismatch',
+    );
+    return response;
   }
 
-  claimEligibility(
+  async claimEligibility(
     decisionId: string,
     options?: EmberRequestOptions,
   ): Promise<ClaimEligibilityResponse> {
-    return this.authenticated({
+    const response = await this.authenticated({
       idempotent: true,
       method: 'GET',
       operation: 'claims.eligibility',
       options,
       path: `/v1/wallet/decisions/${encodeURIComponent(decisionId)}/claim-eligibility`,
+      pathTemplate: '/v1/wallet/decisions/{decisionId}/claim-eligibility',
       schema: zClaimEligibilityResponse,
       timeoutMs: this.transport.timeouts.readMs,
     });
+    this.assertMatch(
+      'claims.eligibility',
+      'decisionId',
+      response.decisionId,
+      decisionId,
+      'resource_mismatch',
+    );
+    return response;
   }
 
-  createClaim(
+  async createClaim(
     request: CreateClaimRequest,
     options?: EmberRequestOptions,
   ): Promise<WalletClaimResponse> {
@@ -848,93 +1009,182 @@ export class EmberWalletClient {
       options?.idempotencyKey ??
       `claim-${this.transport.crypto.randomUuid().toLowerCase()}`;
     this.assertIdempotencyKey(idempotencyKey);
-    return this.authenticated({
+    const { response, session } = await this.authenticatedWithSession({
       body: request,
       idempotent: true,
       method: 'POST',
       operation: 'claims.create',
       options: { ...options, idempotencyKey },
       path: '/v1/wallet/claims',
+      pathTemplate: '/v1/wallet/claims',
       schema: zWalletClaimResponse,
       timeoutMs: this.transport.timeouts.mutationMs,
     });
+    this.assertMatch(
+      'claims.create',
+      'decisionId',
+      response.decisionId,
+      request.decisionId,
+    );
+    this.assertClaimAuthority(response, session, 'claims.create');
+    return response;
   }
 
-  listClaims(options?: EmberRequestOptions): Promise<WalletClaimListResponse> {
-    return this.authenticated({
+  async listClaims(
+    options?: EmberRequestOptions,
+  ): Promise<WalletClaimListResponse> {
+    const { response, session } = await this.authenticatedWithSession({
       idempotent: true,
       method: 'GET',
       operation: 'claims.list',
       options,
       path: '/v1/wallet/claims',
+      pathTemplate: '/v1/wallet/claims',
       schema: zWalletClaimListResponse,
       timeoutMs: this.transport.timeouts.readMs,
     });
+    for (const claim of response.claims) {
+      this.assertClaimAuthority(claim, session, 'claims.list');
+    }
+    return response;
   }
 
-  getClaim(
+  async getClaim(
     claimId: string,
     options?: EmberRequestOptions,
   ): Promise<WalletClaimResponse> {
-    return this.authenticated({
+    const { response, session } = await this.authenticatedWithSession({
       idempotent: true,
       method: 'GET',
       operation: 'claims.get',
       options,
       path: `/v1/wallet/claims/${encodeURIComponent(claimId)}`,
+      pathTemplate: '/v1/wallet/claims/{claimId}',
       schema: zWalletClaimResponse,
       timeoutMs: this.transport.timeouts.readMs,
     });
+    this.assertMatch(
+      'claims.get',
+      'claimId',
+      response.claimId,
+      claimId,
+      'resource_mismatch',
+    );
+    this.assertClaimAuthority(response, session, 'claims.get');
+    return response;
   }
 
-  appealClaim(
+  async appealClaim(
     claimId: string,
     request: AppealClaimRequest,
     options?: EmberRequestOptions,
   ): Promise<WalletClaimResponse> {
-    return this.authenticated({
+    const { response, session } = await this.authenticatedWithSession({
       body: request,
       idempotent: false,
       method: 'POST',
       operation: 'claims.appeal',
       options,
       path: `/v1/wallet/claims/${encodeURIComponent(claimId)}/appeals`,
+      pathTemplate: '/v1/wallet/claims/{claimId}/appeals',
       schema: zWalletClaimResponse,
       timeoutMs: this.transport.timeouts.mutationMs,
     });
+    this.assertMatch(
+      'claims.appeal',
+      'claimId',
+      response.claimId,
+      claimId,
+      'resource_mismatch',
+    );
+    this.assertClaimAuthority(response, session, 'claims.appeal');
+    return response;
   }
 
-  beginClaimEvidenceUpload(
+  async beginClaimEvidenceUpload(
     claimId: string,
     request: BeginEvidenceUploadRequest,
     options?: EmberRequestOptions,
   ): Promise<EvidenceUploadResponse> {
-    return this.authenticated({
+    const response = await this.authenticated({
       body: request,
       idempotent: false,
       method: 'POST',
       operation: 'claims.evidence.begin',
       options,
       path: `/v1/wallet/claims/${encodeURIComponent(claimId)}/evidence-uploads`,
+      pathTemplate: '/v1/wallet/claims/{claimId}/evidence-uploads',
       schema: zEvidenceUploadResponse,
       timeoutMs: this.transport.timeouts.mutationMs,
     });
+    this.assertMatch(
+      'claims.evidence.begin',
+      'claimId',
+      response.claimId,
+      claimId,
+      'resource_mismatch',
+    );
+    this.assertMatch(
+      'claims.evidence.begin',
+      'requestId',
+      response.requestId,
+      request.requestId,
+    );
+    this.assertMatch(
+      'claims.evidence.begin',
+      'evidenceCode',
+      response.evidenceCode,
+      request.evidenceCode,
+    );
+    if (response.status !== 'pending_upload' || !response.upload) {
+      throw new EmberResponseMismatchError(
+        'claims.evidence.begin',
+        'status',
+        'unexpected_state',
+      );
+    }
+    assertEvidenceUploadGrant(response.upload, this.transport.currentDate());
+    return response;
   }
 
-  completeClaimEvidenceUpload(
+  async completeClaimEvidenceUpload(
     claimId: string,
     evidenceId: string,
     options?: EmberRequestOptions,
   ): Promise<EvidenceUploadResponse> {
-    return this.authenticated({
+    const response = await this.authenticated({
       idempotent: true,
       method: 'POST',
       operation: 'claims.evidence.complete',
       options,
       path: `/v1/wallet/claims/${encodeURIComponent(claimId)}/evidence-uploads/${encodeURIComponent(evidenceId)}/complete`,
+      pathTemplate:
+        '/v1/wallet/claims/{claimId}/evidence-uploads/{evidenceId}/complete',
       schema: zEvidenceUploadResponse,
       timeoutMs: this.transport.timeouts.mutationMs,
     });
+    this.assertMatch(
+      'claims.evidence.complete',
+      'claimId',
+      response.claimId,
+      claimId,
+      'resource_mismatch',
+    );
+    this.assertMatch(
+      'claims.evidence.complete',
+      'evidenceId',
+      response.evidenceId,
+      evidenceId,
+      'resource_mismatch',
+    );
+    if (response.status !== 'uploaded' || response.upload != null) {
+      throw new EmberResponseMismatchError(
+        'claims.evidence.complete',
+        'status',
+        'unexpected_state',
+      );
+    }
+    return response;
   }
 
   private async authenticated<T>(
@@ -945,16 +1195,34 @@ export class EmberWalletClient {
       operation: string;
       options?: EmberRequestOptions;
       path: string;
+      pathTemplate: string;
       schema: ZodType<T>;
       timeoutMs: number;
     },
   ): Promise<T> {
+    return (await this.authenticatedWithSession(definition)).response;
+  }
+
+  private async authenticatedWithSession<T>(
+    definition: {
+      body?: unknown;
+      idempotent: boolean;
+      method: 'GET' | 'POST';
+      operation: string;
+      options?: EmberRequestOptions;
+      path: string;
+      pathTemplate: string;
+      schema: ZodType<T>;
+      timeoutMs: number;
+    },
+  ): Promise<{ response: T; session: PersistedWalletSession }> {
     const session = await this.requireSession();
-    return this.transport.signedRequest(
+    const response = await this.transport.signedRequest(
       definition,
       session,
       this.sessionSigner,
     );
+    return { response, session };
   }
 
   private async revoke(
@@ -969,6 +1237,7 @@ export class EmberWalletClient {
       operation: 'wallet_session.revoke',
       options,
       path,
+      pathTemplate: path,
       schema: zRevocationResponse,
       timeoutMs: this.transport.timeouts.mutationMs,
     });
@@ -1110,6 +1379,53 @@ export class EmberWalletClient {
         `${offer.environment}/${offer.cluster}`,
         'offer',
       );
+    }
+  }
+
+  private assertCoverageAuthority(
+    response: CoverageInstanceResponse,
+    session: PersistedWalletSession,
+    operation: string,
+  ): void {
+    this.assertMatch(
+      operation,
+      'walletSubjectId',
+      response.walletSubjectId,
+      session.walletSubjectId,
+      'authority_mismatch',
+    );
+    this.assertMatch(
+      operation,
+      'protectedWallet',
+      response.protectedWallet,
+      session.walletAddress,
+      'authority_mismatch',
+    );
+  }
+
+  private assertClaimAuthority(
+    response: WalletClaimResponse,
+    session: PersistedWalletSession,
+    operation: string,
+  ): void {
+    this.assertMatch(
+      operation,
+      'protectedWallet',
+      response.protectedWallet,
+      session.walletAddress,
+      'authority_mismatch',
+    );
+  }
+
+  private assertMatch(
+    operation: string,
+    field: string,
+    received: string | number,
+    expected: string | number,
+    reason: EmberResponseMismatchReason = 'request_mismatch',
+  ): void {
+    if (received !== expected) {
+      throw new EmberResponseMismatchError(operation, field, reason);
     }
   }
 }

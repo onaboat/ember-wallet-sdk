@@ -12,6 +12,10 @@
   correlation, and typed persistence failures.
 - Replaces the ambiguous generated `client` configuration with an explicit
   `hostBinding` and requires the trusted `integrationVersion`.
+- Rejects successful responses that do not match the originating request or
+  active wallet authority with a typed `EmberResponseMismatchError`.
+- Emits only static route templates to telemetry and validates HTTPS `PUT`
+  evidence-upload grants, expiry, lifecycle state, and safe headers.
 
 ## 1.3.2-beta.1
 

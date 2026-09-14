@@ -378,6 +378,12 @@ Only clean evidence satisfies a request. Rejections remain immutable, and
 `appealClaim` opens a separate appeal review without rewriting the original
 decision.
 
+Before returning a begin-upload response, the SDK correlates its claim,
+request, and evidence code, requires the `pending_upload` state, and validates
+an unexpired HTTPS `PUT` URL. Credential, connection-control, Ember-private,
+and header-injection values are rejected. Completion must correlate the claim
+and evidence identifiers and return `uploaded` without another upload grant.
+
 ## `signAndSendTransaction`
 
 Use the same review sequence. After approval:
@@ -430,8 +436,9 @@ but cannot rotate again.
 
 ## Telemetry
 
-The optional telemetry hook receives only operation name, path template,
-attempt, duration, status, and outcome. It never receives request bodies,
+The optional telemetry hook receives only operation name, `pathTemplate`,
+attempt, duration, status, and outcome. The template contains placeholders
+such as `{claimId}`, never concrete resource identifiers. It never receives request bodies,
 wallet addresses, signed bytes, signatures, session identifiers, refresh
 credentials, or API responses.
 

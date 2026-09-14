@@ -279,19 +279,19 @@
         <h2>SDK branch overview</h2>
         <div class="progress-summary">
           <article class="card">
-            <span class="status attention">1 complete · 1 ready to push</span>
-            <strong>Branch 01 implemented</strong>
-            <p>Branch 00 is complete. Branch 01 passed the full SDK verification and is ready to push for Manual QA.</p>
+            <span class="status attention">2 complete · 1 ready to push</span>
+            <strong>Branch 02 verified</strong>
+            <p>Branches 00 and 01 are complete and pushed. Branch 02 passed the complete SDK gate and is ready for Manual QA and push.</p>
           </article>
           <article class="card">
             <span class="status attention">Current branch</span>
-            <strong><code>codex/sdk-01-session-security</code></strong>
-            <p>Implementation complete. Full verification passed with 137 tests and the exact eleven-file package.</p>
+            <strong><code>codex/sdk-02-response-integrity</code></strong>
+            <p>Response correlation, privacy-safe telemetry, typed mismatch handling and evidence-grant validation passed 156 tests and the exact eleven-file package gate.</p>
           </article>
           <article class="card">
             <span class="status planned">Next after QA</span>
-            <strong><code>codex/sdk-02-response-integrity</code></strong>
-            <p>Response integrity and privacy remains not started.</p>
+            <strong><code>codex/sdk-03-lifecycle-coverage</code></strong>
+            <p>Complete public-method lifecycle coverage begins after Branch 02 Manual QA and push.</p>
           </article>
         </div>
         <div class="table-wrap">
@@ -299,8 +299,8 @@
             <thead><tr><th>Order</th><th>Delivery branch</th><th>Branch name</th><th>Status</th></tr></thead>
             <tbody>
               <tr><td>00</td><td>Contract authority and provenance</td><td><code>codex/sdk-00-contract-authority</code></td><td><span class="status good">Done</span></td></tr>
-              <tr><td>01</td><td>Session and protected-signing security</td><td><code>codex/sdk-01-session-security</code></td><td><span class="status attention">Ready to push · Manual QA</span></td></tr>
-              <tr><td>02</td><td>Response integrity and privacy</td><td><code>codex/sdk-02-response-integrity</code></td><td><span class="status planned">Next · Not started</span></td></tr>
+              <tr><td>01</td><td>Session and protected-signing security</td><td><code>codex/sdk-01-session-security</code></td><td><span class="status good">Done · Pushed</span></td></tr>
+              <tr><td>02</td><td>Response integrity and privacy</td><td><code>codex/sdk-02-response-integrity</code></td><td><span class="status attention">Ready to push · Manual QA</span></td></tr>
               <tr><td>03</td><td>Complete SDK lifecycle coverage</td><td><code>codex/sdk-03-lifecycle-coverage</code></td><td><span class="status planned">Not started</span></td></tr>
               <tr><td>04</td><td>Real API conformance</td><td><code>codex/sdk-04-api-conformance</code></td><td><span class="status planned">Not started</span></td></tr>
               <tr><td>05</td><td>Origin-bound web and Chrome conformance</td><td><code>codex/sdk-05-origin-host-conformance</code></td><td><span class="status planned">Not started</span></td></tr>
@@ -520,7 +520,7 @@
         </article>
 
         <article class="finding">
-          <div><span class="status blocking">P0</span><div class="finding-id">SDK-004</div></div>
+          <div><span class="status good">P0 · Resolved</span><div class="finding-id">SDK-004</div></div>
           <div><h3>Correlate every successful response with its request and active authority</h3><p>Most methods trust any response that matches the generated schema. Explicit checks are needed for offer ID, terms facts, quote ID, payment signature, payment ID, coverage ID, wallet subject, protected wallet, decision kind, decision ID, claim ID and evidence identifiers.</p><p><strong>Failure impact:</strong> a validly shaped but misrouted or stale response can be accepted as the result of another operation.</p><p><strong>Exit:</strong> cross-resource fixtures fail locally with typed response-mismatch errors.</p></div>
         </article>
 
@@ -530,7 +530,7 @@
         </article>
 
         <article class="finding">
-          <div><span class="status attention">P1</span><div class="finding-id">SDK-006</div></div>
+          <div><span class="status good">P1 · Resolved</span><div class="finding-id">SDK-006</div></div>
           <div><h3>Stop telemetry from receiving resource identifiers</h3><p><a href="../src/transport.ts#L437">The telemetry emitter</a> passes the concrete request path even though the README promises a path template. Dynamic paths can reveal payment, coverage, decision, claim and evidence identifiers.</p><p><strong>Failure impact:</strong> integrations can accidentally export customer-linked identifiers to analytics systems.</p><p><strong>Exit:</strong> telemetry emits an operation and static route template only; a privacy test rejects dynamic identifiers.</p></div>
         </article>
 
@@ -550,7 +550,7 @@
         </article>
 
         <article class="finding">
-          <div><span class="status attention">P1</span><div class="finding-id">SDK-010</div></div>
+          <div><span class="status good">P1 · Resolved</span><div class="finding-id">SDK-010</div></div>
           <div><h3>Validate evidence-upload grants before host use</h3><p>Upload method, URL and status are broad strings. A production host should not blindly send claim material to an unexpected scheme, method or destination.</p><p><strong>Failure impact:</strong> sensitive evidence could be sent using an unsafe or unsupported grant.</p><p><strong>Exit:</strong> production grants require HTTPS, the contract-defined method, valid expiry and a documented header policy before returning to the host.</p></div>
         </article>
 
@@ -658,7 +658,7 @@
           </article>
 
           <article class="branch">
-            <div class="branch-head"><h3>01 · Session and protected-signing security</h3><div><span class="status attention">Ready to push · Manual QA</span> <code>codex/sdk-01-session-security</code></div></div>
+            <div class="branch-head"><h3>01 · Session and protected-signing security</h3><div><span class="status good">Complete · Pushed</span> <code>codex/sdk-01-session-security</code></div></div>
             <div class="branch-columns">
               <div><h4>Build</h4><ul><li>Complete challenge parser and authority validator.</li><li>Add the explicit SDK host-binding type.</li><li>Verify HTTPS origin, Chrome-extension origin and native application binding.</li><li>Persisted-session parser and session-state helper.</li><li>Fail before protected signing.</li></ul></div>
               <div><h4>Automated gate</h4><ul><li>Tamper every challenge field.</li><li>Web, extension and native binding cases.</li><li>Challenge timing boundaries.</li><li>Malformed storage matrix.</li><li>15-minute/24-hour session-state boundaries.</li><li>No wallet signer calls on rejected challenge.</li></ul></div>
@@ -667,11 +667,11 @@
           </article>
 
           <article class="branch">
-            <div class="branch-head"><h3>02 · Response integrity and privacy</h3><div><span class="status planned">Not started</span> <code>codex/sdk-02-response-integrity</code></div></div>
+            <div class="branch-head"><h3>02 · Response integrity and privacy</h3><div><span class="status attention">Ready to push · Manual QA</span> <code>codex/sdk-02-response-integrity</code></div></div>
             <div class="branch-columns">
-              <div><h4>Build</h4><ul><li>Explicit response correlation per use case.</li><li>Typed semantic mismatch error.</li><li>Static telemetry route templates.</li><li>Evidence grant validation.</li><li>Backend enum improvements and regeneration.</li></ul></div>
-              <div><h4>Automated gate</h4><ul><li>Cross-resource response fixtures.</li><li>Cross-wallet and cross-subject fixtures.</li><li>Telemetry privacy assertions.</li><li>Upload URL/method/expiry tests.</li><li>Generated schema enum tests.</li></ul></div>
-              <div><h4>Manual QA</h4><ul><li>Proxy one valid response to the wrong request.</li><li>Confirm the SDK rejects it locally.</li><li>Capture telemetry events and inspect identifiers.</li><li>Exercise an evidence grant without uploading customer material.</li></ul></div>
+              <div><h4>Build · Complete</h4><ul><li>Explicit response correlation per use case.</li><li>Typed semantic mismatch error and fail-open signing classification.</li><li>Static telemetry route templates.</li><li>HTTPS PUT evidence-grant, expiry, status and header validation.</li><li>Broad generated backend strings remain recorded as the upstream SDK-007 prerequisite; the SDK contract was not invented locally.</li></ul></div>
+              <div><h4>Automated gate · Passed 14 September 2026</h4><ul><li>Cross-resource response fixtures.</li><li>Cross-wallet and cross-subject fixtures.</li><li>Telemetry privacy assertions.</li><li>Upload URL, method, expiry, header and lifecycle-state tests.</li><li><code>npm run verify</code>: 156 tests, generated contract current, examples and consumers typecheck, secretless public boundary, and eleven-file package allowlist.</li></ul></div>
+              <div><h4>Manual QA checkpoint</h4><ul><li>Proxy one valid response to the wrong request; expect <code>EmberResponseMismatchError</code>.</li><li>Confirm signing review returns <code>response_mismatch</code> without claiming cover.</li><li>Capture telemetry and confirm dynamic identifiers are absent.</li><li>Exercise a valid and invalid evidence grant without uploading customer material.</li></ul></div>
             </div>
           </article>
 

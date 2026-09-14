@@ -9,6 +9,7 @@ import {
   EmberConfigurationError,
   EmberEnvironmentMismatchError,
   EmberQuoteVerificationError,
+  EmberResponseMismatchError,
   EmberSessionPersistenceError,
   EmberSessionRequiredError,
 } from './errors';
@@ -19,10 +20,13 @@ import {
   P11_WALLET_SCOPES,
   type SigningReview,
 } from './emberClient';
+import type { EmberTelemetryEvent } from './transport';
 import type {
   AvailableOfferResponse,
   CoverageDecisionResponse,
+  CoverageInstanceResponse,
   SignedQuoteResponse,
+  WalletClaimResponse,
   WalletScope,
 } from './generated/types.gen';
 import type {
@@ -173,6 +177,7 @@ function client(input: {
   sessionSigner?: EmberMessageSigner;
   store?: MemorySessionStore;
   timeoutMs?: number;
+  telemetry?: (event: EmberTelemetryEvent) => void;
   usePlatformFetch?: boolean;
 }) {
   const store = input.store ?? new MemorySessionStore(session());
@@ -189,6 +194,7 @@ function client(input: {
     retry: { maxBackoffMs: 2, maxRetries: 1, minBackoffMs: 1 },
     sessionSigner: signer,
     sessionStore: store,
+    telemetry: input.telemetry,
     timeouts: {
       bootstrapMs: input.timeoutMs ?? 500,
       decisionMs: input.timeoutMs ?? 500,
@@ -291,6 +297,60 @@ function decision(
     remainingUnderwritingEvaluations: 99,
     riskBand: 'low',
     termsVersion: 'terms-v0.1',
+    ...overrides,
+  };
+}
+
+function coverage(
+  overrides: Partial<CoverageInstanceResponse> = {},
+): CoverageInstanceResponse {
+  return {
+    activatedAt: '2026-07-27T12:05:00.000Z',
+    aggregateLimitMicros: '120000000000',
+    appealWindowDays: 7,
+    benefitPeriodCount: 12,
+    benefitPeriodLimitMicros: '10000000000',
+    coverageEndsAt: '2027-07-27T12:05:00.000Z',
+    coverageInstanceId: 'coverage_wallet-sdk',
+    coverageStartsAt: '2026-07-27T12:05:00.000Z',
+    coveredTransactionLimit: 100,
+    deductibleMicros: '0',
+    delegateLossTailDays: 30,
+    immediateLossClaimWindowDays: 7,
+    offerId: 'offer_core-annual',
+    offerVersion: 1,
+    paymentId: 'payment_wallet-sdk',
+    paymentSignature: '3'.repeat(64),
+    perLossLimitMicros: '10000000000',
+    policyVersion: 'policy-v0.1',
+    protectedWallet: WALLET,
+    quoteId: 'quote_wallet-sdk',
+    status: 'active',
+    termsVersion: 'terms-v0.1',
+    waitingPeriodDays: 0,
+    walletSubjectId: 'wallet_wallet-sdk',
+    ...overrides,
+  };
+}
+
+function claim(
+  overrides: Partial<WalletClaimResponse> = {},
+): WalletClaimResponse {
+  return {
+    claimId: 'claim_wallet-sdk',
+    claimedAmountMicros: '1000000',
+    coverageInstanceId: 'coverage_wallet-sdk',
+    decisionId: 'decision_wallet-sdk',
+    evidenceRequests: [],
+    lossEvent: 'direct_malicious_signing_loss',
+    protectedWallet: WALLET,
+    reviewDueAt: '2026-07-28T12:05:00.000Z',
+    state: 'submitted',
+    submittedAt: '2026-07-27T12:05:00.000Z',
+    timeline: [
+      { occurredAt: '2026-07-27T12:05:00.000Z', status: 'submitted' },
+    ],
+    version: 1,
     ...overrides,
   };
 }
@@ -572,6 +632,234 @@ test('rejects an offer whose environment or cluster disagrees with the client', 
   await expect(sdk.listOffers()).rejects.toBeInstanceOf(
     EmberEnvironmentMismatchError,
   );
+});
+
+test('rejects a valid offer response correlated to another resource', async () => {
+  server.use(
+    http.get(`${API}/v1/wallet/offers/offer_requested`, () =>
+      HttpResponse.json(offer({ offerId: 'offer_other' })),
+    ),
+  );
+  const { sdk } = client({});
+  const error = await sdk.getOffer('offer_requested').catch((caught: unknown) => caught);
+  expect(error).toMatchObject({
+    name: 'EmberResponseMismatchError',
+    operation: 'offers.get',
+    field: 'offerId',
+    reason: 'resource_mismatch',
+  });
+  expect((error as Error).message).not.toContain('offer_requested');
+  expect((error as Error).message).not.toContain('offer_other');
+});
+
+test('telemetry receives a static route template without the requested identifier', async () => {
+  const events: EmberTelemetryEvent[] = [];
+  server.use(
+    http.get(`${API}/v1/wallet/offers/offer_customer-linked`, () =>
+      HttpResponse.json(offer({ offerId: 'offer_customer-linked' })),
+    ),
+  );
+  const { sdk } = client({ telemetry: (event) => events.push(event) });
+  await sdk.getOffer('offer_customer-linked');
+  expect(events).toEqual([
+    expect.objectContaining({
+      operation: 'offers.get',
+      pathTemplate: '/v1/wallet/offers/{offerId}',
+      outcome: 'success',
+    }),
+  ]);
+  expect(JSON.stringify(events)).not.toContain('offer_customer-linked');
+  expect(events[0]).not.toHaveProperty('path');
+});
+
+test('rejects a terms receipt for another wallet subject', async () => {
+  server.use(
+    http.post(`${API}/v1/wallet/terms-acceptances`, () =>
+      HttpResponse.json({
+        acceptanceId: 'acceptance_wallet-sdk',
+        acceptedAt: '2026-07-27T12:05:00.000Z',
+        documentSha256: 'a'.repeat(64),
+        offerId: 'offer_core-annual',
+        offerVersion: 1,
+        termsVersion: 'terms-v0.1',
+        walletSubjectId: 'wallet_other',
+      }),
+    ),
+  );
+  const { sdk } = client({});
+  await expect(
+    sdk.acceptTerms({
+      documentSha256: 'a'.repeat(64),
+      offerId: 'offer_core-annual',
+      offerVersion: 1,
+      termsVersion: 'terms-v0.1',
+    }),
+  ).rejects.toMatchObject({
+    name: 'EmberResponseMismatchError',
+    field: 'walletSubjectId',
+    reason: 'authority_mismatch',
+  });
+});
+
+test('rejects payment creation correlated to another signature', async () => {
+  server.use(
+    http.post(`${API}/v1/payments`, () =>
+      HttpResponse.json({
+        paymentId: 'payment_wallet-sdk',
+        paymentSignature: '4'.repeat(64),
+        quoteId: 'quote_wallet-sdk',
+        status: 'pending',
+        submittedAt: '2026-07-27T12:05:00.000Z',
+        updatedAt: '2026-07-27T12:05:00.000Z',
+      }),
+    ),
+  );
+  const { sdk } = client({});
+  await expect(
+    sdk.createPayment({
+      paymentSignature: '5'.repeat(64),
+      quoteId: 'quote_wallet-sdk',
+    }),
+  ).rejects.toBeInstanceOf(EmberResponseMismatchError);
+});
+
+test('rejects coverage belonging to another active wallet subject', async () => {
+  server.use(
+    http.get(`${API}/v1/coverage-instances/coverage_wallet-sdk`, () =>
+      HttpResponse.json(coverage({ walletSubjectId: 'wallet_other' })),
+    ),
+  );
+  const { sdk } = client({});
+  await expect(sdk.getCoverageInstance('coverage_wallet-sdk')).rejects.toMatchObject({
+    name: 'EmberResponseMismatchError',
+    field: 'walletSubjectId',
+    reason: 'authority_mismatch',
+  });
+});
+
+test('reviewForSigning fails open on a semantically mismatched decision', async () => {
+  server.use(
+    http.post(`${API}/v1/decisions`, () =>
+      HttpResponse.json(decision({ coverageInstanceId: 'coverage_other' })),
+    ),
+  );
+  const { sdk } = client({});
+  await expect(
+    sdk.reviewForSigning({
+      coverageInstanceId: 'coverage_wallet-sdk',
+      kind: 'transaction',
+      transactionBytes: 'AAAA',
+    }),
+  ).resolves.toEqual({
+    status: 'unavailable',
+    coverStatus: 'unavailable',
+    reason: 'response_mismatch',
+  });
+});
+
+test('rejects a claim read that returns another claim or wallet', async () => {
+  server.use(
+    http.get(`${API}/v1/wallet/claims/claim_requested`, () =>
+      HttpResponse.json(claim({ claimId: 'claim_other', protectedWallet: '2'.repeat(32) })),
+    ),
+  );
+  const { sdk } = client({});
+  await expect(sdk.getClaim('claim_requested')).rejects.toMatchObject({
+    name: 'EmberResponseMismatchError',
+    field: 'claimId',
+    reason: 'resource_mismatch',
+  });
+});
+
+test('returns only a correlated and validated evidence upload grant', async () => {
+  server.use(
+    http.post(`${API}/v1/wallet/claims/claim_wallet-sdk/evidence-uploads`, () =>
+      HttpResponse.json({
+        claimId: 'claim_wallet-sdk',
+        evidenceCode: 'loss-proof',
+        evidenceId: 'evidence_wallet-sdk',
+        requestId: 'request_wallet-sdk',
+        retentionUntil: '2027-07-27T12:05:00.000Z',
+        status: 'pending_upload',
+        upload: {
+          expiresAt: '2026-07-27T12:15:00.000Z',
+          headers: { 'content-type': 'application/pdf' },
+          method: 'PUT',
+          url: 'https://evidence.example/upload?signature=opaque',
+        },
+      }),
+    ),
+  );
+  const { sdk } = client({});
+  await expect(
+    sdk.beginClaimEvidenceUpload('claim_wallet-sdk', {
+      contentLength: '1024',
+      contentType: 'application/pdf',
+      evidenceCode: 'loss-proof',
+      requestId: 'request_wallet-sdk',
+      sha256: 'a'.repeat(64),
+    }),
+  ).resolves.toMatchObject({ evidenceId: 'evidence_wallet-sdk' });
+});
+
+test('rejects an evidence grant in an unexpected lifecycle state', async () => {
+  server.use(
+    http.post(`${API}/v1/wallet/claims/claim_wallet-sdk/evidence-uploads`, () =>
+      HttpResponse.json({
+        claimId: 'claim_wallet-sdk',
+        evidenceCode: 'loss-proof',
+        evidenceId: 'evidence_wallet-sdk',
+        requestId: 'request_wallet-sdk',
+        retentionUntil: '2027-07-27T12:05:00.000Z',
+        status: 'uploaded',
+        upload: {
+          expiresAt: '2026-07-27T12:15:00.000Z',
+          headers: {},
+          method: 'PUT',
+          url: 'https://evidence.example/upload',
+        },
+      }),
+    ),
+  );
+  const { sdk } = client({});
+  await expect(
+    sdk.beginClaimEvidenceUpload('claim_wallet-sdk', {
+      contentLength: '1024',
+      contentType: 'application/pdf',
+      evidenceCode: 'loss-proof',
+      requestId: 'request_wallet-sdk',
+      sha256: 'a'.repeat(64),
+    }),
+  ).rejects.toMatchObject({
+    name: 'EmberResponseMismatchError',
+    field: 'status',
+    reason: 'unexpected_state',
+  });
+});
+
+test('correlates evidence completion with both path identifiers', async () => {
+  server.use(
+    http.post(
+      `${API}/v1/wallet/claims/claim_wallet-sdk/evidence-uploads/evidence_requested/complete`,
+      () =>
+        HttpResponse.json({
+          claimId: 'claim_wallet-sdk',
+          evidenceCode: 'loss-proof',
+          evidenceId: 'evidence_other',
+          requestId: 'request_wallet-sdk',
+          retentionUntil: '2027-07-27T12:05:00.000Z',
+          status: 'uploaded',
+        }),
+    ),
+  );
+  const { sdk } = client({});
+  await expect(
+    sdk.completeClaimEvidenceUpload('claim_wallet-sdk', 'evidence_requested'),
+  ).rejects.toMatchObject({
+    name: 'EmberResponseMismatchError',
+    field: 'evidenceId',
+    reason: 'resource_mismatch',
+  });
 });
 
 test('retries an exact decision with a fresh proof JTI', async () => {

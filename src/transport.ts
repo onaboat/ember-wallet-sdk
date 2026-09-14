@@ -42,7 +42,7 @@ export type EmberTelemetryEvent = {
   durationMs: number;
   operation: string;
   outcome: 'success' | 'api_error' | 'timeout' | 'aborted' | 'network_error';
-  path: string;
+  pathTemplate: string;
   status?: number;
 };
 
@@ -74,6 +74,7 @@ type RequestDefinition<T> = {
   operation: string;
   options?: EmberRequestOptions;
   path: string;
+  pathTemplate: string;
   schema: ZodType<T>;
   timeoutMs: number;
 };
@@ -460,7 +461,7 @@ export class EmberTransport {
         durationMs: Math.max(0, Date.now() - startedAt),
         operation: definition.operation,
         outcome,
-        path: definition.path,
+        pathTemplate: definition.pathTemplate,
         ...(status === undefined ? {} : { status }),
       });
     } catch {

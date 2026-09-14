@@ -110,6 +110,32 @@ export class EmberResponseValidationError extends Error {
   }
 }
 
+export type EmberResponseMismatchReason =
+  | 'authority_mismatch'
+  | 'expired'
+  | 'request_mismatch'
+  | 'resource_mismatch'
+  | 'unexpected_state'
+  | 'unsafe_upload_grant';
+
+/**
+ * A success response passed its wire schema but does not belong to the
+ * request or active wallet authority that produced it.
+ *
+ * Expected and received values are deliberately omitted so identifiers and
+ * wallet-linked data are not copied into logs by default.
+ */
+export class EmberResponseMismatchError extends Error {
+  constructor(
+    readonly operation: string,
+    readonly field: string,
+    readonly reason: EmberResponseMismatchReason,
+  ) {
+    super(`Ember returned a mismatched success response for ${operation} (${field}).`);
+    this.name = 'EmberResponseMismatchError';
+  }
+}
+
 export class EmberTimeoutError extends Error {
   constructor(
     readonly path: string,
