@@ -9,6 +9,7 @@ import {
   EmberSigningError,
   EmberTimeoutError,
 } from './errors';
+import { canonicalizeHostBinding, type EmberHostBinding } from './challenge';
 import type {
   ApiErrorResponse,
   IntegrationEnvironment,
@@ -16,7 +17,6 @@ import type {
 } from './generated/types.gen';
 import { zApiErrorResponse } from './generated/zod.gen';
 import {
-  nativeApplicationHeader,
   walletRequestPayload,
   type EmberMessageSigner,
   type PersistedWalletSession,
@@ -57,10 +57,10 @@ export interface EmberRequestOptions {
 
 export interface EmberTransportConfig {
   baseUrl: string;
-  client: WalletClientBindingRequest;
   crypto?: EmberCrypto;
   environment: IntegrationEnvironment;
   fetch?: EmberFetch;
+  hostBinding: EmberHostBinding;
   now?: () => Date;
   retry?: EmberRetryPolicy;
   telemetry?: (event: EmberTelemetryEvent) => void;
@@ -135,6 +135,20 @@ function retryableStatus(status: number): boolean {
   return status === 408 || status === 425 || status === 429 || status >= 500;
 }
 
+function toWalletClientBindingRequest(
+  binding: EmberHostBinding,
+): WalletClientBindingRequest {
+  return binding.kind === 'native'
+    ? { kind: 'native', applicationId: binding.applicationId }
+    : { kind: 'browser' };
+}
+
+function hostBindingHeaders(binding: EmberHostBinding): Record<string, string> {
+  return binding.kind === 'native'
+    ? { 'x-ember-application-id': binding.applicationId }
+    : {};
+}
+
 function retryAfterMs(response: Response, now: Date): number | undefined {
   const value = response.headers.get('retry-after');
   if (!value) return undefined;
@@ -167,6 +181,7 @@ export class EmberTransport {
   readonly timeouts: Required<EmberTimeouts>;
 
   private readonly fetch: EmberFetch;
+  private readonly hostBinding: EmberHostBinding;
   private readonly now: () => Date;
   private readonly retry: Required<EmberRetryPolicy>;
 
@@ -179,16 +194,10 @@ export class EmberTransport {
         'environment must be exactly sandbox or production.',
       );
     }
-    if (
-      (config.client.kind !== 'browser' && config.client.kind !== 'native') ||
-      (config.client.kind === 'native' &&
-        (config.client.applicationId.trim().length === 0 ||
-          config.client.applicationId.length > 255))
-    ) {
-      throw new EmberConfigurationError(
-        'client must be a browser binding or a native binding with a valid applicationId.',
-      );
-    }
+    this.hostBinding = canonicalizeHostBinding(
+      config.hostBinding,
+      config.environment,
+    );
     this.baseUrl = normalizedBaseUrl(config.baseUrl, config.environment);
     // Browser and extension runtimes expose fetch as a host method. Preserve
     // its required WorkerGlobalScope/Window receiver when the SDK supplies the
@@ -223,6 +232,10 @@ export class EmberTransport {
     return this.now();
   }
 
+  walletClientBindingRequest(): WalletClientBindingRequest {
+    return toWalletClientBindingRequest(this.hostBinding);
+  }
+
   publicRequest<T>(
     definition: Omit<RequestDefinition<T>, 'idempotent'> & {
       idempotent?: boolean;
@@ -231,7 +244,7 @@ export class EmberTransport {
     return this.request(
       { ...definition, idempotent: definition.idempotent ?? false },
       async (body) => ({
-        ...nativeApplicationHeader(this.config.client),
+        ...hostBindingHeaders(this.hostBinding),
         ...(body === undefined ? {} : { 'content-type': 'application/json' }),
       }),
     );
@@ -275,7 +288,7 @@ export class EmberTransport {
         ...(definition.options?.idempotencyKey
           ? { 'idempotency-key': definition.options.idempotencyKey }
           : {}),
-        ...nativeApplicationHeader(this.config.client),
+        ...hostBindingHeaders(this.hostBinding),
         'x-ember-wallet-jti': jti,
         'x-ember-wallet-session': session.sessionId,
         'x-ember-wallet-signature': base64Encode(signature),

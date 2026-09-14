@@ -279,19 +279,19 @@
         <h2>SDK branch overview</h2>
         <div class="progress-summary">
           <article class="card">
-            <span class="status good">1 of 8 complete</span>
-            <strong>Branch 00 passed</strong>
-            <p>Contract authority, automated verification and Manual QA are complete.</p>
+            <span class="status attention">1 complete · 1 ready to push</span>
+            <strong>Branch 01 implemented</strong>
+            <p>Branch 00 is complete. Branch 01 passed the full SDK verification and is ready to push for Manual QA.</p>
           </article>
           <article class="card">
-            <span class="status good">Current branch</span>
-            <strong><code>codex/sdk-00-contract-authority</code></strong>
-            <p>Completed locally. Nothing has been pushed.</p>
-          </article>
-          <article class="card">
-            <span class="status attention">Next</span>
+            <span class="status attention">Current branch</span>
             <strong><code>codex/sdk-01-session-security</code></strong>
-            <p>Requirements and security contracts must be reviewed before implementation.</p>
+            <p>Implementation complete. Full verification passed with 137 tests and the exact eleven-file package.</p>
+          </article>
+          <article class="card">
+            <span class="status planned">Next after QA</span>
+            <strong><code>codex/sdk-02-response-integrity</code></strong>
+            <p>Response integrity and privacy remains not started.</p>
           </article>
         </div>
         <div class="table-wrap">
@@ -299,8 +299,8 @@
             <thead><tr><th>Order</th><th>Delivery branch</th><th>Branch name</th><th>Status</th></tr></thead>
             <tbody>
               <tr><td>00</td><td>Contract authority and provenance</td><td><code>codex/sdk-00-contract-authority</code></td><td><span class="status good">Done</span></td></tr>
-              <tr><td>01</td><td>Session and protected-signing security</td><td><code>codex/sdk-01-session-security</code></td><td><span class="status attention">Next · Not started</span></td></tr>
-              <tr><td>02</td><td>Response integrity and privacy</td><td><code>codex/sdk-02-response-integrity</code></td><td><span class="status planned">Not started</span></td></tr>
+              <tr><td>01</td><td>Session and protected-signing security</td><td><code>codex/sdk-01-session-security</code></td><td><span class="status attention">Ready to push · Manual QA</span></td></tr>
+              <tr><td>02</td><td>Response integrity and privacy</td><td><code>codex/sdk-02-response-integrity</code></td><td><span class="status planned">Next · Not started</span></td></tr>
               <tr><td>03</td><td>Complete SDK lifecycle coverage</td><td><code>codex/sdk-03-lifecycle-coverage</code></td><td><span class="status planned">Not started</span></td></tr>
               <tr><td>04</td><td>Real API conformance</td><td><code>codex/sdk-04-api-conformance</code></td><td><span class="status planned">Not started</span></td></tr>
               <tr><td>05</td><td>Origin-bound web and Chrome conformance</td><td><code>codex/sdk-05-origin-host-conformance</code></td><td><span class="status planned">Not started</span></td></tr>
@@ -505,7 +505,7 @@
         <h2>Issues to resolve before certifying supported wallet hosts</h2>
 
         <article class="finding">
-          <div><span class="status blocking">P0</span><div class="finding-id">SDK-001</div></div>
+          <div><span class="status good">P0 · Resolved</span><div class="finding-id">SDK-001</div></div>
           <div><h3>Validate the complete wallet challenge before protected signing</h3><p><a href="../src/emberClient.ts#L346"><code>openSession()</code></a> validates JSON shape, then sends <code>challenge.message</code> to the wallet signer without verifying its meaning. The API message correctly binds wallet, integration/version, environment, chain, ephemeral key, client binding, scopes, nonce, request ID and expiry. The SDK must parse and compare those facts before any host wallet signer sees a signature request.</p><p><strong>Failure impact:</strong> an unexpected API response could become an arbitrary protected-wallet message-signing request.</p><p><strong>Exit:</strong> field-by-field tampering tests prove the signer is never called for an invalid challenge in web, extension or native configurations.</p></div>
         </article>
 
@@ -525,7 +525,7 @@
         </article>
 
         <article class="finding">
-          <div><span class="status attention">P1</span><div class="finding-id">SDK-005</div></div>
+          <div><span class="status good">P1 · Resolved</span><div class="finding-id">SDK-005</div></div>
           <div><h3>Treat persisted sessions as untrusted input</h3><p><a href="../src/emberClient.ts#L898"><code>requireSession()</code></a> checks signer, integration, environment and access expiry, but the session store result bypasses the generated runtime schema. Malformed timestamps, scopes and identifiers can enter through restored storage.</p><p><strong>Failure impact:</strong> corrupted or old app data produces inconsistent recovery behavior across hosts.</p><p><strong>Exit:</strong> one shared parser rejects and clears malformed persisted sessions, while valid sessions survive process restart.</p></div>
         </article>
 
@@ -658,11 +658,11 @@
           </article>
 
           <article class="branch">
-            <div class="branch-head"><h3>01 · Session and protected-signing security</h3><div><span class="status attention">Next · Not started</span> <code>codex/sdk-01-session-security</code></div></div>
+            <div class="branch-head"><h3>01 · Session and protected-signing security</h3><div><span class="status attention">Ready to push · Manual QA</span> <code>codex/sdk-01-session-security</code></div></div>
             <div class="branch-columns">
               <div><h4>Build</h4><ul><li>Complete challenge parser and authority validator.</li><li>Add the explicit SDK host-binding type.</li><li>Verify HTTPS origin, Chrome-extension origin and native application binding.</li><li>Persisted-session parser and session-state helper.</li><li>Fail before protected signing.</li></ul></div>
               <div><h4>Automated gate</h4><ul><li>Tamper every challenge field.</li><li>Web, extension and native binding cases.</li><li>Challenge timing boundaries.</li><li>Malformed storage matrix.</li><li>15-minute/24-hour session-state boundaries.</li><li>No wallet signer calls on rejected challenge.</li></ul></div>
-              <div><h4>Manual QA</h4><ul><li>Open real sandbox sessions from each declared host fixture.</li><li>Inspect the human-readable messages.</li><li>Test wrong origin/application ID, replay and expiry.</li><li>Restart with valid and deliberately corrupted storage.</li></ul></div>
+              <div><h4>Manual QA checkpoint</h4><ul><li>Run <code>npm run verify</code>; expect 137 tests and the eleven-file package allowlist.</li><li>Review the explicit <code>web</code>, <code>chrome_extension</code> and <code>native</code> configuration examples.</li><li>Confirm the challenge tests cover wrong binding, replay metadata, expiry and every signed field before the protected signer.</li><li>Real-browser, Chrome-worker and Android/Hermes execution remains deliberately gated in branches 05 and 06.</li></ul></div>
             </div>
           </article>
 

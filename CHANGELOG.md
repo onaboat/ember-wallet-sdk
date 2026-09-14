@@ -6,6 +6,12 @@
 - Adds a published contract-provenance manifest with strict revision, path,
   version, and SHA-256 verification.
 - Includes the retained product plan in public-boundary scanning.
+- Validates the complete wallet challenge and expected host authority before
+  invoking a protected-wallet signer.
+- Adds strict persisted-session parsing, lifecycle states, rotation response
+  correlation, and typed persistence failures.
+- Replaces the ambiguous generated `client` configuration with an explicit
+  `hostBinding` and requires the trusted `integrationVersion`.
 
 ## 1.3.2-beta.1
 

@@ -66,6 +66,7 @@ Before writing code, ask Ember for:
 
 - the sandbox API base URL;
 - your public `integrationId`;
+- the exact registered `integrationVersion`;
 - registration of each browser-extension origin; and
 - registration of the iOS bundle ID and Android package ID used by the native
   wallet.
@@ -108,19 +109,25 @@ declare const sessionSigner: EmberMessageSigner; // ephemeral, not the wallet ke
 declare const secureSessionStore: WalletSessionStore;
 declare const EMBER_SANDBOX_API_URL: string; // supplied by Ember
 declare const EMBER_INTEGRATION_ID: string; // supplied by Ember
+declare const EMBER_INTEGRATION_VERSION: number; // supplied by Ember
+declare const EXTENSION_ORIGIN: string; // exact chrome-extension:// origin
 
 const ember = new EmberWalletClient({
   baseUrl: EMBER_SANDBOX_API_URL,
   environment: 'sandbox',
+  hostBinding: { kind: 'chrome_extension', origin: EXTENSION_ORIGIN },
   integrationId: EMBER_INTEGRATION_ID,
-  client: { kind: 'browser' },
+  integrationVersion: EMBER_INTEGRATION_VERSION,
   sessionSigner,
   sessionStore: secureSessionStore,
 });
 ```
 
-Use `client: { kind: 'browser' }` in an extension. Ember binds that session to
-the browser-provided `Origin`; do not synthesize or override it.
+Use `hostBinding: { kind: 'chrome_extension', origin }` in an extension and
+`hostBinding: { kind: 'web', origin }` in an HTTPS web wallet or PWA. The SDK
+checks that the challenge binds the exact expected origin before asking the
+protected wallet to sign. The runtime still supplies the request `Origin`; do
+not synthesize or override that header.
 
 React Native clients use the exact Ember-registered bundle/package identifier
 and inject platform-compatible `fetch` and crypto adapters when required:
@@ -133,7 +140,8 @@ const ember = new EmberWalletClient({
   baseUrl: EMBER_SANDBOX_API_URL,
   environment: 'sandbox',
   integrationId: EMBER_INTEGRATION_ID,
-  client: {
+  integrationVersion: EMBER_INTEGRATION_VERSION,
+  hostBinding: {
     kind: 'native',
     applicationId: 'com.partner.wallet',
   },
@@ -161,9 +169,10 @@ await ember.openSession({
 });
 ```
 
-The wallet signer receives the exact SIWS-style challenge string returned by
-Ember. Its `signMessage` implementation must sign those bytes without adding
-another prefix or encoding transform.
+The SDK validates every authority field and the complete canonical SIWS-style
+message before it calls the protected-wallet signer. The signer's
+`signMessage` implementation must sign those exact bytes without adding another
+prefix or encoding transform.
 
 `P11_WALLET_SCOPES` adds `claims:create` to the core wallet lifecycle scopes.
 `P10_WALLET_SCOPES` remains available for hosts that intentionally do not
@@ -412,6 +421,12 @@ await ember.rotateSession(nextSessionSigner);
 Rotation consumes the old refresh credential and revokes the old session
 atomically on the server. A wallet should prompt for fresh ownership proof when
 rotation cannot be recovered safely.
+
+Use `sessionState(session, now, rotateBeforeMs)` with a host-chosen rotation
+window. It distinguishes `active`, `rotate_soon`, `refresh_window_expired`, and
+`reauthentication_required`. A late-rotated access session may remain active
+after its fixed refresh window closes; it can continue making signed requests
+but cannot rotate again.
 
 ## Telemetry
 

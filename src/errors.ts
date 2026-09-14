@@ -6,9 +6,22 @@ export interface EmberResponseValidationIssue {
 }
 
 export class EmberConfigurationError extends Error {
-  constructor(message: string) {
-    super(message);
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
     this.name = 'EmberConfigurationError';
+  }
+}
+
+export type EmberChallengeValidationReason =
+  | 'authority_mismatch'
+  | 'expired'
+  | 'invalid_response'
+  | 'not_yet_valid';
+
+export class EmberChallengeValidationError extends Error {
+  constructor(readonly reason: EmberChallengeValidationReason) {
+    super(`Ember wallet challenge validation failed: ${reason}.`);
+    this.name = 'EmberChallengeValidationError';
   }
 }
 
@@ -16,6 +29,18 @@ export class EmberSessionRequiredError extends Error {
   constructor(message = 'A live Ember wallet session is required.') {
     super(message);
     this.name = 'EmberSessionRequiredError';
+  }
+}
+
+export type EmberSessionPersistenceOperation = 'clear' | 'save';
+
+export class EmberSessionPersistenceError extends Error {
+  constructor(
+    readonly operation: EmberSessionPersistenceOperation,
+    options?: ErrorOptions,
+  ) {
+    super(`Ember wallet session persistence ${operation} failed.`, options);
+    this.name = 'EmberSessionPersistenceError';
   }
 }
 

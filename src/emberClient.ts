@@ -1,5 +1,6 @@
 import type { ZodType } from 'zod';
 import { base58Decode, base58Encode, sha256Hex, utf8 } from './encoding';
+import { validateWalletChallenge } from './challenge';
 import {
   EmberAbortError,
   EmberApiError,
@@ -8,6 +9,7 @@ import {
   EmberNetworkError,
   EmberQuoteVerificationError,
   EmberResponseValidationError,
+  EmberSessionPersistenceError,
   EmberSessionRequiredError,
   EmberSigningError,
   EmberTimeoutError,
@@ -65,7 +67,9 @@ import {
 import {
   type EmberMessageSigner,
   type OpenWalletSessionInput,
+  parsePersistedWalletSession,
   type PersistedWalletSession,
+  sessionState,
   type WalletSessionStore,
 } from './session';
 import {
@@ -100,6 +104,7 @@ export const P11_WALLET_SCOPES = [
 
 export interface EmberWalletClientConfig extends EmberTransportConfig {
   integrationId: string;
+  integrationVersion: number;
   sessionSigner: EmberMessageSigner;
   sessionStore: WalletSessionStore;
 }
@@ -175,6 +180,22 @@ function appendBytes(left: Uint8Array, right: Uint8Array): Uint8Array {
   combined.set(left);
   combined.set(right, left.length);
   return combined;
+}
+
+function assertCanonicalSignerKey(signer: EmberMessageSigner, label: string): void {
+  let bytes: Uint8Array;
+  try {
+    bytes = base58Decode(signer.publicKey);
+  } catch {
+    throw new EmberConfigurationError(
+      `${label} must expose a canonical base58 Solana Ed25519 public key.`,
+    );
+  }
+  if (bytes.length !== 32) {
+    throw new EmberConfigurationError(
+      `${label} must expose an exact 32-byte Solana Ed25519 public key.`,
+    );
+  }
 }
 
 function canonicalQuotePayload(payload: QuotePayloadResponse): Uint8Array {
@@ -339,12 +360,23 @@ export class EmberWalletClient {
         'integrationId must be a canonical Ember integration identifier.',
       );
     }
+    if (
+      !Number.isSafeInteger(config.integrationVersion) ||
+      config.integrationVersion < 0 ||
+      config.integrationVersion > 2_147_483_647
+    ) {
+      throw new EmberConfigurationError(
+        'integrationVersion must be a nonnegative signed 32-bit integer.',
+      );
+    }
+    assertCanonicalSignerKey(config.sessionSigner, 'sessionSigner');
     this.transport = new EmberTransport(config);
     this.sessionSigner = config.sessionSigner;
   }
 
   async openSession(input: OpenWalletSessionInput): Promise<PersistedWalletSession> {
     this.assertScopes(input.requestedScopes);
+    assertCanonicalSignerKey(input.walletSigner, 'walletSigner');
     if (input.walletSigner.publicKey === this.sessionSigner.publicKey) {
       throw new EmberConfigurationError(
         'The wallet signer and ephemeral session signer must use different keys.',
@@ -352,7 +384,7 @@ export class EmberWalletClient {
     }
     const challenge = await this.transport.publicRequest({
       body: {
-        client: this.config.client,
+        client: this.transport.walletClientBindingRequest(),
         integrationId: this.config.integrationId,
         requestedScopes: [...input.requestedScopes],
         sessionPublicKey: this.sessionSigner.publicKey,
@@ -364,6 +396,20 @@ export class EmberWalletClient {
       schema: zWalletChallengeResponse,
       timeoutMs: this.transport.timeouts.bootstrapMs,
     });
+    await validateWalletChallenge(
+      challenge,
+      {
+        environment: this.config.environment,
+        hostBinding: this.config.hostBinding,
+        integrationId: this.config.integrationId,
+        integrationVersion: this.config.integrationVersion,
+        requestedScopes: input.requestedScopes,
+        sessionPublicKey: this.sessionSigner.publicKey,
+        walletAddress: input.walletSigner.publicKey,
+      },
+      this.transport.currentDate(),
+      this.transport.crypto,
+    );
     let signature: Uint8Array;
     try {
       signature = await input.walletSigner.signMessage(utf8(challenge.message));
@@ -393,11 +439,11 @@ export class EmberWalletClient {
       input.walletSigner.publicKey,
       input.requestedScopes,
     );
-    const persisted = {
-      ...response,
-      sessionPublicKey: this.sessionSigner.publicKey,
-    };
-    await this.config.sessionStore.save(persisted);
+    const persisted = this.validatedPersistedSession(
+      response,
+      this.sessionSigner.publicKey,
+    );
+    await this.persistSession(persisted);
     return persisted;
   }
 
@@ -405,10 +451,19 @@ export class EmberWalletClient {
     nextSigner: EmberMessageSigner,
     options?: EmberRequestOptions,
   ): Promise<PersistedWalletSession> {
+    assertCanonicalSignerKey(nextSigner, 'nextSigner');
     if (nextSigner.publicKey === this.sessionSigner.publicKey) {
       throw new EmberConfigurationError('Session rotation requires a new key.');
     }
     const current = await this.requireSession();
+    if (
+      sessionState(current, this.transport.currentDate(), 0).status ===
+      'refresh_window_expired'
+    ) {
+      throw new EmberSessionRequiredError(
+        'The Ember wallet session refresh window has expired.',
+      );
+    }
     const response = await this.transport.signedRequest(
       {
         body: {
@@ -427,8 +482,23 @@ export class EmberWalletClient {
       this.sessionSigner,
     );
     this.assertNewSession(response, current.walletAddress, current.scopes);
-    const persisted = { ...response, sessionPublicKey: nextSigner.publicKey };
-    await this.config.sessionStore.save(persisted);
+    if (
+      response.partnerId !== current.partnerId ||
+      response.walletSubjectId !== current.walletSubjectId ||
+      Date.parse(response.refreshExpiresAt) !==
+        Date.parse(current.refreshExpiresAt) ||
+      response.sessionId === current.sessionId ||
+      response.refreshToken === current.refreshToken
+    ) {
+      throw new EmberSessionRequiredError(
+        'The rotated Ember session does not preserve the current session family authority.',
+      );
+    }
+    const persisted = this.validatedPersistedSession(
+      response,
+      nextSigner.publicKey,
+    );
+    await this.persistSession(persisted);
     this.sessionSigner = nextSigner;
     return persisted;
   }
@@ -448,11 +518,22 @@ export class EmberWalletClient {
   }
 
   async currentSession(): Promise<PersistedWalletSession | null> {
-    return this.config.sessionStore.load();
+    const stored = await this.config.sessionStore.load();
+    const session = parsePersistedWalletSession(stored);
+    const matchesClient =
+      session !== null &&
+      session.sessionPublicKey === this.sessionSigner.publicKey &&
+      session.integrationId === this.config.integrationId &&
+      session.integrationVersion === this.config.integrationVersion &&
+      session.environment === this.config.environment;
+    if (stored !== null && !session) {
+      await this.clearPersistedSession();
+    }
+    return matchesClient ? session : null;
   }
 
   async clearLocalSession(): Promise<void> {
-    await this.config.sessionStore.clear();
+    await this.clearPersistedSession();
   }
 
   async listOffers(options?: EmberRequestOptions): Promise<AvailableOfferListResponse> {
@@ -891,12 +972,12 @@ export class EmberWalletClient {
       schema: zRevocationResponse,
       timeoutMs: this.transport.timeouts.mutationMs,
     });
-    await this.config.sessionStore.clear();
+    await this.clearPersistedSession();
     return response;
   }
 
   private async requireSession(): Promise<PersistedWalletSession> {
-    const session = await this.config.sessionStore.load();
+    const session = await this.currentSession();
     if (!session) throw new EmberSessionRequiredError();
     if (session.sessionPublicKey !== this.sessionSigner.publicKey) {
       throw new EmberSessionRequiredError(
@@ -908,6 +989,11 @@ export class EmberWalletClient {
         'The persisted Ember session belongs to a different integration.',
       );
     }
+    if (session.integrationVersion !== this.config.integrationVersion) {
+      throw new EmberSessionRequiredError(
+        'The persisted Ember session belongs to a different integration version.',
+      );
+    }
     if (session.environment !== this.config.environment) {
       throw new EmberEnvironmentMismatchError(
         this.config.environment,
@@ -915,7 +1001,10 @@ export class EmberWalletClient {
         'wallet session',
       );
     }
-    if (this.transport.currentDate().getTime() >= Date.parse(session.expiresAt)) {
+    if (
+      sessionState(session, this.transport.currentDate(), 0).status ===
+      'reauthentication_required'
+    ) {
       throw new EmberSessionRequiredError('The Ember wallet session has expired.');
     }
     return session;
@@ -935,12 +1024,55 @@ export class EmberWalletClient {
     }
     if (
       response.integrationId !== this.config.integrationId ||
+      response.integrationVersion !== this.config.integrationVersion ||
       response.walletAddress !== walletAddress ||
       !sameScopes(requestedScopes, response.scopes)
     ) {
       throw new EmberSessionRequiredError(
         'The Ember wallet session authority does not match the requested authority.',
       );
+    }
+  }
+
+  private validatedPersistedSession(
+    response: WalletSessionResponse,
+    sessionPublicKey: string,
+  ): PersistedWalletSession {
+    const persisted = parsePersistedWalletSession({
+      ...response,
+      sessionPublicKey,
+    });
+    if (
+      !persisted ||
+      sessionState(persisted, this.transport.currentDate(), 0).status ===
+        'reauthentication_required'
+    ) {
+      throw new EmberSessionRequiredError(
+        'Ember returned a wallet session that is not valid for persistence.',
+      );
+    }
+    return persisted;
+  }
+
+  private async persistSession(session: PersistedWalletSession): Promise<void> {
+    try {
+      await this.config.sessionStore.save(session);
+    } catch (cause) {
+      try {
+        await this.config.sessionStore.clear();
+      } catch {
+        // Preserve the primary failure. The host must repair or replace a
+        // store that cannot remove a possibly partial credential write.
+      }
+      throw new EmberSessionPersistenceError('save', { cause });
+    }
+  }
+
+  private async clearPersistedSession(): Promise<void> {
+    try {
+      await this.config.sessionStore.clear();
+    } catch (cause) {
+      throw new EmberSessionPersistenceError('clear', { cause });
     }
   }
 
