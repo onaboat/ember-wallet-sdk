@@ -473,3 +473,8 @@ Both examples are typechecked in CI.
 
 Before approving a prerelease, run the complete React Native and browser
 extension checkpoint in [`QA.md`](./QA.md) against the exact release tarball.
+
+The SDK-owned real API journey is documented in
+[`CONFORMANCE.md`](./CONFORMANCE.md). It installs the packed package into a
+clean consumer and requires an external, human-approved Devnet wallet fixture;
+it never imports wallet or backend source into the SDK.

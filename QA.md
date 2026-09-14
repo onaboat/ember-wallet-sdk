@@ -75,6 +75,20 @@ build identifiers, tester, date, and pass/fail evidence.
 - Confirm all displayed amounts use integer-safe handling and never pass through
   floating-point conversion.
 
+## Real API conformance
+
+- Configure the designated sandbox authority and an operator-owned wallet
+  fixture as documented in [`CONFORMANCE.md`](./CONFORMANCE.md).
+- Review the payment recipient, amount, mint, cluster, fee payer and controlled
+  test transaction; confirm both simulations pass before setting the explicit
+  Devnet transaction approval for the run.
+- Run `npm run conformance:api` and retain the JSON evidence report.
+- Confirm the report identifies the packed SDK version and tarball SHA-256,
+  contract version/digest/upstream revision, public lifecycle identifiers and
+  every required step through appeal and revocation.
+- Confirm the report contains no credentials, signed bytes, evidence contents,
+  request bodies, private keys or upload URLs.
+
 ## Release decision
 
 The prerelease passes only when every row has evidence from both the React

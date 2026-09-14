@@ -10,12 +10,14 @@ to exist first. The initial beta is therefore a one-time manual bootstrap:
 
 1. Enable two-factor authentication on the maintainer npm account.
 2. From the exact public tag, run `npm ci` and `npm run verify`.
-3. Confirm `contract/provenance.json` identifies the reviewed upstream contract
+3. Run the packed SDK against the designated sandbox using the process in
+   `CONFORMANCE.md`, and review the provenance-bearing evidence report.
+4. Confirm `contract/provenance.json` identifies the reviewed upstream contract
    revision and exact SHA-256.
-4. Run `npm pack` and inspect the eleven-file tarball.
-5. Publish that exact tarball with
+5. Run `npm pack` and inspect the eleven-file tarball.
+6. Publish that exact tarball with
    `npm publish <tarball> --tag beta --access public`.
-6. Confirm `npm install @embercover/wallet-sdk@beta` resolves the expected
+7. Confirm `npm install @embercover/wallet-sdk@beta` resolves the expected
    version and run the consumer smoke test.
 
 ## Subsequent versions
@@ -37,11 +39,13 @@ For each beta:
 1. update `package.json`, `package-lock.json`, and `CHANGELOG.md`;
 2. verify the recorded contract revision and digest, then run `npm ci` and
    `npm run verify`;
-3. create the exact signed tag `v<package-version>`;
-4. manually run `publish.yml` from that tag;
-5. download and inspect the staged tarball and its provenance manifest on npm;
-6. approve it with maintainer 2FA; and
-7. install by exact version and rerun the smoke test.
+3. run `npm run conformance:api` against the designated sandbox and review its
+   evidence report;
+4. create the exact signed tag `v<package-version>`;
+5. manually run `publish.yml` from that tag;
+6. download and inspect the staged tarball and its provenance manifest on npm;
+7. approve it with maintainer 2FA; and
+8. install by exact version and rerun the smoke test.
 
 The workflow cannot publish directly. It can only place a package in npm's
 private staging area for later human approval.

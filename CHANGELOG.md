@@ -20,6 +20,9 @@
   near-expiry, expired, and invalid states.
 - Exercises every public client method and verifies retry, idempotency,
   cancellation, malformed-response, and fail-open signing behavior.
+- Adds an SDK-owned packed-package conformance runner for the complete
+  secretless lifecycle against a configured sandbox API, with explicit Devnet
+  transaction approval and provenance-bearing evidence reports.
 
 ## 1.3.2-beta.1
 

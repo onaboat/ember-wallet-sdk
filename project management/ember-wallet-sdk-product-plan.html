@@ -279,19 +279,19 @@
         <h2>SDK branch overview</h2>
         <div class="progress-summary">
           <article class="card">
-            <span class="status attention">3 complete · 1 ready to push</span>
-            <strong>Branch 03 verified</strong>
-            <p>Branches 00 through 02 are complete and pushed. Branch 03 passed the complete SDK gate and is ready for Manual QA and push.</p>
+            <span class="status attention">4 complete · 1 awaiting live evidence</span>
+            <strong>Branch 04 harness implemented</strong>
+            <p>Branches 00 through 03 are complete and pushed. Branch 04 has an SDK-owned packed-package runner; a designated API and secure operator wallet fixture are still required for the real conformance record.</p>
           </article>
           <article class="card">
             <span class="status attention">Current branch</span>
-            <strong><code>codex/sdk-03-lifecycle-coverage</code></strong>
-            <p>Public-method behavior, retry, idempotency, cancellation and decision-freshness coverage passed 175 tests and the exact eleven-file package gate.</p>
+            <strong><code>codex/sdk-04-api-conformance</code></strong>
+            <p>The runner covers session through revocation, reconstructs the client after durable transitions, and emits provenance-bearing evidence without credential material. The local SDK gate passes 187 tests.</p>
           </article>
           <article class="card">
-            <span class="status planned">Next after QA</span>
-            <strong><code>codex/sdk-04-api-conformance</code></strong>
-            <p>Real packed-SDK API conformance begins after Branch 03 Manual QA and push.</p>
+            <span class="status blocking">External checkpoint</span>
+            <strong>Designated sandbox inputs</strong>
+            <p>Supply the HTTPS QA API origin, registered integration/version and host identity, plus the external funded-wallet fixture. A human must approve the controlled Devnet transactions.</p>
           </article>
         </div>
         <div class="table-wrap">
@@ -301,8 +301,8 @@
               <tr><td>00</td><td>Contract authority and provenance</td><td><code>codex/sdk-00-contract-authority</code></td><td><span class="status good">Done</span></td></tr>
               <tr><td>01</td><td>Session and protected-signing security</td><td><code>codex/sdk-01-session-security</code></td><td><span class="status good">Done · Pushed</span></td></tr>
               <tr><td>02</td><td>Response integrity and privacy</td><td><code>codex/sdk-02-response-integrity</code></td><td><span class="status good">Done · Pushed</span></td></tr>
-              <tr><td>03</td><td>Complete SDK lifecycle coverage</td><td><code>codex/sdk-03-lifecycle-coverage</code></td><td><span class="status attention">Ready to push · Manual QA</span></td></tr>
-              <tr><td>04</td><td>Real API conformance</td><td><code>codex/sdk-04-api-conformance</code></td><td><span class="status planned">Not started</span></td></tr>
+              <tr><td>03</td><td>Complete SDK lifecycle coverage</td><td><code>codex/sdk-03-lifecycle-coverage</code></td><td><span class="status good">Done · Pushed</span></td></tr>
+              <tr><td>04</td><td>Real API conformance</td><td><code>codex/sdk-04-api-conformance</code></td><td><span class="status attention">Harness ready · Live run required</span></td></tr>
               <tr><td>05</td><td>Origin-bound web and Chrome conformance</td><td><code>codex/sdk-05-origin-host-conformance</code></td><td><span class="status planned">Not started</span></td></tr>
               <tr><td>06</td><td>Native-mobile conformance</td><td><code>codex/sdk-06-native-mobile-conformance</code></td><td><span class="status planned">Not started</span></td></tr>
               <tr><td>07</td><td>Shared release candidate</td><td><code>codex/sdk-07-release-candidate</code></td><td><span class="status planned">Not started</span></td></tr>
@@ -511,7 +511,7 @@
 
         <article class="finding">
           <div><span class="status blocking">P0</span><div class="finding-id">SDK-002</div></div>
-          <div><h3>Add real SDK-to-API conformance</h3><p>SDK tests mock HTTP and there is no SDK-owned automated proof that the packed public client completes the current secretless wallet protocol against the designated real test API.</p><p><strong>Failure impact:</strong> schema generation and mocked SDK tests can pass while the deployed product journey fails.</p><p><strong>Exit:</strong> an SDK-repository conformance runner installs the packed artifact and completes session, offer, terms, quote, payment, coverage, decision, evidence and claim journeys against a configured API, without importing backend source or a legacy client.</p></div>
+          <div><h3>Add real SDK-to-API conformance</h3><p>The SDK-owned runner now installs the packed artifact, uses real Ed25519 session signers, requires an external wallet/Solana fixture, reconstructs durable state, exercises the full public lifecycle and emits a provenance-bearing report. The actual designated sandbox run is not yet recorded.</p><p><strong>Failure impact:</strong> schema generation, mocked tests and a locally valid harness can pass while the deployed product journey fails.</p><p><strong>Exit:</strong> run <code>npm run conformance:api</code> with the approved sandbox authority and wallet fixture; review and attach the passing report without importing backend or wallet source.</p></div>
         </article>
 
         <article class="finding">
@@ -676,7 +676,7 @@
           </article>
 
           <article class="branch">
-            <div class="branch-head"><h3>03 · Complete SDK lifecycle coverage</h3><div><span class="status attention">Ready to push · Manual QA</span> <code>codex/sdk-03-lifecycle-coverage</code></div></div>
+            <div class="branch-head"><h3>03 · Complete SDK lifecycle coverage</h3><div><span class="status good">Complete · Pushed</span> <code>codex/sdk-03-lifecycle-coverage</code></div></div>
             <div class="branch-columns">
               <div><h4>Build · Complete</h4><ul><li>Behavior tests execute every public method.</li><li>Retry and non-retry matrix.</li><li>Payment/claim replay and cancellation matrix.</li><li>Host-neutral decision freshness helper.</li><li>Product compatibility and Manual QA behavior documented.</li></ul></div>
               <div><h4>Automated gate · Passed 14 September 2026</h4><ul><li>All 27 public client methods exercised.</li><li>Every retry receives a fresh JTI.</li><li>Business bodies and claim idempotency keys remain exact.</li><li>Fail-open signing never claims cover.</li><li><code>npm run verify</code>: 175 tests, generated contract current, examples and consumers typecheck, secretless public boundary, and eleven-file package allowlist.</li></ul></div>
@@ -685,11 +685,11 @@
           </article>
 
           <article class="branch">
-            <div class="branch-head"><h3>04 · Real API conformance</h3><div><span class="status planned">Not started</span> <code>codex/sdk-04-api-conformance</code></div></div>
+            <div class="branch-head"><h3>04 · Real API conformance</h3><div><span class="status attention">Harness ready · Live run required</span> <code>codex/sdk-04-api-conformance</code></div></div>
             <div class="branch-columns">
-              <div><h4>Build</h4><ul><li>Keep the conformance runner in this SDK repository.</li><li>Install the packed standalone SDK rather than importing source.</li><li>Use real ephemeral and wallet signer fixtures.</li><li>Run the secretless lifecycle against a configured real test API.</li><li>Record the API contract revision used as evidence.</li></ul></div>
-              <div><h4>Automated gate</h4><ul><li>Challenge/session/rotation/revocation.</li><li>Offer/terms/quote.</li><li>Payment/coverage.</li><li>Decision/evidence/lineage.</li><li>Eligibility/claim/upload/appeal.</li></ul></div>
-              <div><h4>Manual QA</h4><ul><li>Complete the journey against the designated test API.</li><li>Record returned public lifecycle identifiers and expected states.</li><li>Kill the client between each durable transition.</li><li>Resume without repeating a side effect.</li></ul></div>
+              <div><h4>Build · Complete locally</h4><ul><li>SDK-repository runner packs and installs the standalone package.</li><li>Real Ed25519 session signers and external wallet fixture contract.</li><li>Explicit sandbox-only transaction approval.</li><li>Client reconstruction after durable transitions.</li><li>Reports package tarball and contract provenance without credentials.</li></ul></div>
+              <div><h4>Automated gate · Local SDK passed; live API pending</h4><ul><li>Challenge/session/rotation/revocation.</li><li>Offer/terms/quote.</li><li>Simulated and approved payment/coverage.</li><li>Simulated decision/evidence/lineage.</li><li>Eligibility/claim/upload/appeal.</li><li><code>npm run verify</code>: 187 tests, configuration and report privacy, generated contract, consumers, public boundary and eleven-file package all pass.</li></ul></div>
+              <div><h4>Manual QA checkpoint</h4><ul><li>Provide the designated API and registered public authority.</li><li>Review both Devnet simulations and approve the transactions.</li><li>Run <code>npm run conformance:api</code>.</li><li>Review the JSON report and public lifecycle states.</li><li>Kill the process at durable transitions and resume without repeating a side effect.</li></ul></div>
             </div>
           </article>
 
@@ -812,6 +812,9 @@
           <li><a href="../src/session.ts">Signing and session ports</a></li>
           <li><a href="../src/transport.ts">HTTP proof, retry and telemetry boundary</a></li>
           <li><a href="../src/emberClient.test.ts">Current SDK behavioral tests</a></li>
+          <li><a href="../CONFORMANCE.md">Real API conformance operator contract</a></li>
+          <li><a href="../conformance/runner.mjs">Packed-SDK real API lifecycle runner</a></li>
+          <li><a href="../scripts/run-api-conformance.mjs">Package installation and evidence orchestration</a></li>
           <li><a href="../contract/wallet-v1.json">Standalone wallet OpenAPI input</a></li>
           <li><a href="../contract/provenance.json">Imported wallet contract provenance</a></li>
           <li><a href="../contract/README.md">Contract update and regeneration process</a></li>

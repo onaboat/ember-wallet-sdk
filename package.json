@@ -39,6 +39,7 @@
     "boundary:check": "node scripts/check-public-boundary.mjs",
     "contract:check": "node scripts/check-contract-provenance.mjs && npm run generate:check",
     "consumer:check": "npm run build && node scripts/check-consumers.mjs",
+    "conformance:api": "node scripts/run-api-conformance.mjs",
     "generate": "openapi-ts",
     "generate:check": "node scripts/check-generated.mjs",
     "typecheck": "tsc --noEmit",
