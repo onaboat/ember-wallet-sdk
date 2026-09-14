@@ -279,19 +279,19 @@
         <h2>SDK branch overview</h2>
         <div class="progress-summary">
           <article class="card">
-            <span class="status attention">2 complete · 1 ready to push</span>
-            <strong>Branch 02 verified</strong>
-            <p>Branches 00 and 01 are complete and pushed. Branch 02 passed the complete SDK gate and is ready for Manual QA and push.</p>
+            <span class="status attention">3 complete · 1 ready to push</span>
+            <strong>Branch 03 verified</strong>
+            <p>Branches 00 through 02 are complete and pushed. Branch 03 passed the complete SDK gate and is ready for Manual QA and push.</p>
           </article>
           <article class="card">
             <span class="status attention">Current branch</span>
-            <strong><code>codex/sdk-02-response-integrity</code></strong>
-            <p>Response correlation, privacy-safe telemetry, typed mismatch handling and evidence-grant validation passed 156 tests and the exact eleven-file package gate.</p>
+            <strong><code>codex/sdk-03-lifecycle-coverage</code></strong>
+            <p>Public-method behavior, retry, idempotency, cancellation and decision-freshness coverage passed 175 tests and the exact eleven-file package gate.</p>
           </article>
           <article class="card">
             <span class="status planned">Next after QA</span>
-            <strong><code>codex/sdk-03-lifecycle-coverage</code></strong>
-            <p>Complete public-method lifecycle coverage begins after Branch 02 Manual QA and push.</p>
+            <strong><code>codex/sdk-04-api-conformance</code></strong>
+            <p>Real packed-SDK API conformance begins after Branch 03 Manual QA and push.</p>
           </article>
         </div>
         <div class="table-wrap">
@@ -300,8 +300,8 @@
             <tbody>
               <tr><td>00</td><td>Contract authority and provenance</td><td><code>codex/sdk-00-contract-authority</code></td><td><span class="status good">Done</span></td></tr>
               <tr><td>01</td><td>Session and protected-signing security</td><td><code>codex/sdk-01-session-security</code></td><td><span class="status good">Done · Pushed</span></td></tr>
-              <tr><td>02</td><td>Response integrity and privacy</td><td><code>codex/sdk-02-response-integrity</code></td><td><span class="status attention">Ready to push · Manual QA</span></td></tr>
-              <tr><td>03</td><td>Complete SDK lifecycle coverage</td><td><code>codex/sdk-03-lifecycle-coverage</code></td><td><span class="status planned">Not started</span></td></tr>
+              <tr><td>02</td><td>Response integrity and privacy</td><td><code>codex/sdk-02-response-integrity</code></td><td><span class="status good">Done · Pushed</span></td></tr>
+              <tr><td>03</td><td>Complete SDK lifecycle coverage</td><td><code>codex/sdk-03-lifecycle-coverage</code></td><td><span class="status attention">Ready to push · Manual QA</span></td></tr>
               <tr><td>04</td><td>Real API conformance</td><td><code>codex/sdk-04-api-conformance</code></td><td><span class="status planned">Not started</span></td></tr>
               <tr><td>05</td><td>Origin-bound web and Chrome conformance</td><td><code>codex/sdk-05-origin-host-conformance</code></td><td><span class="status planned">Not started</span></td></tr>
               <tr><td>06</td><td>Native-mobile conformance</td><td><code>codex/sdk-06-native-mobile-conformance</code></td><td><span class="status planned">Not started</span></td></tr>
@@ -540,8 +540,8 @@
         </article>
 
         <article class="finding">
-          <div><span class="status attention">P1</span><div class="finding-id">SDK-008</div></div>
-          <div><h3>Complete lifecycle method tests</h3><p>The current 30 tests focus on transport proof, quote verification and failure conversion. Rotation, revocation, offer detail, terms success, payment reads, coverage, lineage, evidence, claim eligibility, claim reads, appeal and upload lifecycle need direct behavior tests.</p><p><strong>Failure impact:</strong> public methods can regress without failing package CI.</p><p><strong>Exit:</strong> every public method has at least one success contract and its relevant failure, correlation and retry contract.</p></div>
+          <div><span class="status good">P1 · Resolved</span><div class="finding-id">SDK-008</div></div>
+          <div><h3>Complete lifecycle method tests</h3><p>Every public client method now executes in the behavior suite. Domain tests cover session, offers, terms, quotes, payment, coverage, decisions, post-sign evidence, claims, appeals and evidence uploads.</p><p><strong>Failure impact:</strong> public methods could otherwise regress without failing package CI.</p><p><strong>Exit:</strong> success behavior, response correlation, retry/non-retry policy, idempotency, cancellation, malformed responses and fail-open signing are enforced by the SDK gate.</p></div>
         </article>
 
         <article class="finding">
@@ -628,7 +628,7 @@
               <tr><td><code>parsePersistedWalletSession(value)</code></td><td>Core validation</td><td>Runtime-validate storage values, canonical keys, scopes, environment and timestamp ordering.</td><td>Corrupt JSON shapes; invalid dates; unknown scope; wrong key; valid restore.</td></tr>
               <tr><td><code>currentSession()</code></td><td>Application client</td><td>Return only a validated session or <code>null</code>; never expose malformed stored authority as trusted state.</td><td>Malformed storage clears safely; valid expired session has an explicit state policy.</td></tr>
               <tr><td><code>sessionState(session, now)</code></td><td>Core policy helper</td><td>Return a discriminated state such as active, rotate-soon, reauthentication-required or refresh-window-expired.</td><td>Boundary timestamps at access and refresh expiry; identical results in every host.</td></tr>
-              <tr><td><code>decisionFreshness(decision, now, minimumRemainingMs)</code></td><td>Core policy helper</td><td>Return fresh, near-expiry or expired without importing a protected-signer or UI concern.</td><td>Exact equality, safety margin and malformed time.</td></tr>
+              <tr><td><code>decisionFreshness(decision, now, minimumRemainingMs)</code></td><td>Core policy helper</td><td>Return fresh, near-expiry, expired or invalid without importing a protected-signer or UI concern.</td><td>Exact equality, safety margin, malformed time and invalid host policy.</td></tr>
               <tr><td><code>assertOfferMatchesRequest</code></td><td>Application client</td><td>Match returned offer ID and environment/cluster.</td><td>Wrong ID and wrong cluster.</td></tr>
               <tr><td><code>assertTermsAcceptanceMatchesRequest</code></td><td>Application client</td><td>Match offer/version, terms version, document hash and active wallet subject.</td><td>Each stale fact rejected independently.</td></tr>
               <tr><td><code>assertPaymentMatchesRequest</code></td><td>Application client</td><td>Match quote ID and payment signature for creation; match payment ID for reads.</td><td>Cross-payment and stale-signature fixtures.</td></tr>
@@ -667,7 +667,7 @@
           </article>
 
           <article class="branch">
-            <div class="branch-head"><h3>02 · Response integrity and privacy</h3><div><span class="status attention">Ready to push · Manual QA</span> <code>codex/sdk-02-response-integrity</code></div></div>
+            <div class="branch-head"><h3>02 · Response integrity and privacy</h3><div><span class="status good">Complete · Pushed</span> <code>codex/sdk-02-response-integrity</code></div></div>
             <div class="branch-columns">
               <div><h4>Build · Complete</h4><ul><li>Explicit response correlation per use case.</li><li>Typed semantic mismatch error and fail-open signing classification.</li><li>Static telemetry route templates.</li><li>HTTPS PUT evidence-grant, expiry, status and header validation.</li><li>Broad generated backend strings remain recorded as the upstream SDK-007 prerequisite; the SDK contract was not invented locally.</li></ul></div>
               <div><h4>Automated gate · Passed 14 September 2026</h4><ul><li>Cross-resource response fixtures.</li><li>Cross-wallet and cross-subject fixtures.</li><li>Telemetry privacy assertions.</li><li>Upload URL, method, expiry, header and lifecycle-state tests.</li><li><code>npm run verify</code>: 156 tests, generated contract current, examples and consumers typecheck, secretless public boundary, and eleven-file package allowlist.</li></ul></div>
@@ -676,11 +676,11 @@
           </article>
 
           <article class="branch">
-            <div class="branch-head"><h3>03 · Complete SDK lifecycle coverage</h3><div><span class="status planned">Not started</span> <code>codex/sdk-03-lifecycle-coverage</code></div></div>
+            <div class="branch-head"><h3>03 · Complete SDK lifecycle coverage</h3><div><span class="status attention">Ready to push · Manual QA</span> <code>codex/sdk-03-lifecycle-coverage</code></div></div>
             <div class="branch-columns">
-              <div><h4>Build</h4><ul><li>Behavior tests for every public method.</li><li>Retry and non-retry matrix.</li><li>Idempotency and cancellation matrix.</li><li>Decision freshness helper.</li><li>Document product compatibility behavior.</li></ul></div>
-              <div><h4>Automated gate</h4><ul><li>All public methods exercised.</li><li>Every retry receives a fresh JTI.</li><li>Mutation replay rules remain exact.</li><li>Fail-open signing never claims cover.</li><li>Package and consumer checks still pass.</li></ul></div>
-              <div><h4>Manual QA</h4><ul><li>Force timeout, abort, malformed response and 5xx.</li><li>Confirm no duplicate payment or claim.</li><li>Test near-expiry and expired decisions.</li><li>Verify error messages are support-safe.</li></ul></div>
+              <div><h4>Build · Complete</h4><ul><li>Behavior tests execute every public method.</li><li>Retry and non-retry matrix.</li><li>Payment/claim replay and cancellation matrix.</li><li>Host-neutral decision freshness helper.</li><li>Product compatibility and Manual QA behavior documented.</li></ul></div>
+              <div><h4>Automated gate · Passed 14 September 2026</h4><ul><li>All 27 public client methods exercised.</li><li>Every retry receives a fresh JTI.</li><li>Business bodies and claim idempotency keys remain exact.</li><li>Fail-open signing never claims cover.</li><li><code>npm run verify</code>: 175 tests, generated contract current, examples and consumers typecheck, secretless public boundary, and eleven-file package allowlist.</li></ul></div>
+              <div><h4>Manual QA checkpoint</h4><ul><li>Force timeout, abort, malformed response and 5xx.</li><li>Confirm no duplicate payment or claim.</li><li>Test exact-boundary, near-expiry, expired and invalid decisions.</li><li>Verify error messages are support-safe and identifier-free where promised.</li></ul></div>
             </div>
           </article>
 

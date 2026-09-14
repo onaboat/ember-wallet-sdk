@@ -1,4 +1,5 @@
 export * from './challenge';
+export * from './decision';
 export * from './emberClient';
 export type { EmberCrypto } from './encoding';
 export { webCrypto } from './encoding';

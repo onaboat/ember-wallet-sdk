@@ -1,6 +1,6 @@
 # Wallet integration QA
 
-Run un this checkpoint against the exact prerelease tarball before anyone approves
+Run this checkpoint against the exact prerelease tarball before anyone approves
 an npm release. Record the SDK version, tarball SHA-256, API environment, wallet
 build identifiers, tester, date, and pass/fail evidence.
 
@@ -46,6 +46,22 @@ build identifiers, tester, date, and pass/fail evidence.
   Both attempts must fail closed before a transaction is submitted.
 - Confirm coverage activation and status refresh survive an app or extension
   restart.
+- Exercise `decisionFreshness` immediately before protected signing and after
+  the signer returns. Confirm exact-boundary, near-expiry, expired, and invalid
+  timestamps never appear as fresh.
+
+## Failure, retry, and cancellation
+
+- Force a transient failure on a read, payment, decision, evidence submission,
+  claim creation, and evidence completion. Confirm the business body and
+  idempotency key stay exact while each proof JTI and signature changes.
+- Force the same failure on session bootstrap/rotation, terms acceptance,
+  quote creation, revocation, claim appeal, and evidence-upload begin. Confirm
+  none of these non-idempotent operations retries automatically.
+- Abort a read and mutation before dispatch and while in flight. Confirm caller
+  cancellation is distinguishable from timeout and no later retry is sent.
+- Return a validly shaped response for the wrong resource and wallet. Confirm
+  the SDK rejects it locally without copying either identifier into the error.
 
 ## Evidence and claims
 

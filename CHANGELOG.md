@@ -16,6 +16,10 @@
   active wallet authority with a typed `EmberResponseMismatchError`.
 - Emits only static route templates to telemetry and validates HTTPS `PUT`
   evidence-upload grants, expiry, lifecycle state, and safe headers.
+- Adds a host-neutral `decisionFreshness` policy with explicit fresh,
+  near-expiry, expired, and invalid states.
+- Exercises every public client method and verifies retry, idempotency,
+  cancellation, malformed-response, and fail-open signing behavior.
 
 ## 1.3.2-beta.1
 

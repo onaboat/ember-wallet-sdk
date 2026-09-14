@@ -4,6 +4,7 @@ import { afterAll, afterEach, beforeAll, expect, test, vi } from 'vitest';
 import { delay, http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import {
+  EmberAbortError,
   EmberApiError,
   EmberChallengeValidationError,
   EmberConfigurationError,
@@ -25,6 +26,7 @@ import type {
   AvailableOfferResponse,
   CoverageDecisionResponse,
   CoverageInstanceResponse,
+  PaymentResponse,
   SignedQuoteResponse,
   WalletClaimResponse,
   WalletScope,
@@ -329,6 +331,18 @@ function coverage(
     termsVersion: 'terms-v0.1',
     waitingPeriodDays: 0,
     walletSubjectId: 'wallet_wallet-sdk',
+    ...overrides,
+  };
+}
+
+function payment(overrides: Partial<PaymentResponse> = {}): PaymentResponse {
+  return {
+    paymentId: 'payment_wallet-sdk',
+    paymentSignature: '3'.repeat(64),
+    quoteId: 'quote_wallet-sdk',
+    status: 'pending',
+    submittedAt: '2026-07-27T12:05:00.000Z',
+    updatedAt: '2026-07-27T12:05:00.000Z',
     ...overrides,
   };
 }
@@ -895,6 +909,111 @@ test('retries an exact decision with a fresh proof JTI', async () => {
   expect(jtis.size).toBe(2);
 });
 
+test('retries payment creation with exact input and a fresh proof JTI', async () => {
+  const bodies: string[] = [];
+  const jtis = new Set<string>();
+  let attempts = 0;
+  const paymentSignature = '3'.repeat(64);
+  server.use(
+    http.post(`${API}/v1/payments`, async ({ request }) => {
+      attempts += 1;
+      bodies.push(await request.text());
+      jtis.add(request.headers.get('x-ember-wallet-jti') ?? '');
+      if (attempts === 1) {
+        return HttpResponse.json(
+          {
+            details: [],
+            error: 'service_unavailable',
+            message: 'Try again.',
+            requestId: 'req_payment_retry',
+          },
+          { status: 503 },
+        );
+      }
+      return HttpResponse.json(payment({ paymentSignature }));
+    }),
+  );
+  const { sdk } = client({});
+  await expect(
+    sdk.createPayment({ paymentSignature, quoteId: 'quote_wallet-sdk' }),
+  ).resolves.toMatchObject({ paymentId: 'payment_wallet-sdk' });
+  expect(attempts).toBe(2);
+  expect(new Set(bodies).size).toBe(1);
+  expect(jtis.size).toBe(2);
+});
+
+test('retries claim creation with one idempotency key and a fresh proof JTI', async () => {
+  const keys = new Set<string>();
+  const bodies: string[] = [];
+  const jtis = new Set<string>();
+  let attempts = 0;
+  server.use(
+    http.post(`${API}/v1/wallet/claims`, async ({ request }) => {
+      attempts += 1;
+      keys.add(request.headers.get('idempotency-key') ?? '');
+      jtis.add(request.headers.get('x-ember-wallet-jti') ?? '');
+      bodies.push(await request.text());
+      if (attempts === 1) {
+        return HttpResponse.json(
+          {
+            details: [],
+            error: 'service_unavailable',
+            message: 'Try again.',
+            requestId: 'req_claim_retry',
+          },
+          { status: 503 },
+        );
+      }
+      return HttpResponse.json(claim(), { status: 201 });
+    }),
+  );
+  const store = new MemorySessionStore(
+    session({ scopes: [...P11_WALLET_SCOPES] }),
+  );
+  const { sdk } = client({ store });
+  await sdk.createClaim(
+    {
+      claimedAmountMicros: '1000000',
+      decisionId: 'decision_wallet-sdk',
+      lossEvent: 'direct_malicious_signing_loss',
+      statement: 'Synthetic loss.',
+    },
+    { idempotencyKey: 'claim-retry-00000001' },
+  );
+  expect(attempts).toBe(2);
+  expect(keys).toEqual(new Set(['claim-retry-00000001']));
+  expect(new Set(bodies).size).toBe(1);
+  expect(jtis.size).toBe(2);
+});
+
+test('caller cancellation stops read and replay-safe mutation requests', async () => {
+  let requests = 0;
+  server.use(
+    http.get(`${API}/v1/wallet/offers`, () => {
+      requests += 1;
+      return HttpResponse.json({ offers: [offer()] });
+    }),
+    http.post(`${API}/v1/payments`, () => {
+      requests += 1;
+      return HttpResponse.json(payment());
+    }),
+  );
+  const controller = new AbortController();
+  controller.abort();
+  const { sdk } = client({});
+
+  await expect(
+    sdk.listOffers({ signal: controller.signal }),
+  ).rejects.toBeInstanceOf(EmberAbortError);
+  await expect(
+    sdk.createPayment(
+      { paymentSignature: '3'.repeat(64), quoteId: 'quote_wallet-sdk' },
+      { signal: controller.signal },
+    ),
+  ).rejects.toBeInstanceOf(EmberAbortError);
+  expect(requests).toBe(0);
+});
+
 test('does not retry a typed client error', async () => {
   let attempts = 0;
   server.use(
@@ -1119,6 +1238,194 @@ test('createClaim sends one stable idempotency key and validates claim data', as
   expect(observedKey).toBe('claim-test-00000001');
 });
 
+test('accepts correlated terms and completes payment create/read behavior', async () => {
+  const paymentSignature = '3'.repeat(64);
+  server.use(
+    http.post(`${API}/v1/wallet/terms-acceptances`, async ({ request }) => {
+      expect(await request.json()).toEqual({
+        documentSha256: 'a'.repeat(64),
+        offerId: 'offer_core-annual',
+        offerVersion: 1,
+        termsVersion: 'terms-v0.1',
+      });
+      return HttpResponse.json({
+        acceptanceId: 'acceptance_wallet-sdk',
+        acceptedAt: '2026-07-27T12:05:00.000Z',
+        documentSha256: 'a'.repeat(64),
+        offerId: 'offer_core-annual',
+        offerVersion: 1,
+        termsVersion: 'terms-v0.1',
+        walletSubjectId: 'wallet_wallet-sdk',
+      });
+    }),
+    http.post(`${API}/v1/payments`, async ({ request }) => {
+      expect(await request.json()).toEqual({
+        paymentSignature,
+        quoteId: 'quote_wallet-sdk',
+      });
+      return HttpResponse.json(payment({ paymentSignature }));
+    }),
+    http.get(`${API}/v1/payments/payment_wallet-sdk`, () =>
+      HttpResponse.json(
+        payment({ coverageInstanceId: 'coverage_wallet-sdk', status: 'activated' }),
+      ),
+    ),
+  );
+  const { sdk } = client({});
+
+  await expect(
+    sdk.acceptTerms({
+      documentSha256: 'a'.repeat(64),
+      offerId: 'offer_core-annual',
+      offerVersion: 1,
+      termsVersion: 'terms-v0.1',
+    }),
+  ).resolves.toMatchObject({ acceptanceId: 'acceptance_wallet-sdk' });
+  await expect(
+    sdk.createPayment({ paymentSignature, quoteId: 'quote_wallet-sdk' }),
+  ).resolves.toMatchObject({ paymentId: 'payment_wallet-sdk', status: 'pending' });
+  await expect(sdk.getPayment('payment_wallet-sdk')).resolves.toMatchObject({
+    coverageInstanceId: 'coverage_wallet-sdk',
+    status: 'activated',
+  });
+});
+
+test('completes coverage, decision, lineage, evidence, and eligibility reads', async () => {
+  server.use(
+    http.get(`${API}/v1/coverage-instances/coverage_wallet-sdk`, () =>
+      HttpResponse.json(coverage()),
+    ),
+    http.get(`${API}/v1/decisions/decision_wallet-sdk`, () =>
+      HttpResponse.json(decision()),
+    ),
+    http.get(`${API}/v1/decisions/decision_wallet-sdk/lineage`, () =>
+      HttpResponse.json({
+        coverageInstanceId: 'coverage_wallet-sdk',
+        decisionId: 'decision_wallet-sdk',
+        evidenceState: 'post_sign',
+        lifecycle: [
+          { occurredAt: '2026-07-27T12:05:00.000Z', status: 'reviewed' },
+        ],
+        paymentId: 'payment_wallet-sdk',
+        quoteId: 'quote_wallet-sdk',
+      }),
+    ),
+    http.post(
+      `${API}/v1/decisions/decision_wallet-sdk/post-sign`,
+      async ({ request }) => {
+        expect(await request.json()).toEqual({
+          kind: 'transaction',
+          signedBytes: 'AAAA',
+        });
+        return HttpResponse.json({
+          accepted: true,
+          decisionId: 'decision_wallet-sdk',
+          evidenceState: 'confirmation',
+          transactionSignature: '4'.repeat(64),
+        });
+      },
+    ),
+    http.get(
+      `${API}/v1/wallet/decisions/decision_wallet-sdk/claim-eligibility`,
+      () =>
+        HttpResponse.json({
+          decisionId: 'decision_wallet-sdk',
+          eligible: true,
+        }),
+    ),
+  );
+  const { sdk } = client({});
+
+  await expect(sdk.getCoverageInstance('coverage_wallet-sdk')).resolves.toMatchObject({
+    coverageInstanceId: 'coverage_wallet-sdk',
+  });
+  await expect(sdk.getDecision('decision_wallet-sdk')).resolves.toMatchObject({
+    decisionId: 'decision_wallet-sdk',
+  });
+  await expect(sdk.getDecisionLineage('decision_wallet-sdk')).resolves.toMatchObject({
+    evidenceState: 'post_sign',
+  });
+  await expect(
+    sdk.submitDecisionEvidence('decision_wallet-sdk', {
+      kind: 'transaction',
+      signedBytes: 'AAAA',
+    }),
+  ).resolves.toMatchObject({ accepted: true, evidenceState: 'confirmation' });
+  await expect(sdk.claimEligibility('decision_wallet-sdk')).resolves.toEqual({
+    decisionId: 'decision_wallet-sdk',
+    eligible: true,
+  });
+});
+
+test('completes claim list, read, appeal, and evidence completion behavior', async () => {
+  server.use(
+    http.get(`${API}/v1/wallet/claims`, () =>
+      HttpResponse.json({ claims: [claim()] }),
+    ),
+    http.get(`${API}/v1/wallet/claims/claim_wallet-sdk`, () =>
+      HttpResponse.json(claim()),
+    ),
+    http.post(
+      `${API}/v1/wallet/claims/claim_wallet-sdk/appeals`,
+      async ({ request }) => {
+        expect(await request.json()).toEqual({ reason: 'Independent review requested.' });
+        return HttpResponse.json(claim({ state: 'appealed' }));
+      },
+    ),
+    http.post(
+      `${API}/v1/wallet/claims/claim_wallet-sdk/evidence-uploads/evidence_wallet-sdk/complete`,
+      () =>
+        HttpResponse.json({
+          claimId: 'claim_wallet-sdk',
+          evidenceCode: 'loss-proof',
+          evidenceId: 'evidence_wallet-sdk',
+          requestId: 'request_wallet-sdk',
+          retentionUntil: '2027-07-27T12:05:00.000Z',
+          status: 'uploaded',
+        }),
+    ),
+  );
+  const store = new MemorySessionStore(
+    session({ scopes: [...P11_WALLET_SCOPES] }),
+  );
+  const { sdk } = client({ store });
+
+  await expect(sdk.listClaims()).resolves.toMatchObject({
+    claims: [{ claimId: 'claim_wallet-sdk' }],
+  });
+  await expect(sdk.getClaim('claim_wallet-sdk')).resolves.toMatchObject({
+    state: 'submitted',
+  });
+  await expect(
+    sdk.appealClaim('claim_wallet-sdk', {
+      reason: 'Independent review requested.',
+    }),
+  ).resolves.toMatchObject({ state: 'appealed' });
+  await expect(
+    sdk.completeClaimEvidenceUpload('claim_wallet-sdk', 'evidence_wallet-sdk'),
+  ).resolves.toMatchObject({ status: 'uploaded' });
+});
+
+test('revoke-all and explicit local clearing remove persisted authority', async () => {
+  server.use(
+    http.post(`${API}/v1/wallet-sessions/revoke-all`, () =>
+      HttpResponse.json({ revokedSessions: 3 }),
+    ),
+  );
+  const firstStore = new MemorySessionStore(session());
+  const { sdk: revokeAllClient } = client({ store: firstStore });
+  await expect(revokeAllClient.revokeAllSessions()).resolves.toEqual({
+    revokedSessions: 3,
+  });
+  expect(firstStore.value).toBeNull();
+
+  const secondStore = new MemorySessionStore(session());
+  const { sdk: localClient } = client({ store: secondStore });
+  await localClient.clearLocalSession();
+  expect(secondStore.value).toBeNull();
+  await expect(localClient.currentSession()).resolves.toBeNull();
+});
+
 test('production clients reject plaintext HTTP during construction', () => {
   expect(() => client({ environment: 'production' })).toThrow(
     EmberConfigurationError,
@@ -1146,6 +1453,126 @@ test('non-idempotent quote creation is never retried', async () => {
     sdk.createQuote({ offerId: 'offer_core-annual' }),
   ).rejects.toBeInstanceOf(EmberApiError);
   expect(attempts).toBe(1);
+});
+
+test('non-idempotent terms, appeal, and upload-begin mutations never retry', async () => {
+  const attempts = { appeal: 0, begin: 0, terms: 0 };
+  const unavailable = () =>
+    HttpResponse.json(
+      {
+        details: [],
+        error: 'service_unavailable',
+        message: 'Try again.',
+        requestId: 'req_non_idempotent',
+      },
+      { status: 503 },
+    );
+  server.use(
+    http.post(`${API}/v1/wallet/terms-acceptances`, () => {
+      attempts.terms += 1;
+      return unavailable();
+    }),
+    http.post(`${API}/v1/wallet/claims/claim_wallet-sdk/appeals`, () => {
+      attempts.appeal += 1;
+      return unavailable();
+    }),
+    http.post(
+      `${API}/v1/wallet/claims/claim_wallet-sdk/evidence-uploads`,
+      () => {
+        attempts.begin += 1;
+        return unavailable();
+      },
+    ),
+  );
+  const store = new MemorySessionStore(
+    session({ scopes: [...P11_WALLET_SCOPES] }),
+  );
+  const { sdk } = client({ store });
+
+  await expect(
+    sdk.acceptTerms({
+      documentSha256: 'a'.repeat(64),
+      offerId: 'offer_core-annual',
+      offerVersion: 1,
+      termsVersion: 'terms-v0.1',
+    }),
+  ).rejects.toBeInstanceOf(EmberApiError);
+  await expect(
+    sdk.appealClaim('claim_wallet-sdk', { reason: 'Independent review.' }),
+  ).rejects.toBeInstanceOf(EmberApiError);
+  await expect(
+    sdk.beginClaimEvidenceUpload('claim_wallet-sdk', {
+      contentLength: '1024',
+      contentType: 'application/pdf',
+      evidenceCode: 'loss-proof',
+      requestId: 'request_wallet-sdk',
+      sha256: 'a'.repeat(64),
+    }),
+  ).rejects.toBeInstanceOf(EmberApiError);
+  expect(attempts).toEqual({ appeal: 1, begin: 1, terms: 1 });
+});
+
+test('creates and verifies a correlated signed quote before returning it', async () => {
+  const vector = JSON.parse(
+    await readFile(
+      new URL('../fixtures/signed-quote-vector-v1.json', import.meta.url),
+      'utf8',
+    ),
+  ) as SignedQuoteResponse;
+  server.use(
+    http.post('https://api.ember.test/v1/quotes', async ({ request }) => {
+      expect(await request.json()).toEqual({ offerId: vector.payload.offer.offerId });
+      return HttpResponse.json(vector);
+    }),
+    http.get('https://api.ember.test/v1/quote-signing-keys', () =>
+      HttpResponse.json({
+        keys: [
+          {
+            algorithm: 'ed25519',
+            createdAt: '2026-07-27T11:00:00Z',
+            keyId: vector.payload.signingKeyId,
+            mode: vector.payload.mode,
+            publicKey: vector.signingPublicKey,
+            state: 'active',
+            updatedAt: '2026-07-27T11:00:00Z',
+          },
+        ],
+      }),
+    ),
+  );
+  const sdk = new EmberWalletClient({
+    baseUrl: 'https://api.ember.test',
+    crypto: webCrypto(),
+    environment: 'production',
+    fetch,
+    hostBinding: { kind: 'native', applicationId: APPLICATION_ID },
+    integrationId: 'integration_vector',
+    integrationVersion: 1,
+    now: () => FIXED_NOW,
+    retry: { maxRetries: 0 },
+    sessionSigner: new CapturingSigner(SESSION_PUBLIC_KEY, 7),
+    sessionStore: new MemorySessionStore(
+      session({
+        environment: 'production',
+        expiresAt: '2026-07-27T12:30:00Z',
+        integrationId: 'integration_vector',
+        integrationVersion: 1,
+        partnerId: 'partner_vector',
+        sessionPublicKey: SESSION_PUBLIC_KEY,
+        walletAddress: WALLET,
+        walletSubjectId: 'wallet_vector',
+      }),
+    ),
+  });
+
+  await expect(
+    sdk.createQuote({ offerId: vector.payload.offer.offerId }),
+  ).resolves.toMatchObject({
+    payload: vector.payload,
+    payloadSha256: vector.payloadSha256,
+    signature: vector.signature,
+    signingPublicKey: vector.signingPublicKey,
+  });
 });
 
 test('public signing-key discovery sends no credentials or content type', async () => {

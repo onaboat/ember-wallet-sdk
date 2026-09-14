@@ -309,6 +309,8 @@ checks finalized settlement before returning a coverage instance.
 ## `signTransaction`
 
 ```ts
+import { decisionFreshness } from '@embercover/wallet-sdk';
+
 const review = await ember.reviewForSigning({
   kind: 'transaction',
   coverageInstanceId,
@@ -319,6 +321,19 @@ const review = await ember.reviewForSigning({
 // Render review before approval. `unavailable` never claims coverage and must
 // not prevent ordinary wallet signing.
 renderEmberReview(review);
+
+// Use a safety window measured for this host. The SDK deliberately does not
+// choose one global approval-time threshold for web, extension, and mobile.
+if (review.status === 'reviewed') {
+  const freshness = decisionFreshness(
+    review.decision,
+    new Date(),
+    approvalSafetyMs,
+  );
+  if (freshness.status !== 'fresh') {
+    return handleDecisionThatShouldNotEnterProtectedSigning(freshness);
+  }
+}
 
 const signedBytes = await walletSignExactReviewedTransaction();
 
@@ -337,6 +352,11 @@ return signedBytes;
 The evidence queue retries the exact same decision evidence. Ember verifies
 every required transaction signature and the reviewed message hash before
 accepting it.
+
+Call `decisionFreshness` again immediately before signing and after the signer
+returns. It reports `near_expiry` at the exact host-supplied safety boundary,
+`expired` at or after expiry, and `invalid` for an unusable timestamp. Only
+`fresh` should be treated as eligible for a covered signing continuation.
 
 ## Claims
 
