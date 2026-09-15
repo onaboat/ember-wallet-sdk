@@ -15,6 +15,8 @@
     }
   },
   "files": [
+    "COMPATIBILITY.md",
+    "SUPPORT.md",
     "contract/README.md",
     "contract/provenance.json",
     "dist",
@@ -51,8 +53,10 @@
     "scan:public": "npm run build && npm run boundary:check && node scripts/check-bundle-secrets.mjs",
     "sbom": "node scripts/write-sbom.mjs",
     "pack:check": "npm run build && node scripts/check-package-contents.mjs",
+    "release:pack": "node scripts/pack-release.mjs",
+    "release:policy": "node scripts/check-release-policy.mjs",
     "release:check": "node scripts/check-release-ref.mjs",
-    "verify": "npm run contract:check && npm run typecheck && npm test && npm run examples:check && npm run consumer:check && npm run conformance:origins && npm run conformance:native && npm run scan:public && npm run pack:check",
+    "verify": "npm run contract:check && npm run release:policy && npm run typecheck && npm test && npm run examples:check && npm run consumer:check && npm run conformance:origins && npm run conformance:native && npm run scan:public && npm run pack:check",
     "prepack": "npm run build && npm run boundary:check && node scripts/check-bundle-secrets.mjs",
     "prepublishOnly": "npm run verify"
   },

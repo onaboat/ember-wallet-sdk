@@ -51,8 +51,11 @@ compatibility mirrors. They do not define this package's behavior.
 npm install @embercover/wallet-sdk@beta
 ```
 
-The `beta` tag is the prerelease channel for integration testing. Pin an exact
-version before a production wallet release.
+The `beta` tag is for integration testing, `release-candidate` is for final host
+qualification, and `latest` is reserved for stable releases. Pin an exact
+version in every wallet build. See [`SUPPORT.md`](./SUPPORT.md) for the declared
+host matrix and [`COMPATIBILITY.md`](./COMPATIBILITY.md) for upgrade and
+rollback rules.
 
 The package publishes ESM, CommonJS, and TypeScript declarations from an
 intentional host-neutral ES2022 build. The runtime has no Node-only dependency.

@@ -1,7 +1,17 @@
-name: Stage npm prerelease
+name: Stage npm release
 
 on:
   workflow_dispatch:
+    inputs:
+      channel:
+        description: npm release channel required by the package version
+        required: true
+        default: beta
+        type: choice
+        options:
+          - beta
+          - release-candidate
+          - latest
 
 permissions:
   contents: read
@@ -20,6 +30,7 @@ jobs:
       - name: Check out exact release ref
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
+          fetch-depth: 0
           persist-credentials: false
       - name: Set up Node and npm registry
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
@@ -29,16 +40,30 @@ jobs:
           package-manager-cache: false
       - name: Install staged-publishing npm CLI
         run: npm install --global npm@11.18.0
-      - run: npm run release:check
       - run: npm ci
       - run: npm audit --audit-level=high
       - run: npm run verify
       - run: npm run sbom
-      - name: Upload reviewed SBOM
+      - name: Pack exact release artifact
+        id: package
+        run: npm run release:pack
+      - name: Check channel, signed tag, artifact and evidence
+        id: release
+        run: npm run release:check
+        env:
+          EMBER_RELEASE_CHANNEL: ${{ inputs.channel }}
+          EMBER_RELEASE_TARBALL: ${{ steps.package.outputs.tarball }}
+      - name: Upload reviewed release evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: ember-wallet-sdk-sbom-${{ github.ref_name }}
-          path: artifacts/ember-wallet-sdk.cdx.json
+          name: ember-wallet-sdk-release-${{ github.ref_name }}
+          path: |
+            artifacts/ember-wallet-sdk.cdx.json
+            ${{ steps.package.outputs.tarball }}
+            ${{ steps.release.outputs.evidence }}
           if-no-files-found: error
       - name: Stage package for maintainer review
-        run: npm stage publish --tag beta --access public
+        run: npm stage publish "$EMBER_RELEASE_TARBALL" --tag "$EMBER_RELEASE_DIST_TAG" --access public
+        env:
+          EMBER_RELEASE_DIST_TAG: ${{ steps.release.outputs.dist_tag }}
+          EMBER_RELEASE_TARBALL: ${{ steps.package.outputs.tarball }}

@@ -7,8 +7,8 @@ build identifiers, tester, date, and pass/fail evidence.
 ## Package boundary
 
 - Extract the tarball and confirm it contains only `dist`, `README.md`,
-  `LICENSE`, `contract/README.md`, `contract/provenance.json`, and package
-  metadata.
+  `SUPPORT.md`, `COMPATIBILITY.md`, `LICENSE`, `contract/README.md`,
+  `contract/provenance.json`, and package metadata.
 - Confirm the published provenance digest matches the reviewed
   `contract/wallet-v1.json` and its recorded upstream revision.
 - Install the tarball into clean React Native and browser-extension test
@@ -137,3 +137,8 @@ The prerelease passes only when every row has evidence from the HTTPS web
 fixture, browser extension, and declared native-mobile wallet; the package and
 repository boundary checks pass; and no unresolved severity-one or
 severity-two defect remains.
+
+Hash the reviewed API, CORS, Android emulator, representative Solana-phone and
+manual product QA records into `release/evidence/v<package-version>.json` using
+the exact release tarball SHA-256. `npm run release:check` must reject a missing,
+failed, malformed or cross-version gate before the artifact can be staged.

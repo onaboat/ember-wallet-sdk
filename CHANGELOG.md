@@ -32,6 +32,11 @@
   approval remains an explicit Manual QA gate.
 - Bundles the runtime validator into the neutral SDK artifacts so React Native
   consumers do not require a package-specific Babel transform.
+- Adds closed beta, release-candidate and stable channel rules, exact-tarball
+  staged publishing, signed-tag checks and a fail-closed release-evidence
+  manifest covering every declared host.
+- Publishes the supported-host matrix plus semantic compatibility, upgrade and
+  rollback rules with the package.
 
 ## 1.3.2-beta.1
 
