@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Aligns fresh challenge validation with the API's bounded 60-second wallet
+  clock-skew policy while continuing to reject larger future timestamps before
+  invoking the protected-wallet signer.
+- Keeps runtime exports aligned with the public declarations for persisted
+  session parsing, session-state evaluation, and request-proof construction.
 - Declares this repository as the sole authority for the published SDK.
 - Adds a published contract-provenance manifest with strict revision, path,
   version, and SHA-256 verification.

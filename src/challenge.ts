@@ -2,6 +2,10 @@ import { EmberChallengeValidationError, EmberConfigurationError } from './errors
 import { base58Decode, sha256Hex, utf8, type EmberCrypto } from './encoding';
 
 const CHALLENGE_LIFETIME_MS = 5 * 60 * 1_000;
+// Match the API's signed-wallet-request clock policy. Wallet hosts can have a
+// small wall-clock difference from the API, but challenges further in the
+// future still fail closed before any message reaches the wallet signer.
+const MAX_CHALLENGE_FUTURE_CLOCK_SKEW_MS = 60 * 1_000;
 const MAX_EMBER_IDENTIFIER_LENGTH = 96;
 const MAX_APPLICATION_ID_LENGTH = 200;
 const MAX_INTEGRATION_VERSION = 0x7fff_ffff;
@@ -167,7 +171,9 @@ export async function validateWalletChallenge(
 
   const nowMs = now.getTime();
   if (!Number.isFinite(nowMs)) fail('invalid_response');
-  if (nowMs < issuedAt) fail('not_yet_valid');
+  if (issuedAt - nowMs > MAX_CHALLENGE_FUTURE_CLOCK_SKEW_MS) {
+    fail('not_yet_valid');
+  }
   if (nowMs >= expiresAt) fail('expired');
 
   let hostBinding: EmberHostBinding;

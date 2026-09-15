@@ -70,6 +70,7 @@ export type EmberQuoteVerificationReason =
   | 'expired'
   | 'hash_mismatch'
   | 'invalid_signature'
+  | 'not_yet_valid'
   | 'untrusted_key'
   | 'unsupported_schema';
 

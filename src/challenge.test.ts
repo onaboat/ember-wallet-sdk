@@ -351,14 +351,27 @@ describe('wallet challenge validation', () => {
     );
   });
 
-  test('classifies not-yet-valid and expired challenges at exact boundaries', async () => {
+  test('accepts API challenges within the wallet clock-skew boundary', async () => {
+    const expected = authority({ kind: 'native', applicationId: 'cover.ember.reference' });
+    const challenge = await challengeFor(expected);
+    await expect(
+      validateWalletChallenge(
+        challenge,
+        expected,
+        new Date('2026-07-27T12:04:00.000Z'),
+        crypto,
+      ),
+    ).resolves.toBeUndefined();
+  });
+
+  test('rejects challenges beyond clock skew and at expiration', async () => {
     const expected = authority({ kind: 'native', applicationId: 'cover.ember.reference' });
     const challenge = await challengeFor(expected);
     await expectReason(
       validateWalletChallenge(
         challenge,
         expected,
-        new Date('2026-07-27T12:04:59.999Z'),
+        new Date('2026-07-27T12:03:59.999Z'),
         crypto,
       ),
       'not_yet_valid',

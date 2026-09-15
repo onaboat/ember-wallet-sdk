@@ -75,6 +75,8 @@ import {
   sessionState,
   type WalletSessionStore,
 } from './session';
+
+const MAX_QUOTE_FUTURE_CLOCK_SKEW_MS = 60 * 1_000;
 import {
   EmberTransport,
   type EmberRequestOptions,
@@ -728,10 +730,12 @@ export class EmberWalletClient {
       throw new EmberQuoteVerificationError('authority_mismatch');
     }
     const now = this.transport.currentDate().getTime();
-    if (
-      now < Date.parse(payload.validity.issuedAt) ||
-      now >= Date.parse(payload.validity.expiresAt)
-    ) {
+    const issuedAt = Date.parse(payload.validity.issuedAt);
+    const expiresAt = Date.parse(payload.validity.expiresAt);
+    if (issuedAt - now > MAX_QUOTE_FUTURE_CLOCK_SKEW_MS) {
+      throw new EmberQuoteVerificationError('not_yet_valid');
+    }
+    if (now >= expiresAt) {
       throw new EmberQuoteVerificationError('expired');
     }
 

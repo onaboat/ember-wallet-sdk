@@ -137,11 +137,13 @@ function session(
   };
 }
 
-function nativeChallenge(requestedScopes: ReadonlyArray<WalletScope>) {
+function nativeChallenge(
+  requestedScopes: ReadonlyArray<WalletScope>,
+  issuedAt = '2026-07-27T12:05:00.000Z',
+) {
   const challengeId = 'challenge_11111111-1111-4111-8111-111111111111';
   const nonce = '111111111111111111111111';
-  const issuedAt = '2026-07-27T12:05:00.000Z';
-  const expiresAt = '2026-07-27T12:10:00.000Z';
+  const expiresAt = new Date(Date.parse(issuedAt) + 5 * 60_000).toISOString();
   const bindingSha256 = createHash('sha256')
     .update(APPLICATION_ID)
     .digest('hex');
@@ -411,6 +413,60 @@ test('opens a secretless session without an API key or authorization header', as
   );
   expect(opened.sessionPublicKey).toBe(SESSION_PUBLIC_KEY);
   expect(store.value?.refreshToken).toContain('refresh_');
+});
+
+test('opens a session when the API clock is at the accepted 60-second boundary', async () => {
+  const store = new MemorySessionStore();
+  const walletSigner = new CapturingSigner(WALLET, 9);
+  const requestedScopes: WalletScope[] = ['offers:read', 'cover:evaluate'];
+  server.use(
+    http.post(`${API}/v1/wallet-sessions/challenges`, () =>
+      HttpResponse.json(
+        nativeChallenge(requestedScopes, '2026-07-27T12:06:00.000Z'),
+      ),
+    ),
+    http.post(`${API}/v1/wallet-sessions`, () =>
+      HttpResponse.json({
+        ...session({ scopes: requestedScopes }),
+        sessionPublicKey: undefined,
+      }),
+    ),
+  );
+
+  const { sdk } = client({ store });
+
+  await expect(
+    sdk.openSession({ requestedScopes, walletSigner }),
+  ).resolves.toMatchObject({ walletAddress: WALLET });
+  expect(walletSigner.messages).toHaveLength(1);
+  expect(store.value?.walletAddress).toBe(WALLET);
+});
+
+test('never signs a challenge beyond the accepted clock-skew boundary', async () => {
+  const store = new MemorySessionStore();
+  const walletSigner = new CapturingSigner(WALLET, 9);
+  const requestedScopes: WalletScope[] = ['offers:read', 'cover:evaluate'];
+  let createAttempts = 0;
+  server.use(
+    http.post(`${API}/v1/wallet-sessions/challenges`, () =>
+      HttpResponse.json(
+        nativeChallenge(requestedScopes, '2026-07-27T12:06:00.001Z'),
+      ),
+    ),
+    http.post(`${API}/v1/wallet-sessions`, () => {
+      createAttempts += 1;
+      return HttpResponse.json(session());
+    }),
+  );
+
+  const { sdk } = client({ store });
+
+  await expect(
+    sdk.openSession({ requestedScopes, walletSigner }),
+  ).rejects.toMatchObject({ reason: 'not_yet_valid' });
+  expect(walletSigner.messages).toHaveLength(0);
+  expect(createAttempts).toBe(0);
+  expect(store.value).toBeNull();
 });
 
 test('never calls the protected-wallet signer for a tampered challenge', async () => {
@@ -1663,6 +1719,99 @@ test('verifies the canonical non-payable quote vector and rejects payload tamper
   await expect(sdk.verifyQuote(missingBenefitSchedule)).rejects.toMatchObject({
     name: EmberQuoteVerificationError.name,
     reason: 'unsupported_schema',
+  });
+});
+
+test('allows bounded quote issuer clock skew while keeping expiry strict', async () => {
+  const vector = JSON.parse(
+    await readFile(
+      new URL('../fixtures/signed-quote-vector-v1.json', import.meta.url),
+      'utf8',
+    ),
+  ) as SignedQuoteResponse;
+  const { privateKey, publicKey } = generateKeyPairSync('ed25519');
+  const signingPublicKey = base58Encode(
+    publicKey.export({ format: 'der', type: 'spki' }).subarray(-32),
+  );
+  const domain = Buffer.from(
+    '656d6265722d7369676e65642d71756f74652d763100',
+    'hex',
+  );
+  const signedQuote = (issuedAt: string, expiresAt: string): SignedQuoteResponse => {
+    const payload = structuredClone(vector.payload);
+    payload.validity = { issuedAt, expiresAt };
+    const canonical = new TextEncoder().encode(JSON.stringify(payload));
+    return {
+      payload,
+      payloadSha256: createHash('sha256').update(canonical).digest('hex'),
+      signature: base58Encode(
+        signBytes(null, Buffer.concat([domain, canonical]), privateKey),
+      ),
+      signingPublicKey,
+    };
+  };
+  server.use(
+    http.get('https://api.ember.test/v1/quote-signing-keys', () =>
+      HttpResponse.json({
+        keys: [
+          {
+            algorithm: 'ed25519',
+            createdAt: '2026-07-27T11:00:00Z',
+            keyId: vector.payload.signingKeyId,
+            mode: vector.payload.mode,
+            publicKey: signingPublicKey,
+            state: 'active',
+            updatedAt: '2026-07-27T11:00:00Z',
+          },
+        ],
+      }),
+    ),
+  );
+  const sdk = new EmberWalletClient({
+    baseUrl: 'https://api.ember.test',
+    crypto: webCrypto(),
+    environment: 'production',
+    fetch,
+    hostBinding: { kind: 'native', applicationId: APPLICATION_ID },
+    integrationId: 'integration_vector',
+    integrationVersion: 1,
+    now: () => FIXED_NOW,
+    retry: { maxRetries: 0 },
+    sessionSigner: new CapturingSigner(SESSION_PUBLIC_KEY, 7),
+    sessionStore: new MemorySessionStore(
+      session({
+        environment: 'production',
+        expiresAt: '2026-07-27T12:30:00Z',
+        integrationId: 'integration_vector',
+        integrationVersion: 1,
+        partnerId: 'partner_vector',
+        sessionPublicKey: SESSION_PUBLIC_KEY,
+        walletAddress: WALLET,
+        walletSubjectId: 'wallet_vector',
+      }),
+    ),
+  });
+
+  await expect(
+    sdk.verifyQuote(
+      signedQuote('2026-07-27T12:06:00.000Z', '2026-07-27T12:21:00.000Z'),
+    ),
+  ).resolves.toBeUndefined();
+  await expect(
+    sdk.verifyQuote(
+      signedQuote('2026-07-27T12:06:00.001Z', '2026-07-27T12:21:00.001Z'),
+    ),
+  ).rejects.toMatchObject({
+    name: EmberQuoteVerificationError.name,
+    reason: 'not_yet_valid',
+  });
+  await expect(
+    sdk.verifyQuote(
+      signedQuote('2026-07-27T11:50:00.000Z', '2026-07-27T12:05:00.000Z'),
+    ),
+  ).rejects.toMatchObject({
+    name: EmberQuoteVerificationError.name,
+    reason: 'expired',
   });
 });
 
