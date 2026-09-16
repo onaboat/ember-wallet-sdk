@@ -8,7 +8,7 @@ import {
 } from './release-policy.mjs';
 
 const policy = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   packageName: '@embercover/wallet-sdk',
   channels: [
     {
@@ -16,18 +16,39 @@ const policy = {
       npmDistTag: 'beta',
       prereleaseIdentifier: 'beta',
       purpose: 'integration_testing',
+      requiredEvidence: [
+        'apiConformance',
+        'chromeExtensionCors',
+        'manualProductQa',
+      ],
     },
     {
       id: 'release-candidate',
       npmDistTag: 'release-candidate',
       prereleaseIdentifier: 'rc',
       purpose: 'final_qualification',
+      requiredEvidence: [
+        'apiConformance',
+        'httpsWebCors',
+        'chromeExtensionCors',
+        'androidEmulator',
+        'solanaPhone',
+        'manualProductQa',
+      ],
     },
     {
       id: 'latest',
       npmDistTag: 'latest',
       prereleaseIdentifier: null,
       purpose: 'production',
+      requiredEvidence: [
+        'apiConformance',
+        'httpsWebCors',
+        'chromeExtensionCors',
+        'androidEmulator',
+        'solanaPhone',
+        'manualProductQa',
+      ],
     },
   ],
   hosts: [
@@ -71,7 +92,16 @@ const policy = {
   ],
 };
 
-function evidence() {
+const qualifiedGateNames = [
+  'apiConformance',
+  'httpsWebCors',
+  'chromeExtensionCors',
+  'androidEmulator',
+  'solanaPhone',
+  'manualProductQa',
+];
+
+function evidence({ gateNames = qualifiedGateNames, version = '1.4.0-rc.0' } = {}) {
   const gate = {
     status: 'passed',
     recordedAt: '2026-09-15T00:00:00.000Z',
@@ -81,20 +111,13 @@ function evidence() {
     schemaVersion: 1,
     package: {
       name: '@embercover/wallet-sdk',
-      version: '1.4.0-rc.0',
+      version,
       tarballSha256: 'a'.repeat(64),
       contractVersion: '1.0.0',
       contractSha256: 'c'.repeat(64),
       upstreamRevision: 'd'.repeat(40),
     },
-    gates: {
-      apiConformance: { ...gate },
-      httpsWebCors: { ...gate },
-      chromeExtensionCors: { ...gate },
-      androidEmulator: { ...gate },
-      solanaPhone: { ...gate },
-      manualProductQa: { ...gate },
-    },
+    gates: Object.fromEntries(gateNames.map((gateName) => [gateName, { ...gate }])),
   };
 }
 
@@ -106,6 +129,12 @@ describe('release policy', () => {
   ])('maps %s only to %s', (version, expected) => {
     assertReleasePolicy(policy);
     expect(releaseChannelForVersion(version, policy).id).toBe(expected);
+  });
+
+  it('rejects the earlier policy schema without channel evidence requirements', () => {
+    expect(() => assertReleasePolicy({ ...policy, schemaVersion: 1 })).toThrow(
+      /schemaVersion must be 2/,
+    );
   });
 
   it('prevents a prerelease from using latest', () => {
@@ -170,6 +199,60 @@ describe('release policy', () => {
         tarballSha256: 'a'.repeat(64),
       }),
     ).toBeTruthy();
+  });
+
+  it('accepts beta integration evidence without unqualified host claims', () => {
+    const betaEvidence = evidence({
+      gateNames: ['apiConformance', 'chromeExtensionCors', 'manualProductQa'],
+      version: '1.4.0-beta.2',
+    });
+    expect(
+      assertReleaseEvidence({
+        evidence: betaEvidence,
+        packageJson: { name: '@embercover/wallet-sdk', version: '1.4.0-beta.2' },
+        policy,
+        provenance: {
+          contract: { version: '1.0.0', sha256: 'c'.repeat(64) },
+          upstream: { revision: 'd'.repeat(40) },
+        },
+        tarballSha256: 'a'.repeat(64),
+      }),
+    ).toBeTruthy();
+  });
+
+  it('rejects beta evidence that omits a beta integration gate', () => {
+    const incomplete = evidence({
+      gateNames: ['apiConformance', 'manualProductQa'],
+      version: '1.4.0-beta.2',
+    });
+    expect(() =>
+      assertReleaseEvidence({
+        evidence: incomplete,
+        packageJson: { name: '@embercover/wallet-sdk', version: '1.4.0-beta.2' },
+        policy,
+        provenance: {
+          contract: { version: '1.0.0', sha256: 'c'.repeat(64) },
+          upstream: { revision: 'd'.repeat(40) },
+        },
+        tarballSha256: 'a'.repeat(64),
+      }),
+    ).toThrow(/channel beta must contain exactly its required gates/);
+  });
+
+  it('rejects beta evidence that claims qualified-only host gates', () => {
+    const overclaimed = evidence({ version: '1.4.0-beta.2' });
+    expect(() =>
+      assertReleaseEvidence({
+        evidence: overclaimed,
+        packageJson: { name: '@embercover/wallet-sdk', version: '1.4.0-beta.2' },
+        policy,
+        provenance: {
+          contract: { version: '1.0.0', sha256: 'c'.repeat(64) },
+          upstream: { revision: 'd'.repeat(40) },
+        },
+        tarballSha256: 'a'.repeat(64),
+      }),
+    ).toThrow(/channel beta must contain exactly its required gates/);
   });
 
   it('rejects a failed or missing release gate', () => {

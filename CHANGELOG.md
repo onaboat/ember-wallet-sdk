@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Makes release evidence channel-specific: beta integration releases require
+  retained real-API and Chrome wallet records, while release-candidate and stable
+  releases remain gated by the complete HTTPS and Android/Solana-phone matrix.
 - Aligns fresh challenge validation with the API's bounded 60-second wallet
   clock-skew policy while continuing to reject larger future timestamps before
   invoking the protected-wallet signer.
@@ -38,8 +41,8 @@
 - Bundles the runtime validator into the neutral SDK artifacts so React Native
   consumers do not require a package-specific Babel transform.
 - Adds closed beta, release-candidate and stable channel rules, exact-tarball
-  staged publishing, signed-tag checks and a fail-closed release-evidence
-  manifest covering every declared host.
+  staged publishing, signed-tag checks and fail-closed release-evidence
+  manifests appropriate to each channel.
 - Publishes the supported-host matrix plus semantic compatibility, upgrade and
   rollback rules with the package.
 

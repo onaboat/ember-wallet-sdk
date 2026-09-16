@@ -19,6 +19,12 @@ The authoritative machine-readable declaration is
 from assigning prerelease versions to the stable channel and validates the
 closed host set used by release evidence.
 
+The `beta` channel is an integration channel, not a supported-host declaration.
+Its narrower API, Chrome-origin and manual Chrome evidence permits consumers to
+test an exact package before HTTPS and native qualification. The
+`release-candidate` and stable channels still require evidence for every host
+listed as qualification required above.
+
 ## Host-owned boundaries
 
 The SDK owns Ember challenge validation, session/request proofs, response

@@ -57,6 +57,11 @@ version in every wallet build. See [`SUPPORT.md`](./SUPPORT.md) for the declared
 host matrix and [`COMPATIBILITY.md`](./COMPATIBILITY.md) for upgrade and
 rollback rules.
 
+Beta staging requires real API conformance, registered Chrome-extension origin
+evidence, and manual Chrome product QA. It does not claim HTTPS-web or native
+host qualification. Release-candidate and stable staging remain blocked on the
+complete supported-host evidence matrix.
+
 The package publishes ESM, CommonJS, and TypeScript declarations from an
 intentional host-neutral ES2022 build. The runtime has no Node-only dependency.
 Its runtime validator is bundled into the JavaScript artifact so React Native

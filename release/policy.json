@@ -1,24 +1,45 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "packageName": "@embercover/wallet-sdk",
   "channels": [
     {
       "id": "beta",
       "npmDistTag": "beta",
       "prereleaseIdentifier": "beta",
-      "purpose": "integration_testing"
+      "purpose": "integration_testing",
+      "requiredEvidence": [
+        "apiConformance",
+        "chromeExtensionCors",
+        "manualProductQa"
+      ]
     },
     {
       "id": "release-candidate",
       "npmDistTag": "release-candidate",
       "prereleaseIdentifier": "rc",
-      "purpose": "final_qualification"
+      "purpose": "final_qualification",
+      "requiredEvidence": [
+        "apiConformance",
+        "httpsWebCors",
+        "chromeExtensionCors",
+        "androidEmulator",
+        "solanaPhone",
+        "manualProductQa"
+      ]
     },
     {
       "id": "latest",
       "npmDistTag": "latest",
       "prereleaseIdentifier": null,
-      "purpose": "production"
+      "purpose": "production",
+      "requiredEvidence": [
+        "apiConformance",
+        "httpsWebCors",
+        "chromeExtensionCors",
+        "androidEmulator",
+        "solanaPhone",
+        "manualProductQa"
+      ]
     }
   ],
   "hosts": [

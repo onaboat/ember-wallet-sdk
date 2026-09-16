@@ -133,12 +133,17 @@ build identifiers, tester, date, and pass/fail evidence.
 
 ## Release decision
 
-The prerelease passes only when every row has evidence from the HTTPS web
-fixture, browser extension, and declared native-mobile wallet; the package and
-repository boundary checks pass; and no unresolved severity-one or
-severity-two defect remains.
+A beta integration release passes only when the exact package has real API
+conformance, registered Chrome-extension CORS, and manual Chrome product-QA
+evidence; the package and repository boundary checks pass; and no unresolved
+severity-one or severity-two defect affects that integration path. This does
+not qualify the HTTPS-web or native hosts.
 
-Hash the reviewed API, CORS, Android emulator, representative Solana-phone and
-manual product QA records into `release/evidence/v<package-version>.json` using
-the exact release tarball SHA-256. `npm run release:check` must reject a missing,
-failed, malformed or cross-version gate before the artifact can be staged.
+A release-candidate or stable release passes only when every row has evidence
+from the HTTPS web fixture, browser extension, and declared native-mobile
+wallet, in addition to the same package, repository and defect gates.
+
+Hash the reviewed records required by the selected channel into
+`release/evidence/v<package-version>.json` using the exact release tarball
+SHA-256. `npm run release:check` must reject a missing, extra, failed, malformed
+or cross-version gate before the artifact can be staged.

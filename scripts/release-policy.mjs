@@ -4,7 +4,7 @@ const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 const REVISION_PATTERN = /^[a-f0-9]{40}$/;
 const RELEASE_VERSION_PATTERN =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([a-z][a-z0-9-]*)\.(0|[1-9]\d*))?$/;
-const REQUIRED_GATES = [
+const EVIDENCE_GATES = [
   'apiConformance',
   'httpsWebCors',
   'chromeExtensionCors',
@@ -50,16 +50,28 @@ export function assertReleasePolicy(policy) {
     hasExactKeys(policy, ['schemaVersion', 'packageName', 'channels', 'hosts']),
     'Release policy has unexpected top-level fields.',
   );
-  assert(policy.schemaVersion === 1, 'Release policy schemaVersion must be 1.');
+  assert(policy.schemaVersion === 2, 'Release policy schemaVersion must be 2.');
   assert(
     policy.packageName === '@embercover/wallet-sdk',
     'Release policy packageName is invalid.',
   );
 
   const expectedChannels = [
-    ['beta', 'beta', 'beta', 'integration_testing'],
-    ['release-candidate', 'release-candidate', 'rc', 'final_qualification'],
-    ['latest', 'latest', null, 'production'],
+    [
+      'beta',
+      'beta',
+      'beta',
+      'integration_testing',
+      ['apiConformance', 'chromeExtensionCors', 'manualProductQa'],
+    ],
+    [
+      'release-candidate',
+      'release-candidate',
+      'rc',
+      'final_qualification',
+      EVIDENCE_GATES,
+    ],
+    ['latest', 'latest', null, 'production', EVIDENCE_GATES],
   ];
   assert(
     Array.isArray(policy.channels) &&
@@ -67,7 +79,7 @@ export function assertReleasePolicy(policy) {
     'Release policy must define exactly three channels.',
   );
   expectedChannels.forEach(
-    ([id, npmDistTag, prereleaseIdentifier, purpose], index) => {
+    ([id, npmDistTag, prereleaseIdentifier, purpose, requiredEvidence], index) => {
       const channel = policy.channels[index];
       assert(
         hasExactKeys(channel, [
@@ -75,6 +87,7 @@ export function assertReleasePolicy(policy) {
           'npmDistTag',
           'prereleaseIdentifier',
           'purpose',
+          'requiredEvidence',
         ]),
         `Release channel ${id} is malformed.`,
       );
@@ -82,7 +95,9 @@ export function assertReleasePolicy(policy) {
         channel.id === id &&
           channel.npmDistTag === npmDistTag &&
           channel.prereleaseIdentifier === prereleaseIdentifier &&
-          channel.purpose === purpose,
+          channel.purpose === purpose &&
+          JSON.stringify(channel.requiredEvidence) ===
+            JSON.stringify(requiredEvidence),
         `Release channel ${id} differs from the supported policy.`,
       );
     },
@@ -159,7 +174,8 @@ export function assertReleasePolicy(policy) {
     policy.hosts.flatMap((host) => host.requiredEvidence),
   );
   assert(
-    REQUIRED_GATES.every((gate) => policyGates.has(gate)),
+    policyGates.size === EVIDENCE_GATES.length &&
+      EVIDENCE_GATES.every((gate) => policyGates.has(gate)),
     'Release host declarations do not cover every required evidence gate.',
   );
   return policy;
@@ -216,6 +232,8 @@ export function assertReleaseEvidence({
   provenance,
   tarballSha256,
 }) {
+  const channel = releaseChannelForVersion(packageJson.version, policy);
+  const requiredGates = channel.requiredEvidence;
   assert(
     hasExactKeys(evidence, ['schemaVersion', 'package', 'gates']),
     'Release evidence has unexpected top-level fields.',
@@ -258,10 +276,10 @@ export function assertReleaseEvidence({
     'Release evidence provenance digests are malformed.',
   );
   assert(
-    hasExactKeys(evidence.gates, REQUIRED_GATES),
-    'Release evidence must contain exactly the required gates.',
+    hasExactKeys(evidence.gates, requiredGates),
+    `Release evidence for channel ${channel.id} must contain exactly its required gates.`,
   );
-  for (const gateName of REQUIRED_GATES) {
+  for (const gateName of requiredGates) {
     const gate = evidence.gates[gateName];
     assert(
       hasExactKeys(gate, ['status', 'recordedAt', 'evidenceSha256']),
@@ -284,4 +302,4 @@ export function assertReleaseEvidence({
   return evidence;
 }
 
-export const releaseEvidenceGateNames = Object.freeze([...REQUIRED_GATES]);
+export const releaseEvidenceGateNames = Object.freeze([...EVIDENCE_GATES]);
