@@ -302,7 +302,7 @@
               <tr><td>01</td><td>Session and protected-signing security</td><td><code>codex/sdk-01-session-security</code></td><td><span class="status good">Done · Pushed</span></td></tr>
               <tr><td>02</td><td>Response integrity and privacy</td><td><code>codex/sdk-02-response-integrity</code></td><td><span class="status good">Done · Pushed</span></td></tr>
               <tr><td>03</td><td>Complete SDK lifecycle coverage</td><td><code>codex/sdk-03-lifecycle-coverage</code></td><td><span class="status good">Done · Pushed</span></td></tr>
-              <tr><td>04</td><td>Real API conformance</td><td><code>codex/sdk-04-api-conformance</code></td><td><span class="status good">Harness done · Pushed</span> <span class="status blocking">Designated full-lifecycle report pending</span></td></tr>
+              <tr><td>04</td><td>Real API conformance</td><td><code>codex/sdk-04-api-conformance</code></td><td><span class="status good">Harness done · External wallet fixture built</span> <span class="status blocking">Designated full-lifecycle report pending</span></td></tr>
               <tr><td>05</td><td>Origin-bound web and Chrome conformance</td><td><code>codex/sdk-05-origin-host-conformance</code></td><td><span class="status good">Done · Pushed · Chrome live passed</span> <span class="status attention">HTTPS CORS QA pending</span></td></tr>
               <tr><td>06</td><td>Native-mobile conformance</td><td><code>codex/sdk-06-native-mobile-conformance</code></td><td><span class="status good">Done · Pushed</span> <span class="status attention">Android/Solana-phone QA pending</span></td></tr>
               <tr><td>07</td><td>Shared release candidate</td><td><code>codex/sdk-07-release-candidate</code></td><td><span class="status good">Done · Pushed</span> <span class="status blocking">Release evidence pending</span></td></tr>
@@ -352,7 +352,7 @@
               <tr><td>Account signup</td><td>Creates or resumes Ember wallet-subject history after a valid ownership signature. No email, password or partner key.</td><td>Account selection, recovery explanation, consent screen and secure storage implementation.</td></tr>
               <tr><td>Offers and terms</td><td>Typed offer reads, environment checks, terms receipt request and response correlation.</td><td>Rendering the exact terms and collecting explicit user agreement.</td></tr>
               <tr><td>Cover purchase</td><td>Quote creation and cryptographic verification, payment submission, payment recovery and coverage reads.</td><td>USDC transaction construction, simulation, user review, signing, broadcast and durable local recovery state.</td></tr>
-              <tr><td>Signing review</td><td>Exact decision request, typed result, fail-open transport behavior, decision identity and freshness helpers.</td><td>Dapp identity, transaction decoding, simulation, approval UI, protected-signer lifecycle, evidence outbox and signature release.</td></tr>
+              <tr><td>Signing review</td><td>Exact decision request, typed covered/not-covered/unavailable result, decision identity and freshness helpers. The result describes cover and is not itself signing authorization.</td><td>Dapp identity, transaction decoding, simulation, approval UI, protected-signer lifecycle, evidence outbox and signature-release policy. Uncovered signing remains available only through explicit user acknowledgement and may never claim protection.</td></tr>
               <tr><td>Claims</td><td>Eligibility, creation, reads, appeal and typed evidence-upload lifecycle.</td><td>Evidence selection, upload byte transfer, user explanation and local recovery UX.</td></tr>
               <tr><td>Infrastructure</td><td>Portable interfaces at real external boundaries only.</td><td>HTTPS page/PWA, extension worker, Android first, later-declared iOS, storage, RPC, MWA, Seed Vault and telemetry implementations.</td></tr>
             </tbody>
@@ -431,7 +431,7 @@
               <li>The host requests the protected signature from its wallet-signing adapter.</li>
               <li>The decision is checked again after protected signing returns.</li>
               <li>Fresh covered evidence is queued durably before signed bytes are released.</li>
-              <li>If cover expired, the signed result is not represented as covered; the user chooses cancel or continue without cover.</li>
+              <li>If a covered decision expires, the host rechecks it. If cover is not offered, or remains unavailable after retry, the host may continue only after explicit user acknowledgement and must represent the result as uncovered.</li>
               <li>Confirmation and evidence lineage remain visible after the dapp receives the result.</li>
             </ol>
           </article>
@@ -459,7 +459,7 @@
         <div class="flow" aria-label="Architecture dependency direction">
           <div><strong>Ember business contract</strong><span>Wallet identity, offer, quote, payment, coverage, decision, evidence and claim invariants.</span></div>
           <div><strong>Generated contract boundary</strong><span>OpenAPI-derived wire types and runtime response schemas.</span></div>
-          <div><strong>SDK application client</strong><span>Use-case methods, validation, correlation, retry and fail-open rules.</span></div>
+          <div><strong>SDK application client</strong><span>Use-case methods, validation, correlation, retry and explicit unavailable-result rules.</span></div>
           <div><strong>Portable ports</strong><span>Signer, crypto, fetch, clock, session store and privacy-safe telemetry.</span></div>
           <div><strong>Host adapters</strong><span>Web wallet, extension worker, Android first, later-declared iOS, protected signer, secure storage, Solana RPC and UI.</span></div>
         </div>
@@ -467,6 +467,23 @@
           <article class="card"><h3>Core rules</h3><ul><li>Pure validation where practical.</li><li>No framework types in business decisions.</li><li>Side effects at transport and host edges.</li><li>Explicit discriminated states.</li></ul></article>
           <article class="card"><h3>Meaningful interfaces</h3><ul><li><code>EmberMessageSigner</code></li><li><code>WalletSessionStore</code></li><li><code>EmberCrypto</code></li><li><code>EmberFetch</code></li></ul></article>
           <article class="card"><h3>Do not add</h3><ul><li>Generic repositories.</li><li>Factories for every object.</li><li>Mobile-specific DTO copies.</li><li>A second SDK abstraction layer.</li><li>UI or CSS APIs.</li></ul></article>
+        </div>
+        <div class="callout blocker" style="margin-top:16px">
+          <strong>ADR-001 · One decision owner per signing use case</strong>
+          <p><strong>Status:</strong> Accepted 16 September 2026. The first live conformance attempt used Ember as the runner's external Wallet Standard signer. That composed two applications which each believed they owned session and cover-decision orchestration, producing contradictory wallet-level and request-level cover presentation. The run was stopped before either transaction was signed or broadcast.</p>
+          <p><strong>Decision:</strong> the SDK remains a host-neutral protocol library. Its API conformance runner is a separate test application that owns its own lifecycle and uses a dedicated neutral external QA signer. Ember is rejected as that signer. Chrome and Android are product applications: each owns its complete cover decision, explicit approval, protected signing, broadcast and evidence flow while consuming the SDK only through its protocol boundary.</p>
+          <p><strong>Rejected design:</strong> no privileged conformance bypass, trusted-dapp flag or externally injected cover decision will be added. Such a path would let an initiating application avoid the wallet's product decision and would create ambiguous authority at the security boundary.</p>
+          <p><strong>Failure policy boundary:</strong> <code>reviewForSigning()</code> converts transport and validation failures into a typed <code>unavailable</code> result so callers do not receive a false coverage claim. The SDK cannot release a signature; the host owns that choice. Ember Chrome and Android may allow an uncovered signature only after explicit user acknowledgement, while a fresh <code>covered</code> decision is required for any protected claim and post-sign evidence.</p>
+        </div>
+        <div class="table-wrap" style="margin-top:16px">
+          <table>
+            <thead><tr><th>Context</th><th>Application owner</th><th>SDK responsibility</th><th>Signer boundary</th><th>Conformance record</th></tr></thead>
+            <tbody>
+              <tr><td>SDK API conformance</td><td>Standalone SDK runner</td><td>Validate protocol contracts, correlation, persistence and lifecycle behavior</td><td>Named neutral external Wallet Standard QA wallet; Ember is prohibited</td><td>Public-safe full-lifecycle sandbox report bound to package and contract provenance</td></tr>
+              <tr><td>Chrome product</td><td>Ember extension application service</td><td>Protocol adapter only</td><td>Ember vault signs only after its own covered decision and explicit approval</td><td>Separate packaged-product journeys and live product evidence</td></tr>
+              <tr><td>Android / Solana phone product</td><td>Android wallet application service</td><td>Protocol adapter only</td><td>Native non-exportable protected signer behind a typed host port</td><td>Separate emulator and representative-device product evidence</td></tr>
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -687,11 +704,11 @@
           </article>
 
           <article class="branch">
-            <div class="branch-head"><h3>04 · Real API conformance</h3><div><span class="status attention">Harness ready · Live run required</span> <code>codex/sdk-04-api-conformance</code></div></div>
+            <div class="branch-head"><h3>04 · Real API conformance</h3><div><span class="status attention">Harness + external fixture ready · Live run required</span> <code>codex/sdk-04-api-conformance</code></div></div>
             <div class="branch-columns">
-              <div><h4>Build · Complete locally</h4><ul><li>SDK-repository runner packs and installs the standalone package.</li><li>Real Ed25519 session signers and external wallet fixture contract.</li><li>Explicit sandbox-only transaction approval.</li><li>Client reconstruction after durable transitions.</li><li>Reports package tarball and contract provenance without credentials.</li></ul></div>
-              <div><h4>Automated gate · Local SDK passed; live API pending</h4><ul><li>Challenge/session/rotation/revocation.</li><li>Offer/terms/quote.</li><li>Simulated and approved payment/coverage.</li><li>Simulated decision/evidence/lineage.</li><li>Eligibility/claim/upload/appeal.</li><li><code>npm run verify</code>: 187 tests, configuration and report privacy, generated contract, consumers, public boundary and eleven-file package all pass.</li></ul></div>
-              <div><h4>Manual QA checkpoint</h4><ul><li>Provide the designated API and registered public authority.</li><li>Review both Devnet simulations and approve the transactions.</li><li>Run <code>npm run conformance:api</code>.</li><li>Review the JSON report and public lifecycle states.</li><li>Kill the process at durable transitions and resume without repeating a side effect.</li></ul></div>
+              <div><h4>Build · Complete locally</h4><ul><li>SDK-repository runner packs and installs the standalone package.</li><li>Real Ed25519 session signers and external wallet fixture contract.</li><li>The wallet repository supplies a wallet-neutral external signer fixture on <code>codex/conformance-decision-ownership</code>; Node receives no wallet secret.</li><li>The fixture rejects Ember as its signer because Ember owns its own session, cover decision, approval, signing, broadcast and evidence use case. There is no bypass or trusted-dapp mode.</li><li>A token-protected loopback operator binds one configured external wallet, displays exact Devnet review facts and requires explicit approval.</li><li>Explicit sandbox-only transaction approval.</li><li>Client reconstruction after durable transitions.</li><li>Reports package tarball and contract provenance without credentials.</li></ul></div>
+              <div><h4>Automated gate · Local SDK and fixture passed; live API pending</h4><ul><li>Challenge/session/rotation/revocation.</li><li>Offer/terms/quote.</li><li>Simulated and approved payment/coverage.</li><li>Simulated decision/evidence/lineage.</li><li>Eligibility/claim/upload/appeal.</li><li>The external fixture's decision-boundary tests pass and its Node and browser artifacts build and load.</li><li>The Chrome product's separate 12-journey suite still proves an Ember-owned covered transaction with one approval, one broadcast and byte-exact evidence.</li><li><code>npm run verify</code>: 187 tests, configuration and report privacy, generated contract, consumers, public boundary and eleven-file package all pass.</li></ul></div>
+              <div><h4>Manual QA checkpoint</h4><ul><li>Provide the designated API and registered public authority.</li><li>Select a dedicated neutral Wallet Standard QA wallet, set <code>EMBER_CONFORMANCE_SIGNER_WALLET_NAME</code> to its exact advertised name and confirm that configuring Ember is rejected before network access.</li><li>Review both Devnet simulations and explicitly approve the transactions; the setup payment is not itself the later covered transaction.</li><li>Run <code>npm run conformance:api</code> and keep this SDK-owned result separate from Chrome product conformance.</li><li>Review the JSON report and public lifecycle states.</li><li>Kill the process at durable transitions and resume without repeating a side effect.</li></ul></div>
             </div>
           </article>
 
@@ -813,6 +830,7 @@
               <tr><td>Decision expires during protected approval</td><td><span class="status good">Rule settled</span></td><td>Downgrade visibly; do not claim cover. Physical-phone timing still determines the safety margin.</td></tr>
               <tr><td>Native application identifier is not cryptographic attestation</td><td><span class="status attention">Security follow-up</span></td><td>Keep current binding explicit and record platform-attestation decisions outside the SDK; the SDK must not imply stronger authority than the protocol provides.</td></tr>
               <tr><td>Actual deployed sandbox API origin and observable CORS behavior</td><td><span class="status good">Chrome live passed</span> <span class="status attention">HTTPS CORS pending</span></td><td><code>https://ember-devnet-qa.up.railway.app</code> completed the exact-origin Chrome session, signed quote, finalized payment and activation lifecycle. Ordinary HTTPS web-wallet CORS remains a separate certification gate and must pass with an exact HTTPS-origin allowlist before web-wallet support is declared.</td></tr>
+              <tr><td>Designated real-API external signer fixture</td><td><span class="status attention">Built · Live report pending</span></td><td>The wallet repository owns a secretless Devnet-only fixture that requires a dedicated external Wallet Standard QA signer and explicit operator approval for both transactions. It rejects Ember so the SDK runner cannot compete with the product wallet's cover-decision flow. Branch 04 remains open until the SDK runner completes and its public-safe report is reviewed.</td></tr>
               <tr><td>Final Android application identifier and registration owner</td><td><span class="status blocking">External fact</span></td><td>Required before the first native session conformance and Android release signing. The iOS identifier becomes required only when iOS enters the declared support plan.</td></tr>
               <tr><td>Web storage, XSS and multi-tab policy</td><td><span class="status good">Defined and tested</span></td><td>Partition by environment/integration/version/wallet, serialize transitions with Web Locks, re-read after lock acquisition, keep signing material host-owned and enforce a restrictive CSP.</td></tr>
               <tr><td>Embedded frames, other extension schemes, Electron and server-side wallets</td><td><span class="status attention">Not committed</span></td><td>Do not infer support from ESM/CJS packaging. Add a binding threat model and conformance fixture before adding any of these hosts.</td></tr>
