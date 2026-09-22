@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { appendFile, mkdir, readFile } from 'node:fs/promises';
+import { access, appendFile, mkdir, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -22,6 +22,17 @@ function run(command, args, options = {}) {
   return result.stdout;
 }
 
+const packageJson = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
+const candidateName = `${packageJson.name.replace(/^@/, '').replace('/', '-')}-${packageJson.version}.tgz`;
+let candidateExists = false;
+try {
+  await access(join(outputDirectory, candidateName));
+  candidateExists = true;
+} catch (error) {
+  if (error.code !== 'ENOENT') throw error;
+}
+if (candidateExists) throw new Error(`Refusing to overwrite immutable candidate ${candidateName}. Choose a new version.`);
+run(process.execPath, ['scripts/check-contract-provenance.mjs'], { cwd: root });
 await mkdir(outputDirectory, { recursive: true });
 const npmOptions = {
   cwd: root,

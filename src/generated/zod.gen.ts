@@ -9,6 +9,13 @@ export const zAcceptTermsRequest = z.object({
     termsVersion: z.string()
 });
 
+export const zAllowanceSnapshot = z.object({
+    available: z.int().gte(0).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+    committed: z.int().gte(0).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+    limit: z.int().gte(0).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+    reserved: z.int().gte(0).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' })
+});
+
 export const zApiErrorCode = z.enum([
     'invalid_request',
     'session_invalid',
@@ -130,6 +137,17 @@ export const zCreateSessionRequest = z.object({
     challengeId: z.string(),
     signature: z.string().min(64).max(88)
 });
+
+export const zCurrentCoverageResponse = z.union([
+    z.object({
+        status: z.enum(['none'])
+    }),
+    z.object({
+        allowance: zAllowanceSnapshot,
+        coverage: zCoverageInstanceResponse,
+        status: z.enum(['active'])
+    })
+]);
 
 export const zDecisionLifecycleStatus = z.enum([
     'reviewed',
@@ -273,6 +291,12 @@ export const zProductionEvidenceState = z.enum([
     'sealed'
 ]);
 
+export const zCancelDecisionResponse = z.object({
+    cancelled: z.boolean(),
+    decisionId: z.string(),
+    evidenceState: zProductionEvidenceState
+});
+
 export const zDecisionLineageResponse = z.object({
     coverageInstanceId: z.string(),
     decisionId: z.string(),
@@ -404,6 +428,7 @@ export const zRiskBand = z.enum([
 ]);
 
 export const zCoverageDecisionResponse = z.object({
+    allowance: zAllowanceSnapshot,
     coverStatus: zCoverStatus,
     coverageInstanceId: z.string(),
     decisionExpiresAt: z.iso.datetime({ offset: true }),

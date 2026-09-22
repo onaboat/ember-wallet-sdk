@@ -4,11 +4,11 @@
   "contract": {
     "path": "contract/wallet-v1.json",
     "version": "1.0.0",
-    "sha256": "60f54059f578d1a9264819cd64ab842e51e6d521292378bfe59e8bcfb2264f95"
+    "sha256": "6625f15fe48c417831c0c09d7500662cbec5b29f4afc73f49374b3effc7ab77f"
   },
   "upstream": {
     "authority": "Ember wallet API OpenAPI",
     "artifactPath": "docs/openapi/wallet-v1.json",
-    "revision": "81081916fa7838d3b83225b36cf349452c3ead9b"
+    "revision": "418bc944c60ec317e5e48eb826061b5f3e3affa8"
   }
 }

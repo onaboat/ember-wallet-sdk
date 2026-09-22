@@ -288,7 +288,8 @@ function decision(
     decisionExpiresAt: '2099-01-01T00:00:00Z',
     decisionId: 'decision_wallet-sdk',
     decisionReason: 'eligible',
-    evaluationCountImpact: 1,
+    evaluationCountImpact: 0,
+    allowance: { limit: 100, committed: 0, reserved: 1, available: 99 },
     evidenceState: 'pre_sign',
     kind: 'transaction',
     maximumPayoutMicros: '10000000000',
@@ -2030,3 +2031,45 @@ test('verifies only the exact payable Devnet QA contract in test mode', async ()
     reason: 'unsupported_schema',
   });
 });
+
+
+test('discovers current coverage in one read and validates the wallet authority', async () => {
+  let reads = 0;
+  server.use(http.get(`${API}/v1/coverage-instances/current`, () => {
+    reads += 1;
+    return HttpResponse.json({ status: 'active', coverage: coverage(), allowance: { limit: 100, committed: 2, reserved: 1, available: 97 } });
+  }));
+  const { sdk } = client({});
+  await expect(sdk.getCurrentCoverage()).resolves.toMatchObject({ status: 'active', allowance: { available: 97 } });
+  expect(reads).toBe(1);
+  server.use(http.get(`${API}/v1/coverage-instances/current`, () => HttpResponse.json({ status: 'none' })));
+  await expect(sdk.getCurrentCoverage()).resolves.toEqual({ status: 'none' });
+  server.use(http.get(`${API}/v1/coverage-instances/current`, () => HttpResponse.json({
+    status: 'active', coverage: coverage({ walletSubjectId: 'wallet_other' }),
+    allowance: { limit: 100, committed: 0, reserved: 0, available: 100 },
+  })));
+  await expect(sdk.getCurrentCoverage()).rejects.toMatchObject({ reason: 'authority_mismatch' });
+});
+
+test('returns cancellation outcomes without claiming a refund when evidence won', async () => {
+  const { sdk } = client({});
+  for (const cancelled of [true, false]) {
+    server.use(http.post(`${API}/v1/decisions/decision_wallet-sdk/cancel`, () => HttpResponse.json({
+      decisionId: 'decision_wallet-sdk', cancelled, evidenceState: cancelled ? 'dropped' : 'post_sign',
+    })));
+    await expect(sdk.cancelDecision('decision_wallet-sdk')).resolves.toMatchObject({ cancelled });
+  }
+  server.use(http.post(`${API}/v1/decisions/decision_wallet-sdk/cancel`, () => HttpResponse.json({
+    decisionId: 'decision_wrong', cancelled: true, evidenceState: 'dropped',
+  })));
+  await expect(sdk.cancelDecision('decision_wallet-sdk')).rejects.toMatchObject({ reason: 'resource_mismatch' });
+});
+
+test.each(['dropped', 'post_sign', 'confirmation', 'sealed', 'conflict'] as const)(
+  'does not present a %s decision as fresh covered signing authority', async (evidenceState) => {
+    server.use(http.post(`${API}/v1/decisions`, () => HttpResponse.json(decision({ evidenceState }))));
+    const { sdk } = client({});
+    await expect(sdk.reviewForSigning({ coverageInstanceId: 'coverage_wallet-sdk', kind: 'transaction', transactionBytes: 'AAAA' }))
+      .resolves.toMatchObject({ status: 'unavailable', reason: 'response_mismatch' });
+  },
+);

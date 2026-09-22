@@ -26,6 +26,8 @@ import type {
   ClaimEligibilityResponse,
   CoverageDecisionResponse,
   CoverageInstanceResponse,
+  CurrentCoverageResponse,
+  CancelDecisionResponse,
   CreateClaimRequest,
   CreateCoverageDecisionRequest,
   CreatePaymentRequest,
@@ -54,6 +56,8 @@ import {
   zClaimEligibilityResponse,
   zCoverageDecisionResponse,
   zCoverageInstanceResponse,
+  zCurrentCoverageResponse,
+  zCancelDecisionResponse,
   zDecisionLineageResponse,
   zEvidenceUploadResponse,
   zPaymentResponse,
@@ -847,6 +851,32 @@ export class EmberWalletClient {
     return response;
   }
 
+  /** One authenticated read, including allowance; no local payment reference required. */
+  async getCurrentCoverage(options?: EmberRequestOptions): Promise<CurrentCoverageResponse> {
+    const { response, session } = await this.authenticatedWithSession({
+      idempotent: true, method: 'GET', operation: 'coverage.current', options,
+      path: '/v1/coverage-instances/current', pathTemplate: '/v1/coverage-instances/current',
+      schema: zCurrentCoverageResponse, timeoutMs: this.transport.timeouts.readMs,
+    });
+    if (response.status === 'active') {
+      this.assertCoverageAuthority(response.coverage, session, 'coverage.current');
+    }
+    return response;
+  }
+
+  /** Only request cancellation before signing starts. Inspect the server outcome:
+   * accepted evidence wins over a later cancellation and is never refunded. */
+  async cancelDecision(decisionId: string, options?: EmberRequestOptions): Promise<CancelDecisionResponse> {
+    const response = await this.authenticated({
+      idempotent: true, method: 'POST', operation: 'decisions.cancel', options,
+      path: `/v1/decisions/${encodeURIComponent(decisionId)}/cancel`,
+      pathTemplate: '/v1/decisions/{decisionId}/cancel',
+      schema: zCancelDecisionResponse, timeoutMs: this.transport.timeouts.decisionMs,
+    });
+    this.assertMatch('decisions.cancel', 'decisionId', response.decisionId, decisionId, 'resource_mismatch');
+    return response;
+  }
+
   async createDecision(
     request: CreateCoverageDecisionRequest,
     options?: EmberRequestOptions,
@@ -894,7 +924,11 @@ export class EmberWalletClient {
     options?: EmberRequestOptions,
   ): Promise<SigningReview> {
     try {
-      return { status: 'reviewed', decision: await this.createDecision(request, options) };
+      const decision = await this.createDecision(request, options);
+      if (decision.evidenceState !== 'pre_sign') {
+        throw new EmberResponseMismatchError('decisions.create', 'evidenceState', 'unexpected_state');
+      }
+      return { status: 'reviewed', decision };
     } catch (error) {
       return unavailableReview(error);
     }
@@ -1443,6 +1477,8 @@ export type {
   ClaimEligibilityResponse,
   CoverageDecisionResponse,
   CoverageInstanceResponse,
+  CurrentCoverageResponse,
+  CancelDecisionResponse,
   CreateClaimRequest,
   CreateCoverageDecisionRequest,
   CreatePaymentRequest,
