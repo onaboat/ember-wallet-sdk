@@ -78,3 +78,17 @@ ordinary rollback mechanism. Move only the appropriate prerelease tag after
 the previous artifact has been requalified. Move `latest` only to a stable,
 fully qualified version. Record the before/after tag values and verify a clean
 install resolves the intended digest before resuming rollout.
+
+## Signing disposition (1.3.2-beta.4)
+
+A reviewed decision can now include `signingDisposition`. Wallets must enforce
+`block` at their signing boundary, require explicit consent for `acknowledge`,
+and keep coverage eligibility separate. The SDK transports and validates the
+assessment; it does not own the wallet signer. An absent or null disposition
+from an older backend means safety assessment is unavailable, even when cover
+is available. Do not interpret missing assessment as `allow`.
+
+This candidate adds a contract field; it does not expand custom-program
+detection or guarantee that every dangerous transaction will be identified.
+
+Simulation balances (beta.5) are optional observations, not spending intent or a guarantee of execution. SOL changes include network fees and account funding; token amounts are raw units. Hosts must retain incomplete-effect warnings. The default decision timeout is 15 seconds; callers may configure their own bounded budget.

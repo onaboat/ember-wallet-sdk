@@ -244,14 +244,15 @@
   </style>
 </head>
 <body>
+  <p role="status" style="margin:24px;padding:16px;border:1px solid currentColor"><a href="../../backend/docs/plans/2026-09-21-approval-reliability-underwriting-breadth-plan.md#0-execution-control--updated-22-september-2026">Authoritative execution checklist</a>: E1 implemented, Manual QA next → E2 backend/SDK contract → E3 wallet integration → E4 Android foundations. E1 verification: 65 focused tests, typecheck and QA build/verifier passed. Full baseline/browser suites were not repeated. Manual QA pending. Broader verification runs at major checkpoints only. Release and certification gates remain separate.</p>
   <div class="shell">
     <header>
       <p class="eyebrow">Ember product management · shared client boundary</p>
       <h1>Wallet SDK product and delivery plan</h1>
       <p class="lede">A detailed plan for making <code>@embercover/wallet-sdk</code> the dependable Ember integration shared by origin-bound HTTPS web wallets and browser extensions, application-bound native mobile wallets, and future wallet partners.</p>
       <div class="meta">
-        <span><strong>Audit date:</strong> 15 September 2026</span>
-        <span><strong>Reviewed release:</strong> <code>1.3.2-beta.1</code></span>
+        <span><strong>Audit updated:</strong> 21 September 2026</span>
+        <span><strong>Reviewed candidate:</strong> <code>1.3.2-beta.2</code></span>
         <span><strong>Recommendation:</strong> harden the shared core, then certify each supported host</span>
         <span><strong>Document type:</strong> product and engineering plan</span>
       </div>
@@ -262,6 +263,7 @@
         <a href="#host-support">Host support</a>
         <a href="#journeys">User journeys</a>
         <a href="#architecture">Architecture</a>
+        <a href="#reliability">R01 reliability</a>
         <a href="#baseline">Verified baseline</a>
         <a href="#findings">Findings</a>
         <a href="#expiry">Decision expiry</a>
@@ -303,11 +305,12 @@
               <tr><td>02</td><td>Response integrity and privacy</td><td><code>codex/sdk-02-response-integrity</code></td><td><span class="status good">Done · Pushed</span></td></tr>
               <tr><td>03</td><td>Complete SDK lifecycle coverage</td><td><code>codex/sdk-03-lifecycle-coverage</code></td><td><span class="status good">Done · Pushed</span></td></tr>
               <tr><td>04</td><td>Real API conformance</td><td><code>codex/sdk-04-api-conformance</code></td><td><span class="status good">Harness done · External wallet fixture built</span> <span class="status blocking">Designated full-lifecycle report pending</span></td></tr>
-              <tr><td>05</td><td>Origin-bound web and Chrome conformance</td><td><code>codex/sdk-05-origin-host-conformance</code></td><td><span class="status good">Done · Pushed · Chrome live passed</span> <span class="status attention">HTTPS CORS QA pending</span></td></tr>
+              <tr><td>05</td><td>Origin-bound web and Chrome conformance</td><td><code>codex/sdk-05-origin-host-conformance</code></td><td><span class="status good">Done · Pushed · Chrome CORS reconfirmed live 21 Sep</span> <span class="status attention">HTTPS CORS QA pending</span></td></tr>
               <tr><td>06</td><td>Native-mobile conformance</td><td><code>codex/sdk-06-native-mobile-conformance</code></td><td><span class="status good">Done · Pushed</span> <span class="status attention">Android/Solana-phone QA pending</span></td></tr>
               <tr><td>07</td><td>Shared release candidate</td><td><code>codex/sdk-07-release-candidate</code></td><td><span class="status good">Done · Pushed</span> <span class="status blocking">Release evidence pending</span></td></tr>
               <tr><td>08</td><td>Published runtime parity and consumer proof</td><td><code>codex/sdk-08-chrome-wallet-integration</code></td><td><span class="status good">Done · Pushed · Live Chrome passed</span> <span class="status attention">Published package pending</span></td></tr>
-              <tr><td>09</td><td>Channel-specific release evidence</td><td><code>codex/sdk-09-channel-release-evidence</code></td><td><span class="status good">Complete locally · 208 tests</span> <span class="status attention">Not pushed · beta.2 evidence manifest pending</span></td></tr>
+              <tr><td>09</td><td>Channel-specific release evidence</td><td><code>codex/sdk-09-channel-release-evidence</code></td><td><span class="status good">Complete locally · 208 tests</span> <span class="status attention">Latest documentation commit is ahead of remote · beta.2 evidence, tag and publication pending</span></td></tr>
+              <tr><td>R01</td><td>Approval contract reliability</td><td><code>codex/r01-approval-reliability</code></td><td><span class="status attention">Exact beta.2 tarball bound in Chrome · baseline passed · E1 open</span></td></tr>
             </tbody>
           </table>
         </div>
@@ -487,6 +490,37 @@
         </div>
       </section>
 
+      <section id="reliability" class="surface">
+        <p class="eyebrow">Cross-product corrective programme</p>
+        <h2>Keep the SDK stable while underwriting breadth is hardened later</h2>
+        <div class="grid three">
+          <article class="card"><span class="status attention">Contract now</span><h3>Prevent client lock-in</h3><p>Before the decision surface spreads to Chrome and Android, version the four outcomes, safe reason categories, policy/engine/catalogue evidence, lightweight coverage summary and approved allowance reservation fields. Preserve exact fingerprints, idempotency and freshness as shared helpers.</p></article>
+          <article class="card"><span class="status planned">Reusable now</span><h3>Host-neutral work continues</h3><p>Transport, session security, response correlation, packaging, browser/native adapters, offer, quote, payment, claims and evidence recovery remain useful while the engine is narrow. The SDK must not reinterpret <code>unsupported</code> as a temporary success.</p></article>
+          <article class="card"><span class="status blocking">Release boundary</span><h3>Breadth before certification</h3><p>The later engine hardening should change which stable outcome is returned for certified transactions, not force new host orchestration. Protected-signing certification and stable support claims remain blocked until registry, runtime, allowance and adversarial gates pass.</p></article>
+        </div>
+        <div class="callout" style="margin-top:16px">
+          <strong>Recorded beta.2 direction</strong>
+          <p>Do not publish the current package while its decision and allowance contract is being corrected. Finish <code>1.3.2-beta.2</code> against the approved R01 contract, regenerate and verify it, and bind the exact package to API and host evidence before publication, provided the npm version remains unused. If it is no longer unused, select the next version through release policy rather than overwriting it.</p>
+        </div>
+        <div class="callout warning" style="margin-top:16px">
+          <strong>Current checkpoint</strong>
+          <p>The aligned SDK branch exists, but this first R01-01 checkpoint intentionally changed no SDK contract. Chrome now consumes the exact local <code>1.3.2-beta.2</code> release tarball through a vendored file dependency, with its declaration, lockfile and SHA-256 verifier aligned. The Chrome automated baseline passed. Follow the execution checklist; do not rerun unchanged gates. Publication remains blocked until the reopened R01 public contract and required host evidence are complete.</p>
+        </div>
+        <div class="table-wrap" style="margin-top:16px">
+          <table>
+            <thead><tr><th>SDK concern</th><th>Required behavior</th><th>Proof</th></tr></thead>
+            <tbody>
+              <tr><td>Decision union</td><td>Covered alone carries a grant; all outcomes carry safe versioned correlation data; unknown future contract versions fail safely.</td><td>Generated-contract and cross-version golden fixtures.</td></tr>
+              <tr><td>Allowance</td><td>Expose authoritative available/reserved/committed facts without calculating policy in the client.</td><td>Retry, cancellation, expiry and duplicate post-sign contract tests.</td></tr>
+              <tr><td>Coverage summary</td><td>Provide the small active-coverage read separately from payments, claims, decisions and lineage.</td><td>Packed browser/native consumers and request-count tests.</td></tr>
+              <tr><td>Engine versioning</td><td>Carry policy, engine and catalogue versions as opaque authoritative evidence; do not embed programme rules in TypeScript.</td><td>Old-client/new-API and new-client/old-API compatibility matrix.</td></tr>
+              <tr><td>Host boundary</td><td>The host owns approval, simulation presentation, signing permission and evidence outbox; the SDK owns protocol integrity.</td><td>Chrome MV3, HTTPS and Android/Hermes conformance.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="margin-top:16px">See <a href="../../backend/docs/plans/2026-09-21-approval-reliability-underwriting-breadth-plan.md">the R01 plan</a> for the decision gates, staged sequence, migration, tests and rollback.</p>
+      </section>
+
       <section id="ownership" class="surface">
         <p class="eyebrow">Contract ownership</p>
         <h2>One imported API contract, one authoritative published SDK</h2>
@@ -498,7 +532,7 @@
               <tr><td>Published client implementation</td><td><a href="../src/emberClient.ts">This SDK repository</a></td><td>This repository alone owns package behavior, versions, provenance, release notes and consumer compatibility.</td></tr>
               <tr><td>External SDK source copies</td><td>Non-authoritative compatibility mirrors</td><td>They may compare against or consume a published SDK version, but they never supply implementation changes back into this repository as an alternate source of truth.</td></tr>
               <tr><td>HTTPS web-wallet fixture</td><td>Standalone SDK repository</td><td>A clean, framework-light consumer must install the packed package and prove the origin-bound flow in a real browser.</td></tr>
-              <tr><td>Chrome-extension consumer</td><td>External browser wallet</td><td>Consumes a pinned published version; currently recorded as <code>1.3.2-beta.0</code>.</td></tr>
+              <tr><td>Chrome-extension consumer</td><td>External browser wallet</td><td>Consumes the reviewed vendored <code>1.3.2-beta.2</code> tarball for pre-publication QA; a clean pinned registry install remains a publication gate.</td></tr>
               <tr><td>Native-mobile fixture</td><td>Standalone SDK repository</td><td>A clean React Native Android consumer installs the packed package and must pass Metro, Hermes compiler and adapter gates in CI. Actual execution on an emulator and representative Solana phone remains required before Android support is advertised. iOS requires equivalent evidence.</td></tr>
             </tbody>
           </table>
@@ -508,7 +542,7 @@
 
       <section id="baseline">
         <p class="eyebrow">Audit evidence</p>
-        <h2>Verified baseline for <code>1.3.2-beta.1</code></h2>
+        <h2>Verified candidate baseline for <code>1.3.2-beta.2</code></h2>
         <div class="grid three">
           <article class="card"><span class="status good">Passed</span><h3>Repository verification</h3><p>The retained <code>project management/</code> artifact is part of the public-boundary scan. Full verification passes 208 tests plus release policy, packed-package HTTPS Window, Chrome MV3 worker and React Native Android/Metro/Hermes compiler gates on 16 September 2026.</p></article>
           <article class="card"><span class="status good">Recorded</span><h3>Imported API contract</h3><p><code>contract/provenance.json</code> records the reviewed upstream revision and exact SHA-256 of <code>contract/wallet-v1.json</code>; verification fails if its bytes or declared contract version drift.</p></article>
@@ -589,8 +623,8 @@
         </article>
 
         <article class="finding">
-          <div><span class="status attention">P0 · SDK resolved; live CORS evidence pending</span><div class="finding-id">SDK-014</div></div>
-          <div><h3>Add a real HTTPS web-wallet conformance fixture</h3><p>The clean fixture now installs the npm tarball, bundles the installed artifact, opens/restores an origin-bound session and performs a signed request in a real HTTPS Window. It observes challenge and signed-header preflights, rejects an unapproved origin and provides a separate exact-origin checker for the deployed API.</p><p><strong>Failure impact:</strong> the package can bundle successfully while a web wallet fails before its first challenge request.</p><p><strong>Exit:</strong> retain a passing <code>npm run conformance:cors</code> result using the HTTPS and Chrome origins actually registered at the Devnet QA API.</p></div>
+          <div><span class="status attention">P0 · Chrome live passed; HTTPS evidence pending</span><div class="finding-id">SDK-014</div></div>
+          <div><h3>Add a real HTTPS web-wallet conformance fixture</h3><p>The clean fixture now installs the npm tarball, bundles the installed artifact, opens/restores an origin-bound session and performs a signed request in a real HTTPS Window. It observes challenge and signed-header preflights, rejects an unapproved origin and provides a separate exact-origin checker for the deployed API. On 21 September 2026 the redeployed API returned the exact 204 grant for the registered Chrome extension origin and rejected an unknown origin with 403.</p><p><strong>Failure impact:</strong> the package can bundle successfully while a web wallet fails before its first challenge request.</p><p><strong>Exit:</strong> retain a passing <code>npm run conformance:cors</code> result using the registered HTTPS origin; Chrome-origin evidence is complete.</p></div>
         </article>
 
         <article class="finding">
@@ -744,7 +778,7 @@
             <div class="branch-columns">
               <div><h4>Build · Complete</h4><ul><li>Export the persisted-session parser, session-state helper and request-proof builder at runtime, matching the existing public declarations.</li><li>Align fresh challenge validation with the API's established 60-second wallet request clock-skew policy.</li><li>Reject challenges beyond that boundary before invoking the protected-wallet signer.</li><li>Reserve unused package version <code>1.3.2-beta.2</code> and add runtime/boundary regression tests.</li><li>Keep browser, extension, mobile, vault, RPC and secure-storage implementation outside the SDK package.</li></ul></div>
               <div><h4>Automated gate · Passed 16 September 2026</h4><ul><li><code>npm run verify</code>: 204 tests, ESM/CommonJS consumers, HTTPS/MV3 origin conformance, Android Metro/Hermes, public-boundary and secret scans, and thirteen-file package allowlist.</li><li>Clock skew at exactly 60 seconds is accepted; 60.001 seconds is rejected before wallet signing or session creation.</li><li>The packed ESM and CommonJS artifacts expose every declared session helper.</li><li>An external Chrome consumer compiles and executes the direct session, offer, quote and simulation journey against the exact local tarball without importing SDK source.</li><li>No wallet application code, host secret or infrastructure configuration enters the package.</li></ul></div>
-              <div><h4>Manual QA and release checkpoint</h4><ul><li>Complete: the real unpacked Chrome host opened and persisted a Devnet QA session, loaded the server-authoritative offer, accepted exact terms, verified the signed quote and simulated before signing.</li><li>Complete: the user explicitly approved one 1 USDC Devnet payment; transaction <a href="https://explorer.solana.com/tx/3TvRgSPtyWKHMhyw9PyaCH85wuNFAz8spTTNDzUUDm37kDocxJCvB3qT1fa4qtTTDfhPK8RTCG2xpLPDornrFQrF?cluster=devnet"><code>3TvRgSPt...ornrFQrF</code></a> finalized and the backend returned active cover after retrying the saved payment without signing again.</li><li>Next: review and publish the exact <code>1.3.2-beta.2</code> artifact through the closed beta channel.</li><li>Require every declared host to install the published version from a clean lockfile and repeat its owned conformance suite.</li><li>Attach only public-safe host results, package integrity and contract provenance to the SDK evidence manifest.</li><li>Keep transaction approval, live funding and device interaction in the relevant host-product plan.</li></ul></div>
+              <div><h4>Manual QA and release checkpoint</h4><ul><li>Complete: the real unpacked Chrome host opened and persisted a Devnet QA session, loaded the server-authoritative offer, accepted exact terms, verified the signed quote and simulated before signing.</li><li>Complete: the user explicitly approved one 1 USDC Devnet payment; transaction <a href="https://explorer.solana.com/tx/3TvRgSPtyWKHMhyw9PyaCH85wuNFAz8spTTNDzUUDm37kDocxJCvB3qT1fa4qtTTDfhPK8RTCG2xpLPDornrFQrF?cluster=devnet"><code>3TvRgSPt...ornrFQrF</code></a> finalized and the backend returned active cover after retrying the saved payment without signing again.</li><li>Blocked before publication: update the candidate to the approved R01 contract, regenerate it and repeat every SDK and host gate.</li><li>Require every declared host to install the published version from a clean lockfile and repeat its owned conformance suite.</li><li>Attach only public-safe host results, package integrity and contract provenance to the SDK evidence manifest.</li><li>Keep transaction approval, live funding and device interaction in the relevant host-product plan.</li></ul></div>
             </div>
           </article>
 
@@ -753,7 +787,7 @@
             <div class="branch-columns">
               <div><h4>Build · Complete</h4><ul><li>Upgrade release policy schema to v2 with explicit evidence requirements for each npm channel.</li><li>Require API conformance, registered Chrome-extension CORS and manual Chrome product QA for beta integration releases.</li><li>Keep HTTPS web-wallet, Android-emulator and representative Solana-phone evidence mandatory for release-candidate and stable releases.</li><li>Reject missing gates and reject beta manifests that overclaim later host qualification.</li><li>Publish separate beta and qualified-release evidence templates without weakening signed-tag, tarball, provenance, OIDC staging or 2FA boundaries.</li></ul></div>
               <div><h4>Automated gate · Passed 16 September 2026</h4><ul><li><code>npm run verify</code>: 208 tests plus typechecking and generated-contract verification.</li><li>Packed ESM and CommonJS consumer installation passes.</li><li>HTTPS Window and Chrome MV3 origin conformance passes with six sessions, seven signed reads and four CORS preflights.</li><li>Android Metro/Hermes conformance, public-boundary scan, secret scan and thirteen-file package allowlist pass.</li><li>Focused policy tests prove beta accepts exactly its three integration gates while qualified channels retain all six.</li></ul></div>
-              <div><h4>Manual QA and release checkpoint</h4><ul><li>Create the public-safe <code>release/evidence/v1.3.2-beta.2.json</code> from the three reviewed records; do not invent evidence digests.</li><li>Run <code>npm run release:pack</code> and bind the manifest to that exact tarball SHA-256 and the recorded contract provenance.</li><li>Commit and push Branch 09, create and push signed annotated tag <code>v1.3.2-beta.2</code>, then dispatch the stage workflow with channel <code>beta</code>.</li><li>Review the staged tarball and SBOM before npm 2FA approval.</li><li>After publication, install the registry artifact into the Chrome wallet from a clean frozen lock and repeat wallet gates.</li></ul></div>
+              <div><h4>Manual QA and release checkpoint</h4><ul><li>First update beta.2 to the approved R01 contract, regenerate types and repeat the complete verification matrix; do not reuse pre-R01 evidence.</li><li>Create the public-safe <code>release/evidence/v1.3.2-beta.2.json</code> from the post-R01 reviewed records only; do not invent evidence digests.</li><li>Run <code>npm run release:pack</code> and bind the manifest to that exact tarball SHA-256 and the recorded contract provenance.</li><li>Only after the R01 release gate may the user/release owner perform the commit, push, approved signed tag and staging dispatch. Agent work never pushes.</li><li>Review the staged tarball and SBOM before npm 2FA approval.</li><li>After publication, install the registry artifact into the Chrome wallet from a clean frozen lock and repeat wallet gates.</li></ul></div>
             </div>
           </article>
         </div>
@@ -827,7 +861,7 @@
               <tr><td>Wallet address is Ember account identity; no email/password signup</td><td><span class="status good">Settled</span></td><td>Preserve the backend wallet-subject model. Signup is free and separate from payment.</td></tr>
               <tr><td>Payment activates cover only after backend confirmation</td><td><span class="status good">Settled</span></td><td>Never infer cover from a signed or broadcast transaction alone.</td></tr>
               <tr><td>Wallet address remains the account identity across hosts</td><td><span class="status good">Settled</span></td><td>The SDK resumes the same Ember wallet subject for the same proven address; it does not import, migrate or custody seed material.</td></tr>
-              <tr><td>Decision expires during protected approval</td><td><span class="status good">Rule settled</span></td><td>Downgrade visibly; do not claim cover. Physical-phone timing still determines the safety margin.</td></tr>
+              <tr><td>Decision expires during protected approval</td><td><span class="status good">Devnet rule recorded</span></td><td>Devnet QA uses a 24-hour decision TTL, but the SDK must validate the effective minimum across decision, transaction/blockhash, evidence, coverage and session authority. Downgrade visibly and never claim cover after any required authority expires. Physical-phone timing still determines the production margin.</td></tr>
               <tr><td>Native application identifier is not cryptographic attestation</td><td><span class="status attention">Security follow-up</span></td><td>Keep current binding explicit and record platform-attestation decisions outside the SDK; the SDK must not imply stronger authority than the protocol provides.</td></tr>
               <tr><td>Actual deployed sandbox API origin and observable CORS behavior</td><td><span class="status good">Chrome live passed</span> <span class="status attention">HTTPS CORS pending</span></td><td><code>https://ember-devnet-qa.up.railway.app</code> completed the exact-origin Chrome session, signed quote, finalized payment and activation lifecycle. Ordinary HTTPS web-wallet CORS remains a separate certification gate and must pass with an exact HTTPS-origin allowlist before web-wallet support is declared.</td></tr>
               <tr><td>Designated real-API external signer fixture</td><td><span class="status attention">Built · Live report pending</span></td><td>The wallet repository owns a secretless Devnet-only fixture that requires a dedicated external Wallet Standard QA signer and explicit operator approval for both transactions. It rejects Ember so the SDK runner cannot compete with the product wallet's cover-decision flow. Branch 04 remains open until the SDK runner completes and its public-safe report is reviewed.</td></tr>
@@ -837,6 +871,8 @@
               <tr><td>Production quote/product compatibility changes</td><td><span class="status good">Policy defined</span></td><td><code>COMPATIBILITY.md</code> identifies compatible, coordinated and breaking contract changes; a new closed state cannot be emitted before supported wallets can handle it.</td></tr>
               <tr><td>npm <code>latest</code> currently points at <code>1.3.2-beta.0</code></td><td><span class="status blocking">Registry correction required</span></td><td>Branch 07 does not mutate registry state. Remove the prerelease assignment or replace it only with a fully qualified stable version, record before/after tags and never direct an unqualified install to beta or release-candidate builds.</td></tr>
               <tr><td>Multiple SDK copies</td><td><span class="status attention">Drift risk</span></td><td>This repository is the sole implementation authority. External copies must consume a pinned release or be retired by their owners; this SDK does not synchronize source bidirectionally.</td></tr>
+              <tr><td>Current decision contract spreads before R01</td><td><span class="status blocking">Publication held</span></td><td>Beta.2 remains unpublished until the R01 allowance, reason, versioning and coverage-summary contract is approved, generated, tested and verified by its hosts.</td></tr>
+              <tr><td>Policy engine breadth deferred until after host foundations</td><td><span class="status attention">Acceptable with stop line</span></td><td>The stable typed outcome/version contract lets host work proceed while the engine remains narrow and fail-closed. Chrome and Android protected-signing certification, stable support claims and production liability stay blocked until R01 engine/adversarial evidence passes.</td></tr>
             </tbody>
           </table>
         </div>

@@ -129,6 +129,8 @@ export type CoverageDecisionResponse = {
     remainingAggregateLimitMicros: string;
     remainingUnderwritingEvaluations: number;
     riskBand: RiskBand;
+    signingDisposition?: null | SigningDisposition;
+    simulationEffects?: null | SimulationEffectsResponse;
     termsVersion: string;
 };
 
@@ -488,6 +490,38 @@ export type SignedQuoteResponse = {
      * Canonical base58 32-byte Solana address.
      */
     signingPublicKey: string;
+};
+
+export type SigningBlockReason = 'unlimited_token_access' | 'authority_handover' | 'native_token_redirection';
+
+export type SigningDisposition = {
+    status: 'allow';
+} | {
+    reason: SigningWarningReason;
+    status: 'acknowledge';
+} | {
+    reason: SigningBlockReason;
+    status: 'block';
+};
+
+export type SigningWarningReason = 'high_risk' | 'without_coverage' | 'unsupported_effects' | 'assessment_unavailable';
+
+export type SimulatedTokenBalanceResponse = {
+    account: string;
+    mint: string;
+    postAmount: string;
+    preAmount: string;
+};
+
+/**
+ * Wallet-scoped observed balances. Amounts are decimal integer strings; SOL
+ * changes are net changes including the network fee and account funding.
+ */
+export type SimulationEffectsResponse = {
+    contextSlot: string;
+    solBalanceAfter?: string | null;
+    solBalanceBefore?: string | null;
+    tokenBalances: Array<SimulatedTokenBalanceResponse>;
 };
 
 export type SubmitDecisionEvidenceRequest = {

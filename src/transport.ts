@@ -87,7 +87,8 @@ const DEFAULT_RETRY: Required<EmberRetryPolicy> = {
 
 const DEFAULT_TIMEOUTS: Required<EmberTimeouts> = {
   bootstrapMs: 10_000,
-  decisionMs: 1_500,
+  // Includes the server's bounded 12-second hydration and simulation budget.
+  decisionMs: 15_000,
   mutationMs: 10_000,
   readMs: 5_000,
 };

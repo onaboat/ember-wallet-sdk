@@ -106,3 +106,20 @@ test('generated offer decoder rejects unknown clusters and environments', () => 
   });
   expect(result.success).toBe(false);
 });
+
+test('signing disposition requires a reason specific to its state', () => {
+  expect(wireSchemas.zSigningDisposition.parse({ status: 'allow' })).toEqual({ status: 'allow' });
+  expect(wireSchemas.zSigningDisposition.parse({ status: 'block', reason: 'unlimited_token_access' }))
+    .toEqual({ status: 'block', reason: 'unlimited_token_access' });
+  expect(wireSchemas.zSigningDisposition.safeParse({ status: 'block' }).success).toBe(false);
+  expect(wireSchemas.zSigningDisposition.safeParse({ status: 'block', reason: 'assessment_unavailable' }).success).toBe(false);
+  expect(wireSchemas.zSigningDisposition.safeParse({ status: 'acknowledge', reason: 'authority_handover' }).success).toBe(false);
+});
+
+test('simulated token observations retain exact amounts without a SOL observation', () => {
+  const observed = {
+    contextSlot: '100', solBalanceBefore: null, solBalanceAfter: null,
+    tokenBalances: [{ account: walletPublicKey, mint: walletPublicKey, preAmount: '9007199254740993', postAmount: '0' }],
+  };
+  expect(wireSchemas.zSimulationEffectsResponse.parse(observed)).toEqual(observed);
+});

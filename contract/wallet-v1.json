@@ -2403,6 +2403,27 @@
           "riskBand": {
             "$ref": "#/components/schemas/RiskBand"
           },
+          "signingDisposition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SigningDisposition",
+                "description": "Independent signing policy. Optional for compatibility with older servers."
+              }
+            ]
+          },
+          "simulationEffects": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SimulationEffectsResponse"
+              }
+            ]
+          },
           "termsVersion": {
             "type": "string"
           }
@@ -3640,6 +3661,131 @@
             "description": "Canonical base58 32-byte Solana address.",
             "maxLength": 44,
             "minLength": 32
+          }
+        }
+      },
+      "SigningBlockReason": {
+        "type": "string",
+        "enum": [
+          "unlimited_token_access",
+          "authority_handover",
+          "native_token_redirection"
+        ]
+      },
+      "SigningDisposition": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "status"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "allow"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "reason",
+              "status"
+            ],
+            "properties": {
+              "reason": {
+                "$ref": "#/components/schemas/SigningWarningReason"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "acknowledge"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "reason",
+              "status"
+            ],
+            "properties": {
+              "reason": {
+                "$ref": "#/components/schemas/SigningBlockReason"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "block"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "SigningWarningReason": {
+        "type": "string",
+        "enum": [
+          "high_risk",
+          "without_coverage",
+          "unsupported_effects",
+          "assessment_unavailable"
+        ]
+      },
+      "SimulatedTokenBalanceResponse": {
+        "type": "object",
+        "required": [
+          "account",
+          "mint",
+          "preAmount",
+          "postAmount"
+        ],
+        "properties": {
+          "account": {
+            "type": "string"
+          },
+          "mint": {
+            "type": "string"
+          },
+          "postAmount": {
+            "type": "string"
+          },
+          "preAmount": {
+            "type": "string"
+          }
+        }
+      },
+      "SimulationEffectsResponse": {
+        "type": "object",
+        "description": "Wallet-scoped observed balances. Amounts are decimal integer strings; SOL\nchanges are net changes including the network fee and account funding.",
+        "required": [
+          "contextSlot",
+          "tokenBalances"
+        ],
+        "properties": {
+          "contextSlot": {
+            "type": "string"
+          },
+          "solBalanceAfter": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "solBalanceBefore": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tokenBalances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SimulatedTokenBalanceResponse"
+            }
           }
         }
       },

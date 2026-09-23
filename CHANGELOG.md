@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.3.2-beta.5
+
+- Adds optional wallet-scoped simulated balances with lossless integer strings and execution slot. Missing SOL observations do not suppress token observations.
+- Extends the default decision timeout to 15 seconds for the backend’s bounded 12-second runtime assessment.
+- Signing disposition remains independent of coverage and must be enforced by the host wallet.
+
+
+## 1.3.2-beta.4 — signing disposition
+
+- Preserve the optional `signingDisposition` on reviewed decisions, separately from coverage eligibility.
+- Validate `allow`, `acknowledge` and `block` with state-specific public reasons.
+- Older backend responses remain readable. Absence of this field is not a safety approval.
+
+
 ## Unreleased
 
 - Makes release evidence channel-specific: beta integration releases require

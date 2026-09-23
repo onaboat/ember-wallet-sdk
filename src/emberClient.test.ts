@@ -2073,3 +2073,13 @@ test.each(['dropped', 'post_sign', 'confirmation', 'sealed', 'conflict'] as cons
       .resolves.toMatchObject({ status: 'unavailable', reason: 'response_mismatch' });
   },
 );
+
+test('reviewForSigning preserves an explicit block independently of coverage status', async () => {
+  const signingDisposition = { status: 'block' as const, reason: 'authority_handover' as const };
+  server.use(http.post(`${API}/v1/decisions`, () => HttpResponse.json(decision({
+    coverStatus: 'not_covered', riskBand: 'severe', decisionReason: 'not_eligible', signingDisposition,
+  }))));
+  const { sdk } = client({});
+  await expect(sdk.reviewForSigning({ coverageInstanceId: 'coverage_wallet-sdk', kind: 'transaction', transactionBytes: 'AAAA' }))
+    .resolves.toMatchObject({ status: 'reviewed', decision: { signingDisposition } });
+});
