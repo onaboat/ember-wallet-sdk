@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.2-beta.6
+
+- Adds the `wallet_drain` acknowledgement reason: Ember marks a transaction that empties a token, or takes at least 96% of the signer's SOL with nothing coming back, as not covered. Signing stays the owner's choice after an explicit acknowledgement; it is never a block.
+- Compatibility: strict consumers on 1.3.2-beta.5 or earlier reject responses carrying `wallet_drain`. Upgrade the wallet before deploying the backend revision recorded in `contract/provenance.json`.
+
+
 ## 1.3.2-beta.5
 
 - Adds optional wallet-scoped simulated balances with lossless integer strings and execution slot. Missing SOL observations do not suppress token observations.

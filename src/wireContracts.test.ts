@@ -116,6 +116,17 @@ test('signing disposition requires a reason specific to its state', () => {
   expect(wireSchemas.zSigningDisposition.safeParse({ status: 'acknowledge', reason: 'authority_handover' }).success).toBe(false);
 });
 
+// Ember's promise: a transaction that looks like it empties the wallet is uninsured,
+// but signing stays the owner's choice after an explicit acknowledgement.
+test('a wallet drain is a warning the owner can acknowledge', () => {
+  expect(wireSchemas.zSigningDisposition.parse({ status: 'acknowledge', reason: 'wallet_drain' }))
+    .toEqual({ status: 'acknowledge', reason: 'wallet_drain' });
+});
+
+test('a wallet drain is never a hard block', () => {
+  expect(wireSchemas.zSigningDisposition.safeParse({ status: 'block', reason: 'wallet_drain' }).success).toBe(false);
+});
+
 test('simulated token observations retain exact amounts without a SOL observation', () => {
   const observed = {
     contextSlot: '100', solBalanceBefore: null, solBalanceAfter: null,

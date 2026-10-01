@@ -1,6 +1,6 @@
 {
   "name": "@embercover/wallet-sdk",
-  "version": "1.3.2-beta.5",
+  "version": "1.3.2-beta.6",
   "description": "Secretless Ember Cover SDK for web, browser-extension, and native wallets",
   "type": "module",
   "main": "./dist/index.cjs",

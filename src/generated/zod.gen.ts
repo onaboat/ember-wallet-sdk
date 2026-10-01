@@ -449,7 +449,8 @@ export const zSigningWarningReason = z.enum([
     'high_risk',
     'without_coverage',
     'unsupported_effects',
-    'assessment_unavailable'
+    'assessment_unavailable',
+    'wallet_drain'
 ]);
 
 export const zSigningDisposition = z.union([

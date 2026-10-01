@@ -504,7 +504,7 @@ export type SigningDisposition = {
     status: 'block';
 };
 
-export type SigningWarningReason = 'high_risk' | 'without_coverage' | 'unsupported_effects' | 'assessment_unavailable';
+export type SigningWarningReason = 'high_risk' | 'without_coverage' | 'unsupported_effects' | 'assessment_unavailable' | 'wallet_drain';
 
 export type SimulatedTokenBalanceResponse = {
     account: string;

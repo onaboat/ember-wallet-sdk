@@ -3732,7 +3732,8 @@
           "high_risk",
           "without_coverage",
           "unsupported_effects",
-          "assessment_unavailable"
+          "assessment_unavailable",
+          "wallet_drain"
         ]
       },
       "SimulatedTokenBalanceResponse": {
