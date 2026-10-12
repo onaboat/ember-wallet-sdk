@@ -6,6 +6,52 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/v1/coverage-instances/current": {
+      "get": {
+        "tags": [
+          "Wallet coverage"
+        ],
+        "summary": "Discover current coverage using the authenticated wallet authority, never\nlocal payment references. Multiple eligible records are an integrity error.",
+        "operationId": "getCurrentCoverage",
+        "responses": {
+          "200": {
+            "description": "Current coverage, or an explicit none status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentCoverageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Scope not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
     "/v1/coverage-instances/{coverageInstanceId}": {
       "get": {
         "tags": [
@@ -230,6 +276,72 @@
           },
           "404": {
             "description": "Decision is not visible to this wallet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "walletProofOfPossession": []
+          }
+        ]
+      }
+    },
+    "/v1/decisions/{decisionId}/cancel": {
+      "post": {
+        "tags": [
+          "Wallet decisions"
+        ],
+        "operationId": "cancelCoverageDecision",
+        "parameters": [
+          {
+            "name": "decisionId",
+            "in": "path",
+            "description": "Canonical decision identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authoritative cancellation outcome",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelDecisionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Scope not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Decision not visible",
             "content": {
               "application/json": {
                 "schema": {
@@ -1821,6 +1933,37 @@
         },
         "additionalProperties": false
       },
+      "AllowanceSnapshot": {
+        "type": "object",
+        "required": [
+          "limit",
+          "committed",
+          "reserved",
+          "available"
+        ],
+        "properties": {
+          "available": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "committed": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "reserved": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
       "ApiErrorCode": {
         "type": "string",
         "enum": [
@@ -2089,6 +2232,26 @@
         },
         "additionalProperties": false
       },
+      "CancelDecisionResponse": {
+        "type": "object",
+        "required": [
+          "decisionId",
+          "cancelled",
+          "evidenceState"
+        ],
+        "properties": {
+          "cancelled": {
+            "type": "boolean",
+            "description": "True only when cancellation won, including an idempotent cancellation retry."
+          },
+          "decisionId": {
+            "type": "string"
+          },
+          "evidenceState": {
+            "$ref": "#/components/schemas/ProductionEvidenceState"
+          }
+        }
+      },
       "ClaimEligibilityReason": {
         "type": "string",
         "enum": [
@@ -2171,9 +2334,13 @@
           "maximumPayoutMicros",
           "remainingAggregateLimitMicros",
           "remainingUnderwritingEvaluations",
-          "evaluationCountImpact"
+          "evaluationCountImpact",
+          "allowance"
         ],
         "properties": {
+          "allowance": {
+            "$ref": "#/components/schemas/AllowanceSnapshot"
+          },
           "coverStatus": {
             "$ref": "#/components/schemas/CoverStatus"
           },
@@ -2235,6 +2402,27 @@
           },
           "riskBand": {
             "$ref": "#/components/schemas/RiskBand"
+          },
+          "signingDisposition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SigningDisposition",
+                "description": "Independent signing policy. Optional for compatibility with older servers."
+              }
+            ]
+          },
+          "simulationEffects": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SimulationEffectsResponse"
+              }
+            ]
           },
           "termsVersion": {
             "type": "string"
@@ -2639,6 +2827,46 @@
           }
         },
         "additionalProperties": false
+      },
+      "CurrentCoverageResponse": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "status"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "none"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "coverage",
+              "allowance",
+              "status"
+            ],
+            "properties": {
+              "allowance": {
+                "$ref": "#/components/schemas/AllowanceSnapshot"
+              },
+              "coverage": {
+                "$ref": "#/components/schemas/CoverageInstanceResponse"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active"
+                ]
+              }
+            }
+          }
+        ]
       },
       "DecisionLifecycleEvent": {
         "type": "object",
@@ -3433,6 +3661,131 @@
             "description": "Canonical base58 32-byte Solana address.",
             "maxLength": 44,
             "minLength": 32
+          }
+        }
+      },
+      "SigningBlockReason": {
+        "type": "string",
+        "enum": [
+          "unlimited_token_access",
+          "authority_handover",
+          "native_token_redirection"
+        ]
+      },
+      "SigningDisposition": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "status"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "allow"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "reason",
+              "status"
+            ],
+            "properties": {
+              "reason": {
+                "$ref": "#/components/schemas/SigningWarningReason"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "acknowledge"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "reason",
+              "status"
+            ],
+            "properties": {
+              "reason": {
+                "$ref": "#/components/schemas/SigningBlockReason"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "block"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "SigningWarningReason": {
+        "type": "string",
+        "enum": [
+          "high_risk",
+          "without_coverage",
+          "unsupported_effects",
+          "assessment_unavailable"
+        ]
+      },
+      "SimulatedTokenBalanceResponse": {
+        "type": "object",
+        "required": [
+          "account",
+          "mint",
+          "preAmount",
+          "postAmount"
+        ],
+        "properties": {
+          "account": {
+            "type": "string"
+          },
+          "mint": {
+            "type": "string"
+          },
+          "postAmount": {
+            "type": "string"
+          },
+          "preAmount": {
+            "type": "string"
+          }
+        }
+      },
+      "SimulationEffectsResponse": {
+        "type": "object",
+        "description": "Wallet-scoped observed balances. Amounts are decimal integer strings; SOL\nchanges are net changes including the network fee and account funding.",
+        "required": [
+          "contextSlot",
+          "tokenBalances"
+        ],
+        "properties": {
+          "contextSlot": {
+            "type": "string"
+          },
+          "solBalanceAfter": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "solBalanceBefore": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tokenBalances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SimulatedTokenBalanceResponse"
+            }
           }
         }
       },

@@ -1,7 +1,7 @@
 {
   "name": "@embercover/wallet-sdk",
-  "version": "1.3.2-beta.0",
-  "description": "Secretless browser-extension and React Native client for Ember Cover",
+  "version": "1.3.2-beta.5",
+  "description": "Secretless Ember Cover SDK for web and browser-extension wallets",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -15,6 +15,10 @@
     }
   },
   "files": [
+    "COMPATIBILITY.md",
+    "SUPPORT.md",
+    "contract/README.md",
+    "contract/provenance.json",
     "dist",
     "README.md",
     "LICENSE"
@@ -33,9 +37,13 @@
     "url": "https://github.com/onaboat/ember-wallet-sdk.git"
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts --sourcemap --clean",
+    "build": "tsup --config tsup.config.ts",
     "boundary:check": "node scripts/check-public-boundary.mjs",
+    "contract:check": "node scripts/check-contract-provenance.mjs && npm run generate:check",
     "consumer:check": "npm run build && node scripts/check-consumers.mjs",
+    "conformance:api": "node scripts/run-api-conformance.mjs",
+    "conformance:cors": "node scripts/check-live-origin-cors.mjs",
+    "conformance:origins": "npm run build && tsc --noEmit --project conformance/origin-host/tsconfig.json && node scripts/check-origin-hosts.mjs",
     "generate": "openapi-ts",
     "generate:check": "node scripts/check-generated.mjs",
     "typecheck": "tsc --noEmit",
@@ -44,22 +52,27 @@
     "scan:public": "npm run build && npm run boundary:check && node scripts/check-bundle-secrets.mjs",
     "sbom": "node scripts/write-sbom.mjs",
     "pack:check": "npm run build && node scripts/check-package-contents.mjs",
+    "release:pack": "node scripts/pack-release.mjs",
+    "release:policy": "node scripts/check-release-policy.mjs",
     "release:check": "node scripts/check-release-ref.mjs",
-    "verify": "npm run generate:check && npm run typecheck && npm test && npm run examples:check && npm run consumer:check && npm run scan:public && npm run pack:check",
+    "verify": "npm run contract:check && npm run release:policy && npm run typecheck && npm test && npm run examples:check && npm run consumer:check && npm run conformance:origins && npm run scan:public && npm run pack:check",
     "prepack": "npm run build && npm run boundary:check && node scripts/check-bundle-secrets.mjs",
     "prepublishOnly": "npm run verify"
   },
   "overrides": {
-    "js-yaml": "4.3.0",
+    "js-yaml": "4.3.2",
+    "nanoid": "3.3.18",
     "postcss": "8.5.23"
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "0.99.0",
+    "@playwright/test": "1.63.0",
     "@types/node": "25.9.3",
+    "esbuild": "0.28.1",
     "msw": "^2.14.6",
     "tsup": "8.5.0",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.8"
+    "vitest": "4.1.11"
   },
   "dependencies": {
     "zod": "4.4.3"

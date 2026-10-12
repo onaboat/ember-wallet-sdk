@@ -35,12 +35,13 @@ export function createReactNativeEmberClient(input: {
   crypto: EmberCrypto;
   fetch: EmberFetch;
   integrationId: string;
+  integrationVersion: number;
   secureStorage: NativeSecureStorage;
   sessionSigner: EmberMessageSigner;
 }) {
   return new EmberWalletClient({
     baseUrl: 'https://sandbox-api.example.ember.cover',
-    client: {
+    hostBinding: {
       kind: 'native',
       applicationId: input.applicationId,
     },
@@ -48,6 +49,7 @@ export function createReactNativeEmberClient(input: {
     environment: 'sandbox',
     fetch: input.fetch,
     integrationId: input.integrationId,
+    integrationVersion: input.integrationVersion,
     sessionSigner: input.sessionSigner,
     sessionStore: new NativeSessionStore(input.secureStorage),
   });

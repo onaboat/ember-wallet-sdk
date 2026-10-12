@@ -4,5 +4,9 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["browser-extension/**/*.ts", "react-native/**/*.ts"]
+  "include": [
+    "browser-extension/**/*.ts",
+    "react-native/**/*.ts",
+    "readme-quickstart.ts"
+  ]
 }

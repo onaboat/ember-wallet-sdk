@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(new URL('../', import.meta.url)));
@@ -9,6 +9,10 @@ const result = spawnSync(
   {
     cwd: root,
     encoding: 'utf8',
+    env: {
+      ...process.env,
+      npm_config_cache: join(root, 'node_modules', '.cache', 'npm-package-check'),
+    },
   },
 );
 if (result.status !== 0) {
@@ -19,7 +23,16 @@ const files = packed?.files?.map((file) => file.path).sort();
 if (!Array.isArray(files) || files.length === 0) {
   throw new Error('npm pack dry-run returned no package files');
 }
-const allowedRoots = ['LICENSE', 'README.md', 'dist/', 'package.json'];
+const allowedRoots = [
+  'COMPATIBILITY.md',
+  'LICENSE',
+  'README.md',
+  'SUPPORT.md',
+  'contract/README.md',
+  'contract/provenance.json',
+  'dist/',
+  'package.json',
+];
 const unexpected = files.filter(
   (file) =>
     !allowedRoots.some((allowed) =>
@@ -30,6 +43,7 @@ if (unexpected.length > 0) {
   throw new Error(`Unexpected npm package files:\n${unexpected.join('\n')}`);
 }
 for (const required of [
+  'COMPATIBILITY.md',
   'dist/index.cjs',
   'dist/index.cjs.map',
   'dist/index.d.cts',
@@ -38,6 +52,9 @@ for (const required of [
   'dist/index.js.map',
   'LICENSE',
   'README.md',
+  'SUPPORT.md',
+  'contract/README.md',
+  'contract/provenance.json',
   'package.json',
 ]) {
   if (!files.includes(required)) {

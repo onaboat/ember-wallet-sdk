@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 2,
+  "packageName": "@embercover/wallet-sdk",
+  "channels": [
+    {
+      "id": "beta",
+      "npmDistTag": "beta",
+      "prereleaseIdentifier": "beta",
+      "purpose": "integration_testing",
+      "requiredEvidence": [
+        "apiConformance",
+        "chromeExtensionCors",
+        "manualProductQa"
+      ]
+    },
+    {
+      "id": "release-candidate",
+      "npmDistTag": "release-candidate",
+      "prereleaseIdentifier": "rc",
+      "purpose": "final_qualification",
+      "requiredEvidence": [
+        "apiConformance",
+        "httpsWebCors",
+        "chromeExtensionCors",
+        "manualProductQa"
+      ]
+    },
+    {
+      "id": "latest",
+      "npmDistTag": "latest",
+      "prereleaseIdentifier": null,
+      "purpose": "production",
+      "requiredEvidence": [
+        "apiConformance",
+        "httpsWebCors",
+        "chromeExtensionCors",
+        "manualProductQa"
+      ]
+    }
+  ],
+  "hosts": [
+    {
+      "id": "https-web-wallet",
+      "releaseStatus": "qualification_required",
+      "automatedGate": "conformance:origins",
+      "requiredEvidence": [
+        "apiConformance",
+        "httpsWebCors",
+        "manualProductQa"
+      ]
+    },
+    {
+      "id": "chrome-extension",
+      "releaseStatus": "qualification_required",
+      "automatedGate": "conformance:origins",
+      "requiredEvidence": [
+        "apiConformance",
+        "chromeExtensionCors",
+        "manualProductQa"
+      ]
+    },
+    {
+      "id": "android-native-wallet",
+      "releaseStatus": "unsupported",
+      "automatedGate": null,
+      "requiredEvidence": []
+    },
+    {
+      "id": "ios-native-wallet",
+      "releaseStatus": "unsupported",
+      "automatedGate": null,
+      "requiredEvidence": []
+    }
+  ]
+}

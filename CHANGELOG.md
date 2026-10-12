@@ -1,5 +1,79 @@
 # Changelog
 
+## 1.3.2-beta.5
+
+- Adds optional wallet-scoped simulated balances with lossless integer strings and execution slot. Missing SOL observations do not suppress token observations.
+- Extends the default decision timeout to 15 seconds for the backend’s bounded 12-second runtime assessment.
+- Signing disposition remains independent of coverage and must be enforced by the host wallet.
+
+
+## 1.3.2-beta.4 — signing disposition
+
+- Preserve the optional `signingDisposition` on reviewed decisions, separately from coverage eligibility.
+- Validate `allow`, `acknowledge` and `block` with state-specific public reasons.
+- Older backend responses remain readable. Absence of this field is not a safety approval.
+
+
+## Unreleased
+
+- Defers Android qualification and removes the unused React Native, Metro and
+  Hermes development toolchain, including its vulnerable `braces` dependency.
+  HTTPS web and Chrome extension gates remain; native adapter contracts are
+  retained without claiming mobile support. The full npm audit stays mandatory.
+
+- Makes release evidence channel-specific: beta integration releases require
+  retained real-API and Chrome wallet records, while release-candidate and stable
+  releases remain gated by the current HTTPS web and Chrome-extension matrix.
+- Aligns fresh challenge validation with the API's bounded 60-second wallet
+  clock-skew policy while continuing to reject larger future timestamps before
+  invoking the protected-wallet signer.
+- Keeps runtime exports aligned with the public declarations for persisted
+  session parsing, session-state evaluation, and request-proof construction.
+- Declares this repository as the sole authority for the published SDK.
+- Adds a published contract-provenance manifest with strict revision, path,
+  version, and SHA-256 verification.
+- Includes the retained product plan in public-boundary scanning.
+- Validates the complete wallet challenge and expected host authority before
+  invoking a protected-wallet signer.
+- Adds strict persisted-session parsing, lifecycle states, rotation response
+  correlation, and typed persistence failures.
+- Replaces the ambiguous generated `client` configuration with an explicit
+  `hostBinding` and requires the trusted `integrationVersion`.
+- Rejects successful responses that do not match the originating request or
+  active wallet authority with a typed `EmberResponseMismatchError`.
+- Emits only static route templates to telemetry and validates HTTPS `PUT`
+  evidence-upload grants, expiry, lifecycle state, and safe headers.
+- Adds a host-neutral `decisionFreshness` policy with explicit fresh,
+  near-expiry, expired, and invalid states.
+- Exercises every public client method and verifies retry, idempotency,
+  cancellation, malformed-response, and fail-open signing behavior.
+- Adds an SDK-owned packed-package conformance runner for the complete
+  secretless lifecycle against a configured sandbox API, with explicit Devnet
+  transaction approval and provenance-bearing evidence reports.
+- Adds packed-package execution in a real HTTPS Window and Chrome Manifest V3
+  worker, exact-origin CORS conformance, and host-owned browser session
+  partitioning and concurrency guidance.
+- Adds packed-package React Native Android conformance through Metro and the
+  React Native-matched Hermes compiler, plus deterministic request-proof and
+  two-process session-restoration checks; physical Android/Solana-phone runtime
+  approval remains an explicit Manual QA gate.
+- Bundles the runtime validator into the neutral SDK artifacts so React Native
+  consumers do not require a package-specific Babel transform.
+- Adds closed beta, release-candidate and stable channel rules, exact-tarball
+  staged publishing, signed-tag checks and fail-closed release-evidence
+  manifests appropriate to each channel.
+- Publishes the supported-host matrix plus semantic compatibility, upgrade and
+  rollback rules with the package.
+
+## 1.3.2-beta.1
+
+- Adds a copyable sandbox/devnet wallet-integration path to the README.
+- Documents the verified Solana devnet USDC facts and the wallet-owned quoted
+  payment adapter contract.
+- Adds platform-specific browser-extension and React Native configuration,
+  transaction-review requirements, and activation polling guidance.
+- Contains no runtime SDK or public API changes.
+
 ## 1.3.2-beta.0
 
 - First standalone public prerelease for browser-extension and React Native

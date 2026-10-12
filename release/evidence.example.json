@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "package": {
+    "name": "@embercover/wallet-sdk",
+    "version": "REPLACE_WITH_PACKAGE_VERSION",
+    "tarballSha256": "REPLACE_WITH_64_LOWERCASE_HEX",
+    "contractVersion": "REPLACE_WITH_CONTRACT_VERSION",
+    "contractSha256": "REPLACE_WITH_64_LOWERCASE_HEX",
+    "upstreamRevision": "REPLACE_WITH_40_LOWERCASE_HEX"
+  },
+  "gates": {
+    "apiConformance": {
+      "status": "passed",
+      "recordedAt": "REPLACE_WITH_UTC_ISO_TIMESTAMP",
+      "evidenceSha256": "REPLACE_WITH_64_LOWERCASE_HEX"
+    },
+    "httpsWebCors": {
+      "status": "passed",
+      "recordedAt": "REPLACE_WITH_UTC_ISO_TIMESTAMP",
+      "evidenceSha256": "REPLACE_WITH_64_LOWERCASE_HEX"
+    },
+    "chromeExtensionCors": {
+      "status": "passed",
+      "recordedAt": "REPLACE_WITH_UTC_ISO_TIMESTAMP",
+      "evidenceSha256": "REPLACE_WITH_64_LOWERCASE_HEX"
+    },
+    "manualProductQa": {
+      "status": "passed",
+      "recordedAt": "REPLACE_WITH_UTC_ISO_TIMESTAMP",
+      "evidenceSha256": "REPLACE_WITH_64_LOWERCASE_HEX"
+    }
+  }
+}

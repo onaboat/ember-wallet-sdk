@@ -9,6 +9,13 @@ export const zAcceptTermsRequest = z.object({
     termsVersion: z.string()
 });
 
+export const zAllowanceSnapshot = z.object({
+    available: z.int().gte(0).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+    committed: z.int().gte(0).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+    limit: z.int().gte(0).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+    reserved: z.int().gte(0).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' })
+});
+
 export const zApiErrorCode = z.enum([
     'invalid_request',
     'session_invalid',
@@ -130,6 +137,17 @@ export const zCreateSessionRequest = z.object({
     challengeId: z.string(),
     signature: z.string().min(64).max(88)
 });
+
+export const zCurrentCoverageResponse = z.union([
+    z.object({
+        status: z.enum(['none'])
+    }),
+    z.object({
+        allowance: zAllowanceSnapshot,
+        coverage: zCoverageInstanceResponse,
+        status: z.enum(['active'])
+    })
+]);
 
 export const zDecisionLifecycleStatus = z.enum([
     'reviewed',
@@ -273,6 +291,12 @@ export const zProductionEvidenceState = z.enum([
     'sealed'
 ]);
 
+export const zCancelDecisionResponse = z.object({
+    cancelled: z.boolean(),
+    decisionId: z.string(),
+    evidenceState: zProductionEvidenceState
+});
+
 export const zDecisionLineageResponse = z.object({
     coverageInstanceId: z.string(),
     decisionId: z.string(),
@@ -403,7 +427,65 @@ export const zRiskBand = z.enum([
     'severe'
 ]);
 
+export const zRotateSessionRequest = z.object({
+    refreshToken: z.string(),
+    sessionPublicKey: z.string().min(32).max(44)
+});
+
+export const zSignedQuoteResponse = z.object({
+    payload: zQuotePayloadResponse,
+    payloadSha256: z.string(),
+    signature: z.string().min(64).max(88),
+    signingPublicKey: z.string().min(32).max(44)
+});
+
+export const zSigningBlockReason = z.enum([
+    'unlimited_token_access',
+    'authority_handover',
+    'native_token_redirection'
+]);
+
+export const zSigningWarningReason = z.enum([
+    'high_risk',
+    'without_coverage',
+    'unsupported_effects',
+    'assessment_unavailable'
+]);
+
+export const zSigningDisposition = z.union([
+    z.object({
+        status: z.enum(['allow'])
+    }),
+    z.object({
+        reason: zSigningWarningReason,
+        status: z.enum(['acknowledge'])
+    }),
+    z.object({
+        reason: zSigningBlockReason,
+        status: z.enum(['block'])
+    })
+]);
+
+export const zSimulatedTokenBalanceResponse = z.object({
+    account: z.string(),
+    mint: z.string(),
+    postAmount: z.string(),
+    preAmount: z.string()
+});
+
+/**
+ * Wallet-scoped observed balances. Amounts are decimal integer strings; SOL
+ * changes are net changes including the network fee and account funding.
+ */
+export const zSimulationEffectsResponse = z.object({
+    contextSlot: z.string(),
+    solBalanceAfter: z.string().nullish(),
+    solBalanceBefore: z.string().nullish(),
+    tokenBalances: z.array(zSimulatedTokenBalanceResponse)
+});
+
 export const zCoverageDecisionResponse = z.object({
+    allowance: zAllowanceSnapshot,
     coverStatus: zCoverStatus,
     coverageInstanceId: z.string(),
     decisionExpiresAt: z.iso.datetime({ offset: true }),
@@ -421,19 +503,9 @@ export const zCoverageDecisionResponse = z.object({
     remainingAggregateLimitMicros: z.string(),
     remainingUnderwritingEvaluations: z.int().gte(0).max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
     riskBand: zRiskBand,
+    signingDisposition: zSigningDisposition.nullish(),
+    simulationEffects: zSimulationEffectsResponse.nullish(),
     termsVersion: z.string()
-});
-
-export const zRotateSessionRequest = z.object({
-    refreshToken: z.string(),
-    sessionPublicKey: z.string().min(32).max(44)
-});
-
-export const zSignedQuoteResponse = z.object({
-    payload: zQuotePayloadResponse,
-    payloadSha256: z.string(),
-    signature: z.string().min(64).max(88),
-    signingPublicKey: z.string().min(32).max(44)
 });
 
 export const zSubmitDecisionEvidenceRequest = z.union([

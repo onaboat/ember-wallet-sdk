@@ -11,6 +11,13 @@ export type AcceptTermsRequest = {
     termsVersion: string;
 };
 
+export type AllowanceSnapshot = {
+    available: number;
+    committed: number;
+    limit: number;
+    reserved: number;
+};
+
 export type ApiErrorCode = 'invalid_request' | 'session_invalid' | 'client_binding_mismatch' | 'permission_denied' | 'not_found' | 'conflict' | 'coverage_limit_reached' | 'rate_limited' | 'service_unavailable';
 
 /**
@@ -77,6 +84,15 @@ export type BeginEvidenceUploadRequest = {
     sha256: string;
 };
 
+export type CancelDecisionResponse = {
+    /**
+     * True only when cancellation won, including an idempotent cancellation retry.
+     */
+    cancelled: boolean;
+    decisionId: string;
+    evidenceState: ProductionEvidenceState;
+};
+
 export type ClaimEligibilityReason = 'not_eligible' | 'window_expired';
 
 export type ClaimEligibilityResponse = {
@@ -92,6 +108,7 @@ export type ClaimLossEventKind = 'direct_malicious_signing_loss' | 'delegate_dra
 export type CoverStatus = 'covered' | 'not_covered' | 'unsupported' | 'unavailable';
 
 export type CoverageDecisionResponse = {
+    allowance: AllowanceSnapshot;
     coverStatus: CoverStatus;
     coverageInstanceId: string;
     decisionExpiresAt: string;
@@ -112,6 +129,8 @@ export type CoverageDecisionResponse = {
     remainingAggregateLimitMicros: string;
     remainingUnderwritingEvaluations: number;
     riskBand: RiskBand;
+    signingDisposition?: null | SigningDisposition;
+    simulationEffects?: null | SimulationEffectsResponse;
     termsVersion: string;
 };
 
@@ -230,6 +249,14 @@ export type CreateSessionRequest = {
      * Canonical base58 Solana Ed25519 signature.
      */
     signature: string;
+};
+
+export type CurrentCoverageResponse = {
+    status: 'none';
+} | {
+    allowance: AllowanceSnapshot;
+    coverage: CoverageInstanceResponse;
+    status: 'active';
 };
 
 export type DecisionLifecycleEvent = {
@@ -465,6 +492,38 @@ export type SignedQuoteResponse = {
     signingPublicKey: string;
 };
 
+export type SigningBlockReason = 'unlimited_token_access' | 'authority_handover' | 'native_token_redirection';
+
+export type SigningDisposition = {
+    status: 'allow';
+} | {
+    reason: SigningWarningReason;
+    status: 'acknowledge';
+} | {
+    reason: SigningBlockReason;
+    status: 'block';
+};
+
+export type SigningWarningReason = 'high_risk' | 'without_coverage' | 'unsupported_effects' | 'assessment_unavailable';
+
+export type SimulatedTokenBalanceResponse = {
+    account: string;
+    mint: string;
+    postAmount: string;
+    preAmount: string;
+};
+
+/**
+ * Wallet-scoped observed balances. Amounts are decimal integer strings; SOL
+ * changes are net changes including the network fee and account funding.
+ */
+export type SimulationEffectsResponse = {
+    contextSlot: string;
+    solBalanceAfter?: string | null;
+    solBalanceBefore?: string | null;
+    tokenBalances: Array<SimulatedTokenBalanceResponse>;
+};
+
 export type SubmitDecisionEvidenceRequest = {
     kind: 'transaction';
     /**
@@ -579,6 +638,35 @@ export type WalletSessionResponse = {
     walletAddress: string;
     walletSubjectId: string;
 };
+
+export type GetCurrentCoverageData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/coverage-instances/current';
+};
+
+export type GetCurrentCoverageErrors = {
+    /**
+     * Invalid session
+     */
+    401: ApiErrorResponse;
+    /**
+     * Scope not permitted
+     */
+    403: ApiErrorResponse;
+};
+
+export type GetCurrentCoverageError = GetCurrentCoverageErrors[keyof GetCurrentCoverageErrors];
+
+export type GetCurrentCoverageResponses = {
+    /**
+     * Current coverage, or an explicit none status
+     */
+    200: CurrentCoverageResponse;
+};
+
+export type GetCurrentCoverageResponse = GetCurrentCoverageResponses[keyof GetCurrentCoverageResponses];
 
 export type GetCoverageInstanceData = {
     body?: never;
@@ -704,6 +792,44 @@ export type GetCoverageDecisionResponses = {
 };
 
 export type GetCoverageDecisionResponse = GetCoverageDecisionResponses[keyof GetCoverageDecisionResponses];
+
+export type CancelCoverageDecisionData = {
+    body?: never;
+    path: {
+        /**
+         * Canonical decision identifier
+         */
+        decisionId: string;
+    };
+    query?: never;
+    url: '/v1/decisions/{decisionId}/cancel';
+};
+
+export type CancelCoverageDecisionErrors = {
+    /**
+     * Invalid session
+     */
+    401: ApiErrorResponse;
+    /**
+     * Scope not permitted
+     */
+    403: ApiErrorResponse;
+    /**
+     * Decision not visible
+     */
+    404: ApiErrorResponse;
+};
+
+export type CancelCoverageDecisionError = CancelCoverageDecisionErrors[keyof CancelCoverageDecisionErrors];
+
+export type CancelCoverageDecisionResponses = {
+    /**
+     * Authoritative cancellation outcome
+     */
+    200: CancelDecisionResponse;
+};
+
+export type CancelCoverageDecisionResponse = CancelCoverageDecisionResponses[keyof CancelCoverageDecisionResponses];
 
 export type GetCoverageDecisionLineageData = {
     body?: never;

@@ -38,15 +38,18 @@ interface DurableEvidenceQueue {
 }
 
 export function createBrowserEmberClient(input: {
+  extensionOrigin: string;
   integrationId: string;
+  integrationVersion: number;
   sessionSigner: EmberMessageSigner;
   storage: ExtensionSessionStorage;
 }) {
   return new EmberWalletClient({
     baseUrl: 'https://sandbox-api.example.ember.cover',
-    client: { kind: 'browser' },
     environment: 'sandbox',
+    hostBinding: { kind: 'chrome_extension', origin: input.extensionOrigin },
     integrationId: input.integrationId,
+    integrationVersion: input.integrationVersion,
     sessionSigner: input.sessionSigner,
     sessionStore: new BrowserSessionStore(input.storage),
   });
