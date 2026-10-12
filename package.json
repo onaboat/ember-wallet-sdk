@@ -1,7 +1,7 @@
 {
   "name": "@embercover/wallet-sdk",
   "version": "1.3.2-beta.5",
-  "description": "Secretless Ember Cover SDK for web, browser-extension, and native wallets",
+  "description": "Secretless Ember Cover SDK for web and browser-extension wallets",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -43,7 +43,6 @@
     "consumer:check": "npm run build && node scripts/check-consumers.mjs",
     "conformance:api": "node scripts/run-api-conformance.mjs",
     "conformance:cors": "node scripts/check-live-origin-cors.mjs",
-    "conformance:native": "npm run build && node scripts/check-native-mobile.mjs",
     "conformance:origins": "npm run build && tsc --noEmit --project conformance/origin-host/tsconfig.json && node scripts/check-origin-hosts.mjs",
     "generate": "openapi-ts",
     "generate:check": "node scripts/check-generated.mjs",
@@ -56,7 +55,7 @@
     "release:pack": "node scripts/pack-release.mjs",
     "release:policy": "node scripts/check-release-policy.mjs",
     "release:check": "node scripts/check-release-ref.mjs",
-    "verify": "npm run contract:check && npm run release:policy && npm run typecheck && npm test && npm run examples:check && npm run consumer:check && npm run conformance:origins && npm run conformance:native && npm run scan:public && npm run pack:check",
+    "verify": "npm run contract:check && npm run release:policy && npm run typecheck && npm test && npm run examples:check && npm run consumer:check && npm run conformance:origins && npm run scan:public && npm run pack:check",
     "prepack": "npm run build && npm run boundary:check && node scripts/check-bundle-secrets.mjs",
     "prepublishOnly": "npm run verify"
   },
@@ -68,16 +67,9 @@
   "devDependencies": {
     "@hey-api/openapi-ts": "0.99.0",
     "@playwright/test": "1.63.0",
-    "@react-native/metro-config": "0.86.0",
     "@types/node": "25.9.3",
-    "@types/react": "19.3.0",
     "esbuild": "0.28.1",
-    "hermes-compiler": "250829098.0.14",
-    "metro": "0.84.6",
-    "metro-config": "0.84.6",
     "msw": "^2.14.6",
-    "react": "19.2.3",
-    "react-native": "0.86.0",
     "tsup": "8.5.0",
     "typescript": "^6.0.3",
     "vitest": "4.1.11"

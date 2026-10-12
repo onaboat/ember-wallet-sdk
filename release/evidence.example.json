@@ -24,16 +24,6 @@
       "recordedAt": "REPLACE_WITH_UTC_ISO_TIMESTAMP",
       "evidenceSha256": "REPLACE_WITH_64_LOWERCASE_HEX"
     },
-    "androidEmulator": {
-      "status": "passed",
-      "recordedAt": "REPLACE_WITH_UTC_ISO_TIMESTAMP",
-      "evidenceSha256": "REPLACE_WITH_64_LOWERCASE_HEX"
-    },
-    "solanaPhone": {
-      "status": "passed",
-      "recordedAt": "REPLACE_WITH_UTC_ISO_TIMESTAMP",
-      "evidenceSha256": "REPLACE_WITH_64_LOWERCASE_HEX"
-    },
     "manualProductQa": {
       "status": "passed",
       "recordedAt": "REPLACE_WITH_UTC_ISO_TIMESTAMP",

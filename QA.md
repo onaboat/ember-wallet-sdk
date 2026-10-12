@@ -11,8 +11,8 @@ build identifiers, tester, date, and pass/fail evidence.
   `contract/provenance.json`, and package metadata.
 - Confirm the published provenance digest matches the reviewed
   `contract/wallet-v1.json` and its recorded upstream revision.
-- Install the tarball into clean React Native and browser-extension test
-  projects, and execute it in the SDK-owned HTTPS web and Manifest V3 fixtures.
+- Install the tarball into a clean browser-extension test project, and execute
+  it in the SDK-owned HTTPS web and Manifest V3 fixtures.
   All targets must build without Node-only runtime polyfills.
 - Import the package through both ESM and CommonJS entry points and confirm the
   expected exports load.
@@ -22,7 +22,7 @@ build identifiers, tester, date, and pass/fail evidence.
 ## Session and binding
 
 - Confirm the client is configured with its exact registered integration
-  version and a `web`, `chrome_extension`, or `native` host binding.
+  version and a `web` or `chrome_extension` host binding.
 - Create a fresh session using the exact challenge bytes returned by the API.
 - Alter each challenge authority field and confirm the protected-wallet signer
   and session-creation request are never invoked.
@@ -30,8 +30,6 @@ build identifiers, tester, date, and pass/fail evidence.
   storage.
 - Reuse a browser-extension session from a different origin. The API must reject
   it without revealing operational details.
-- Reuse a mobile session with a different application binding. The API must
-  reject it without revealing operational details.
 - Corrupt, expire, and revoke a session independently. Each case must fail
   closed and prompt a clean session renewal.
 - Force secure-storage save and clear failures and confirm they surface as
@@ -56,27 +54,13 @@ build identifiers, tester, date, and pass/fail evidence.
 - Inspect the host CSP and dependency graph. No unreviewed third-party script
   may share access to refresh credentials or session signing capability.
 
-## Native Android and Solana-phone hosts
+## Deferred native hosts
 
-- Run `npm run conformance:native`. Confirm a clean consumer installs the
-  current tarball, Metro builds its Android target, the React Native-matched
-  Hermes compiler accepts both bundles, and no Node-only runtime import enters
-  either bundle.
-- Confirm the deterministic adapter result matches the shared request-proof
-  vector and restores the serialized session in a second process without
-  opening another wallet challenge.
-- Install the same tarball in a supported Android emulator and a representative
-  Solana phone. Confirm the application actually starts under Hermes; compiler
-  acceptance alone is not device-runtime evidence.
-- Using the final Ember-registered Android application ID, open, restore,
-  rotate and revoke against Devnet QA with the wallet's production-equivalent
-  fetch, crypto, non-exportable signer and secure-storage adapters.
-- Kill the process after persistence and confirm the refresh credential and
-  matching ephemeral signer restore as one authority without another protected
-  wallet signature.
-- Background beyond the access window and exercise biometric/PIN approval near
-  the decision-expiry boundary. Record expected reauthentication and freshness
-  behavior. Do not advertise iOS support without an equivalent gate.
+Android and iOS are not current release targets. Their runtime dependencies
+and conformance runner have been removed. Native binding and adapter contracts
+remain in the SDK; unit coverage does not establish mobile runtime support.
+See [native reintroduction requirements](./conformance/native-mobile/README.md)
+before adding either host to the release policy.
 
 ## Quote and coverage journeys
 
@@ -140,8 +124,8 @@ severity-one or severity-two defect affects that integration path. This does
 not qualify the HTTPS-web or native hosts.
 
 A release-candidate or stable release passes only when every row has evidence
-from the HTTPS web fixture, browser extension, and declared native-mobile
-wallet, in addition to the same package, repository and defect gates.
+from the HTTPS web fixture and browser extension, in addition to the same
+package, repository and defect gates. Neither channel qualifies native wallets.
 
 Hash the reviewed records required by the selected channel into
 `release/evidence/v<package-version>.json` using the exact release tarball

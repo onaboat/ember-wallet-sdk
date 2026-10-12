@@ -9,8 +9,8 @@ source state that will be tagged:
   registered Chrome-extension origin and manual Chrome product-QA records used
   for integration testing. It makes no HTTPS-web or native-device release claim.
 - `evidence.example.json` is for `x.y.z-rc.N` and stable `x.y.z`. It requires the
-  complete qualified-host evidence set, including HTTPS web-wallet, Android
-  emulator and representative Solana-phone records.
+  complete current host evidence set: API conformance, HTTPS web-wallet CORS,
+  Chrome-extension CORS and manual product QA. Android and iOS are deferred.
 
 Each evidence digest identifies a retained QA record. The record itself stays
 in the approved release evidence store and must contain the package version,

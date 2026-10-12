@@ -72,7 +72,7 @@ requires HTTPS. Production configuration is not a release approval.
 | --- | --- | --- |
 | HTTPS web wallet / PWA | Exact browser-provided HTTPS origin | Release qualification required |
 | Chrome Manifest V3 extension | Exact registered extension origin | Release qualification required |
-| Android / React Native | Exact registered application ID | Device and release qualification required |
+| Android / React Native | Native binding retained for future integration | Deferred; not currently supported or qualified |
 | iOS | Exact registered bundle ID | Unsupported pending equivalent evidence |
 | Other runtimes and host types | Separate binding and conformance work | Not currently supported |
 
@@ -131,13 +131,14 @@ for integrations that do not request that authority.
 For Chrome extensions, use
 `hostBinding: { kind: 'chrome_extension', origin: registeredExtensionOrigin }`.
 The browser supplies the HTTP `Origin`; do not synthesize that header.
-For native wallets, use
+For future native integrations (currently unqualified), use
 `hostBinding: { kind: 'native', applicationId: registeredApplicationId }`
 and supply `fetch` and `crypto` adapters when the runtime requires them.
 An application ID is a public binding value, not a credential.
 
-Working host adapters are in [the extension example](./examples/browser-extension/index.ts)
-and [the React Native example](./examples/react-native/index.ts).
+The [extension example](./examples/browser-extension/index.ts) demonstrates the current host integration.
+The [native adapter example](./examples/react-native/index.ts) is retained as a
+framework-independent reference; it does not establish Android or iOS support.
 
 ## 2. Activate coverage
 
@@ -447,9 +448,9 @@ See [contract maintenance](./contract/README.md) for regeneration rules.
 | --- | --- |
 | [Activation example](./examples/readme-quickstart.ts) | Typed offer-to-payment orchestration |
 | [Browser extension example](./examples/browser-extension/index.ts) | Signing boundary and durable evidence ordering |
-| [React Native example](./examples/react-native/index.ts) | Native adapters and secure session persistence |
+| [Native adapter reference](./examples/react-native/index.ts) | Future integration interfaces; no mobile runtime qualification |
 | [Browser conformance](./conformance/origin-host/README.md) | HTTPS/MV3 origin binding, CORS, restart, and coordination |
-| [Native conformance](./conformance/native-mobile/README.md) | Metro/Hermes checks and device QA requirements |
+| [Deferred native work](./conformance/native-mobile/README.md) | Requirements for bringing Android qualification back |
 | [API conformance](./CONFORMANCE.md) | Packed SDK journey against an API with an external signer |
 | [Manual QA](./QA.md) | Observable integration and release checkpoints |
 | [Compatibility](./COMPATIBILITY.md) | Versioning, upgrade, and rollback rules |
@@ -462,7 +463,7 @@ npm run examples:check
 ```
 
 `npm run verify` runs the broader automated gates, including contract checks,
-tests, consumer builds, platform fixtures, public-boundary checks, and package
+tests, consumer builds, browser fixtures, public-boundary checks, and package
 checks. It does not replace live API/CORS conformance or device QA.
 
 Before approving a wallet integration, manually exercise activation and payment

@@ -16,9 +16,14 @@
 
 ## Unreleased
 
+- Defers Android qualification and removes the unused React Native, Metro and
+  Hermes development toolchain, including its vulnerable `braces` dependency.
+  HTTPS web and Chrome extension gates remain; native adapter contracts are
+  retained without claiming mobile support. The full npm audit stays mandatory.
+
 - Makes release evidence channel-specific: beta integration releases require
   retained real-API and Chrome wallet records, while release-candidate and stable
-  releases remain gated by the complete HTTPS and Android/Solana-phone matrix.
+  releases remain gated by the current HTTPS web and Chrome-extension matrix.
 - Aligns fresh challenge validation with the API's bounded 60-second wallet
   clock-skew policy while continuing to reject larger future timestamps before
   invoking the protected-wallet signer.

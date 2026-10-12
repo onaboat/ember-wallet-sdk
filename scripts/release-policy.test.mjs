@@ -31,8 +31,6 @@ const policy = {
         'apiConformance',
         'httpsWebCors',
         'chromeExtensionCors',
-        'androidEmulator',
-        'solanaPhone',
         'manualProductQa',
       ],
     },
@@ -45,8 +43,6 @@ const policy = {
         'apiConformance',
         'httpsWebCors',
         'chromeExtensionCors',
-        'androidEmulator',
-        'solanaPhone',
         'manualProductQa',
       ],
     },
@@ -74,14 +70,9 @@ const policy = {
     },
     {
       id: 'android-native-wallet',
-      releaseStatus: 'qualification_required',
-      automatedGate: 'conformance:native',
-      requiredEvidence: [
-        'apiConformance',
-        'androidEmulator',
-        'solanaPhone',
-        'manualProductQa',
-      ],
+      releaseStatus: 'unsupported',
+      automatedGate: null,
+      requiredEvidence: [],
     },
     {
       id: 'ios-native-wallet',
@@ -96,8 +87,6 @@ const qualifiedGateNames = [
   'apiConformance',
   'httpsWebCors',
   'chromeExtensionCors',
-  'androidEmulator',
-  'solanaPhone',
   'manualProductQa',
 ];
 
@@ -130,6 +119,17 @@ describe('release policy', () => {
     assertReleasePolicy(policy);
     expect(releaseChannelForVersion(version, policy).id).toBe(expected);
   });
+
+  it.each(['android-native-wallet', 'ios-native-wallet'])(
+    'rejects a release policy that claims support for deferred host %s', (id) => {
+      const overclaimed = structuredClone(policy);
+      const host = overclaimed.hosts.find((candidate) => candidate.id === id);
+      host.releaseStatus = 'qualification_required';
+      host.automatedGate = 'conformance:origins';
+      host.requiredEvidence = ['apiConformance', 'manualProductQa'];
+      expect(() => assertReleasePolicy(overclaimed)).toThrow(/differs from the supported policy/);
+    },
+  );
 
   it('rejects the earlier policy schema without channel evidence requirements', () => {
     expect(() => assertReleasePolicy({ ...policy, schemaVersion: 1 })).toThrow(
@@ -257,7 +257,7 @@ describe('release policy', () => {
 
   it('rejects a failed or missing release gate', () => {
     const failed = evidence();
-    failed.gates.solanaPhone.status = 'failed';
+    failed.gates.httpsWebCors.status = 'failed';
     expect(() =>
       assertReleaseEvidence({
         evidence: failed,
@@ -269,7 +269,7 @@ describe('release policy', () => {
         },
         tarballSha256: 'a'.repeat(64),
       }),
-    ).toThrow(/solanaPhone did not pass/);
+    ).toThrow(/httpsWebCors did not pass/);
   });
 
   it('rejects evidence for a different tarball', () => {

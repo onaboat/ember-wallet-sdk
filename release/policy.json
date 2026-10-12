@@ -22,8 +22,6 @@
         "apiConformance",
         "httpsWebCors",
         "chromeExtensionCors",
-        "androidEmulator",
-        "solanaPhone",
         "manualProductQa"
       ]
     },
@@ -36,8 +34,6 @@
         "apiConformance",
         "httpsWebCors",
         "chromeExtensionCors",
-        "androidEmulator",
-        "solanaPhone",
         "manualProductQa"
       ]
     }
@@ -65,14 +61,9 @@
     },
     {
       "id": "android-native-wallet",
-      "releaseStatus": "qualification_required",
-      "automatedGate": "conformance:native",
-      "requiredEvidence": [
-        "apiConformance",
-        "androidEmulator",
-        "solanaPhone",
-        "manualProductQa"
-      ]
+      "releaseStatus": "unsupported",
+      "automatedGate": null,
+      "requiredEvidence": []
     },
     {
       "id": "ios-native-wallet",

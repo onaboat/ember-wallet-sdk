@@ -10,7 +10,7 @@ automated gate and every listed release-evidence checkpoint.
 | --- | --- | --- | --- | --- |
 | HTTPS web wallet or PWA | Exact browser-provided HTTPS `Origin` | Packed SDK executes in a real HTTPS Window with default and injected Web Crypto; reload, two-tab ownership and origin rejection pass | Registered-origin CORS and full Devnet/manual product journey | Qualification required |
 | Chrome Manifest V3 extension | Exact `chrome-extension://<extension-id>` origin | Packed SDK executes in an MV3 service worker; worker restart and origin rejection pass | Registered-extension CORS and full Devnet/manual product journey | Qualification required |
-| Android native wallet | Exact Ember-registered application ID | Packed SDK bundles with React Native 0.86/Metro and compiles with Hermes `250829098.0.14`; request proof and serialized session restoration pass | Emulator boot, representative Solana-phone run, platform secure storage and full Devnet/manual product journey | Qualification required; Android first |
+| Android native wallet | Native application binding retained | None in the current toolchain | Restore and qualify Android tooling before declaring support | Unsupported; deferred |
 | iOS native wallet | Exact Ember-registered bundle ID | None | Equivalent iOS runtime, storage, lifecycle and product evidence | Unsupported |
 | Other extension schemes, embedded frames, Electron/desktop and server-side wallets | Undefined | None | Separate binding threat model and conformance fixture | Unsupported unless added by a later release |
 
@@ -21,7 +21,7 @@ closed host set used by release evidence.
 
 The `beta` channel is an integration channel, not a supported-host declaration.
 Its narrower API, Chrome-origin and manual Chrome evidence permits consumers to
-test an exact package before HTTPS and native qualification. The
+test an exact package before HTTPS qualification. Android and iOS are deferred. The
 `release-candidate` and stable channels still require evidence for every host
 listed as qualification required above.
 

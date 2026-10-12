@@ -8,8 +8,6 @@ const EVIDENCE_GATES = [
   'apiConformance',
   'httpsWebCors',
   'chromeExtensionCors',
-  'androidEmulator',
-  'solanaPhone',
   'manualProductQa',
 ];
 
@@ -116,17 +114,7 @@ export function assertReleasePolicy(policy) {
       'conformance:origins',
       ['apiConformance', 'chromeExtensionCors', 'manualProductQa'],
     ],
-    [
-      'android-native-wallet',
-      'qualification_required',
-      'conformance:native',
-      [
-        'apiConformance',
-        'androidEmulator',
-        'solanaPhone',
-        'manualProductQa',
-      ],
-    ],
+    ['android-native-wallet', 'unsupported', null, []],
     ['ios-native-wallet', 'unsupported', null, []],
   ];
   assert(

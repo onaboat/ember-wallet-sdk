@@ -46,8 +46,8 @@ Node 22.14 or later; the workflow pins Node 24 and npm 11.18.
 4. Run `npm run conformance:api` against the designated sandbox using that
    exact package state and review its provenance-bearing report.
 5. Run `npm run conformance:cors` with the registered HTTPS and Chrome origins.
-6. Complete the Android emulator, representative Solana-phone and full product
-   Manual QA checkpoints in `QA.md`.
+6. Complete the HTTPS web-wallet, Chrome-extension and full product Manual QA
+   checkpoints in `QA.md`. Android and iOS are deferred and are not release targets.
 7. Hash each approved QA record. Copy `release/evidence.example.json` to
    `release/evidence/v<package-version>.json` and fill every exact package,
    contract and evidence field. Only public-safe hashes and timestamps belong

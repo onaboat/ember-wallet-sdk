@@ -1,55 +1,29 @@
-# Native-mobile conformance
+# Native qualification is deferred
 
-This SDK-owned fixture keeps React Native, Metro, Hermes, Android and secure
-storage at the infrastructure edge. The published SDK remains free of mobile
-framework imports.
+Android and iOS are not current release targets. The React Native/Metro/Hermes
+dependencies, Android fixtures and native conformance runner were removed when
+Android work was deferred. They are recoverable from Git history; the original
+tooling was introduced in commit `4d20c7e`.
 
-`npm run conformance:native` installs the current npm tarball into a clean
-consumer, forces Metro to resolve `@embercover/wallet-sdk` from that installed
-artifact, and builds:
+The SDK still exposes native application binding, injected fetch/crypto,
+message signer and session-store contracts. The framework-independent
+[adapter example](../../examples/react-native/index.ts) remains typechecked.
+These interfaces do not establish compatibility with a mobile runtime.
 
-- a minimal React Native Android application bundle; and
-- a headless adapter harness for request-proof and persistence behavior.
+Before reintroducing Android:
 
-Both bundles are accepted by the Hermes compiler shipped with the pinned React
-Native release. The adapter harness executes in two separate processes: the
-first opens and persists a session; the second receives only the serialized
-host-owned session, restores it without another wallet challenge and performs
-the same signed request. The proof bytes are compared with a fixed shared
-vector.
+1. Select a maintained React Native/Metro/Hermes toolchain whose complete
+   dependency audit passes. Do not restore old dependency pins blindly.
+2. Restore packed-package Android bundle, Hermes compilation, request-proof
+   and process-restoration conformance checks.
+3. Run the exact tarball in an Android emulator and a representative Solana
+   phone using the wallet's fetch, crypto and secure-storage implementations.
+4. Verify application binding, session opening/rotation/revocation, background
+   expiry, process death, evidence recovery and approval timing against Devnet.
+5. Add the automated gate and device evidence back to the release policy,
+   validator, evidence template, tests and support documentation together.
 
-The deterministic signers and API responses are fixtures. They contain no
-private key, cannot sign a Solana transaction and never contact an RPC or Ember
-API.
-
-## Runtime adapters
-
-A native wallet must provide:
-
-- `fetch` with React Native abort and header behavior;
-- SHA-256, Ed25519 verification and a cryptographically secure UUID source;
-- an ephemeral Ed25519 session signer distinct from the protected wallet key;
-- secure, application-private persistence for the refresh credential and
-  matching non-exportable signer; and
-- the exact registered Android application ID as the native host binding.
-
-Mobile Wallet Adapter and Seed Vault types belong in the wallet application,
-not this SDK. The protected-wallet signer must preserve exact message bytes;
-transaction review, simulation, approval and broadcast remain wallet-owned.
-
-## Manual Android/Solana-phone gate
-
-The repository CI machine proves Metro resolution, Android bundling, Hermes
-bytecode compilation and adapter behavior. It does not claim a device boot.
-Before Android support is approved:
-
-1. install the fixture in a supported Android emulator and a representative
-   Solana phone;
-2. confirm the application starts under Hermes with no Node polyfills;
-3. open, restore, rotate and revoke against the Devnet QA API using the final
-   registered application ID;
-4. terminate the process after persistence and verify the session/signer pair
-   restores without another challenge;
-5. background beyond the 15-minute access window and confirm reauthentication
-   is requested honestly; and
-6. record biometric/PIN approval timing for the decision-freshness policy.
+The host must custody the ephemeral signer and refresh credential together,
+use its registered application ID, and preserve the exact bytes supplied to
+signers. Mobile Wallet Adapter and Seed Vault integrations belong in the wallet
+application. iOS needs equivalent independent qualification.
